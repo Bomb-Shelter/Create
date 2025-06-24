@@ -14,7 +14,6 @@ import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour.TankSegment;
-import com.simibubi.create.foundation.fluid.FluidIngredient;
 import com.simibubi.create.foundation.recipe.DummyCraftingContainer;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
 
@@ -32,6 +31,7 @@ import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.neoforged.neoforge.items.IItemHandler;
 
 public class BasinRecipe extends StandardProcessingRecipe<RecipeInput> {
@@ -81,7 +81,7 @@ public class BasinRecipe extends StandardProcessingRecipe<RecipeInput> {
 		List<FluidStack> recipeOutputFluids = new ArrayList<>();
 
 		List<Ingredient> ingredients = new LinkedList<>(recipe.getIngredients());
-		List<FluidIngredient> fluidIngredients =
+		List<SizedFluidIngredient> fluidIngredients =
 			isBasinRecipe ? ((BasinRecipe) recipe).getFluidIngredients() : Collections.emptyList();
 
 		for (boolean simulate : Iterate.trueAndFalse) {
@@ -113,8 +113,8 @@ public class BasinRecipe extends StandardProcessingRecipe<RecipeInput> {
 
 			boolean fluidsAffected = false;
 			FluidIngredients:
-			for (FluidIngredient fluidIngredient : fluidIngredients) {
-				int amountRequired = fluidIngredient.getRequiredAmount();
+			for (SizedFluidIngredient fluidIngredient : fluidIngredients) {
+				int amountRequired = fluidIngredient.amount();
 
 				for (int tank = 0; tank < availableFluids.getTanks(); tank++) {
 					FluidStack fluidStack = availableFluids.getFluidInTank(tank);

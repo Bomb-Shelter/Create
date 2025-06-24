@@ -15,7 +15,6 @@ import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.Create;
 import com.simibubi.create.content.processing.recipe.ProcessingOutput;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
-import com.simibubi.create.foundation.fluid.FluidIngredient;
 import com.simibubi.create.foundation.utility.CreateLang;
 
 import io.netty.buffer.ByteBuf;
@@ -40,6 +39,7 @@ import net.minecraft.world.level.Level;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import net.neoforged.neoforge.fluids.crafting.SizedFluidIngredient;
 import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 
 public class SequencedAssemblyRecipe implements Recipe<RecipeWrapper> {
@@ -139,7 +139,7 @@ public class SequencedAssemblyRecipe implements Recipe<RecipeWrapper> {
 			.forEach(list::add);
 	}
 
-	public void addAdditionalFluidIngredients(List<FluidIngredient> list) {
+	public void addAdditionalFluidIngredients(List<SizedFluidIngredient> list) {
 		sequence.forEach(sr -> sr.getAsAssemblyRecipe()
 			.addAssemblyFluidIngredients(list));
 	}
