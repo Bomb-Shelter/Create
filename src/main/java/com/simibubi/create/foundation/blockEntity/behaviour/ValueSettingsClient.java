@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.simibubi.create.AllBlocks;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
 import net.createmod.catnip.gui.ScreenOpener;
 import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.theme.Color;
@@ -19,7 +20,6 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
 public class ValueSettingsClient implements LayeredDraw.Layer {
 	private Minecraft mc;

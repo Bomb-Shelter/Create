@@ -42,8 +42,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class BeltSlicer {
 
@@ -304,7 +304,7 @@ public class BeltSlicer {
 							mergedBeltLength - transportedItemStack.prevBeltPosition;
 					}
 				}
-				
+
 				beltChain = BeltBlock.getBeltChain(world, mergedController.getBlockPos());
 			}
 		}
@@ -364,7 +364,7 @@ public class BeltSlicer {
 						continue;
 					belt.invalidateItemHandler();
 				}
-				
+
 				// Transfer items to other controller
 				BlockPos search = controllerBE.getBlockPos();
 				for (int i = 0; i < 10000; i++) {
@@ -457,7 +457,7 @@ public class BeltSlicer {
 		return subtract.dot(beltVector) > 0 == (part == BeltPart.END);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public static void tickHoveringInformation() {
 		Minecraft mc = Minecraft.getInstance();
 		HitResult target = mc.hitResult;

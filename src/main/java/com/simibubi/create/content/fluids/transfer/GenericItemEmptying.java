@@ -6,16 +6,23 @@ import java.util.Optional;
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.fluids.potion.PotionFluidHandler;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.MutableContainerItemContext;
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.createmod.catnip.data.Pair;
+import net.fabricmc.fabric.api.registry.FuelRegistry;
+import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
-import net.neoforged.neoforge.fluids.capability.IFluidHandlerItem;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class GenericItemEmptying {
 
@@ -27,11 +34,11 @@ public class GenericItemEmptying {
 			.isPresent())
 			return true;
 
-		IFluidHandlerItem capability = stack.getCapability(Capabilities.FluidHandler.ITEM);
+		Storage<FluidVariant> capability = FluidStorage.ITEM.find(stack, new MutableContainerItemContext(stack));
 		if (capability == null)
 			return false;
-		for (int i = 0; i < capability.getTanks(); i++) {
-			if (capability.getFluidInTank(i)
+		for (StorageView<FluidVariant> view : capability) {
+			if (view
 				.getAmount() > 0)
 				return true;
 		}
@@ -58,11 +65,11 @@ public class GenericItemEmptying {
 
 		ItemStack split = stack.copy();
 		split.setCount(1);
-		IFluidHandlerItem capability = split.getCapability(Capabilities.FluidHandler.ITEM);
+		Storage<FluidVariant> capability = FluidStorage.ITEM.find(stack, new MutableContainerItemContext(stack));
 		if (capability == null)
 			return Pair.of(resultingFluid, resultingItem);
-		resultingFluid = capability.drain(1000, simulate ? FluidAction.SIMULATE : FluidAction.EXECUTE);
-		resultingItem = capability.getContainer()
+		resultingFluid = CreateTransferUtil.extractFluid(capability, 1000, simulate);
+		resultingItem = stack
 			.copy();
 		if (!simulate)
 			stack.shrink(1);

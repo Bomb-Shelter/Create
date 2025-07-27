@@ -1,5 +1,8 @@
 package com.simibubi.create.impl.contraption.dispenser;
 
+import io.github.fabricators_of_create.porting_lib.core.util.ServerLifecycleHooks;
+import io.github.fabricators_of_create.porting_lib.event.common.TagsUpdatedEvent;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllTags.AllItemTags;
@@ -28,10 +31,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
-
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.TagsUpdatedEvent;
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 public enum DispenserBehaviorConverter implements SimpleRegistry.Provider<Item, MountedDispenseBehavior> {
 	INSTANCE;
@@ -63,7 +62,7 @@ public enum DispenserBehaviorConverter implements SimpleRegistry.Provider<Item, 
 	@Override
 	public void onRegister(Runnable invalidate) {
 		// invalidate if the blacklist tag might've changed
-		NeoForge.EVENT_BUS.addListener((TagsUpdatedEvent event) -> {
+		TagsUpdatedEvent.EVENT.register(event -> {
 			if (event.shouldUpdateStaticData()) {
 				invalidate.run();
 			}

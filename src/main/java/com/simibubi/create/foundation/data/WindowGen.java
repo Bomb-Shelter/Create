@@ -26,6 +26,8 @@ import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
 import com.tterrag.registrate.util.nullness.NonNullConsumer;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
 
+import io.github.fabricators_of_create.porting_lib.models.generators.ConfiguredModel;
+import io.github.fabricators_of_create.porting_lib.models.generators.ModelFile;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.data.recipes.RecipeCategory;
@@ -43,9 +45,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.WoodType;
 import net.minecraft.world.level.material.MapColor;
 
-import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
-import net.neoforged.neoforge.client.model.generators.ModelFile;
-import net.neoforged.neoforge.common.Tags;
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
 
 public class WindowGen {
 	private static final CreateRegistrate REGISTRATE = Create.registrate();
@@ -127,7 +127,7 @@ public class WindowGen {
 				.pattern(" # ")
 				.pattern("#X#")
 				.define('#', ingredient.get())
-				.define('X', DataIngredient.tag(net.neoforged.neoforge.common.Tags.Items.GLASS_BLOCKS_COLORLESS).toVanilla())
+				.define('X', DataIngredient.tag(io.github.fabricators_of_create.porting_lib.tags.Tags.Items.GLASS_BLOCKS_COLORLESS).toVanilla())
 				.unlockedBy("has_ingredient", RegistrateRecipeProvider.has(ingredient.get()))
 				.save(p))
 			.initialProperties(() -> Blocks.GLASS)
@@ -148,12 +148,12 @@ public class WindowGen {
 			.initialProperties(() -> Blocks.GLASS)
 			.properties(WindowGen::glassProperties)
 			.loot((t, g) -> t.dropWhenSilkTouch(g))
-			.recipe((c, p) -> p.stonecutting(DataIngredient.tag(net.neoforged.neoforge.common.Tags.Items.GLASS_BLOCKS_COLORLESS),
+			.recipe((c, p) -> p.stonecutting(DataIngredient.tag(io.github.fabricators_of_create.porting_lib.tags.Tags.Items.GLASS_BLOCKS_COLORLESS),
 				RecipeCategory.BUILDING_BLOCKS, c::get))
 			.blockstate((c, p) -> BlockStateGen.cubeAll(c, p, "palettes/", "framed_glass"))
-			.tag(net.neoforged.neoforge.common.Tags.Blocks.GLASS_BLOCKS_COLORLESS, BlockTags.IMPERMEABLE)
+			.tag(io.github.fabricators_of_create.porting_lib.tags.Tags.Blocks.GLASS_BLOCKS_COLORLESS, BlockTags.IMPERMEABLE)
 			.item()
-			.tag(net.neoforged.neoforge.common.Tags.Items.GLASS_BLOCKS_COLORLESS)
+			.tag(io.github.fabricators_of_create.porting_lib.tags.Tags.Items.GLASS_BLOCKS_COLORLESS)
 			.model((c, p) -> p.cubeColumn(c.getName(), p.modLoc(palettesDir() + c.getName()),
 				p.modLoc("block/palettes/framed_glass")))
 			.build()

@@ -5,6 +5,8 @@ import java.util.Arrays;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 
+import net.fabricmc.fabric.api.renderer.v1.mesh.MutableQuadView;
+import net.fabricmc.fabric.api.renderer.v1.mesh.QuadView;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
@@ -36,15 +38,26 @@ public final class BakedQuadHelper {
 
 	public static Vec3 getXYZ(int[] vertexData, int vertex) {
 		float x = Float.intBitsToFloat(vertexData[vertex * VERTEX_STRIDE + X_OFFSET]);
-        float y = Float.intBitsToFloat(vertexData[vertex * VERTEX_STRIDE + Y_OFFSET]);
-        float z = Float.intBitsToFloat(vertexData[vertex * VERTEX_STRIDE + Z_OFFSET]);
-        return new Vec3(x, y, z);
+		float y = Float.intBitsToFloat(vertexData[vertex * VERTEX_STRIDE + Y_OFFSET]);
+		float z = Float.intBitsToFloat(vertexData[vertex * VERTEX_STRIDE + Z_OFFSET]);
+		return new Vec3(x, y, z);
 	}
 
 	public static void setXYZ(int[] vertexData, int vertex, Vec3 xyz) {
 		vertexData[vertex * VERTEX_STRIDE + X_OFFSET] = Float.floatToRawIntBits((float) xyz.x);
 		vertexData[vertex * VERTEX_STRIDE + Y_OFFSET] = Float.floatToRawIntBits((float) xyz.y);
 		vertexData[vertex * VERTEX_STRIDE + Z_OFFSET] = Float.floatToRawIntBits((float) xyz.z);
+	}
+
+	public static Vec3 getXYZ(QuadView quad, int vertex) {
+		float x = quad.x(vertex);
+		float y = quad.y(vertex);
+		float z = quad.z(vertex);
+		return new Vec3(x, y, z);
+	}
+
+	public static void setXYZ(MutableQuadView quad, int vertex, Vec3 xyz) {
+		quad.pos(vertex, (float) xyz.x, (float) xyz.y, (float) xyz.z);
 	}
 
 	public static Vec3 getNormalXYZ(int[] vertexData, int vertex) {

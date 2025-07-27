@@ -69,7 +69,7 @@ public class EntityHats {
 	}
 
 	public static boolean shouldRenderTrainHat(LivingEntity entity) {
-		if (entity.getPersistentData()
+		if (entity.getCustomData()
 			.contains("TrainHat"))
 			return true;
 		if (!entity.isPassenger())

@@ -22,17 +22,12 @@ import net.minecraft.world.level.material.PushReaction;
 public abstract class AbstractSimpleShaftBlock extends AbstractShaftBlock implements IWrenchableWithBracket {
 
 	public AbstractSimpleShaftBlock(Properties properties) {
-		super(properties);
+		super(properties.pushReaction(PushReaction.NORMAL));
 	}
 
 	@Override
 	public InteractionResult onWrenched(BlockState state, UseOnContext context) {
 		return IWrenchableWithBracket.super.onWrenched(state, context);
-	}
-
-	@Override
-	public PushReaction getPistonPushReaction(BlockState state) {
-		return PushReaction.NORMAL;
 	}
 
 	@Override

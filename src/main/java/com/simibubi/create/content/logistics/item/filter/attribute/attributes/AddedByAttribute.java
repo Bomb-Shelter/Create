@@ -4,6 +4,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
+
+import net.fabricmc.loader.api.metadata.ModMetadata;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,10 +25,6 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.ModList;
-import net.neoforged.neoforgespi.language.IModInfo;
-
 public record AddedByAttribute(String modId) implements ItemAttribute {
 	public static final MapCodec<AddedByAttribute> CODEC = Codec.STRING
 			.xmap(AddedByAttribute::new, AddedByAttribute::modId)
@@ -35,7 +36,7 @@ public record AddedByAttribute(String modId) implements ItemAttribute {
 	@Override
 	public boolean appliesTo(ItemStack stack, Level world) {
 		return modId.equals(stack.getItem()
-			.getCreatorModId(stack));
+			.builtInRegistryHolder().key().location().getNamespace()); // Fabric: this is terrible but we pray
 	}
 
 	@Override
@@ -45,10 +46,10 @@ public record AddedByAttribute(String modId) implements ItemAttribute {
 
 	@Override
 	public Object[] getTranslationParameters() {
-		Optional<? extends ModContainer> modContainerById = ModList.get()
-			.getModContainerById(modId);
-		String name = modContainerById.map(ModContainer::getModInfo)
-			.map(IModInfo::getDisplayName)
+		Optional<? extends ModContainer> modContainerById = FabricLoader.getInstance()
+			.getModContainer(modId);
+		String name = modContainerById.map(ModContainer::getMetadata)
+			.map(ModMetadata::getName)
 			.orElse(StringUtils.capitalize(modId));
 		return new Object[]{name};
 	}
@@ -67,7 +68,7 @@ public record AddedByAttribute(String modId) implements ItemAttribute {
 		@Override
 		public List<ItemAttribute> getAllAttributes(ItemStack stack, Level level) {
 			String id = stack.getItem()
-				.getCreatorModId(stack);
+				.builtInRegistryHolder().key().location().getNamespace();
 			return id == null ? Collections.emptyList() : List.of(new AddedByAttribute(id));
 		}
 

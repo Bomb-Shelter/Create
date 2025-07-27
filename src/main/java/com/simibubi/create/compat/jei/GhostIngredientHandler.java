@@ -21,7 +21,7 @@ import net.minecraft.world.item.ItemStack;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class GhostIngredientHandler<T extends GhostItemMenu<?>>
+public class GhostIngredientHandler<T extends GhostItemMenu<?, ?>>
 	implements IGhostIngredientHandler<AbstractSimiContainerScreen<T>> {
 
 	@Override
@@ -55,7 +55,7 @@ public class GhostIngredientHandler<T extends GhostItemMenu<?>>
 		return true;
 	}
 
-	private static class GhostTarget<I, T extends GhostItemMenu<?>> implements Target<I> {
+	private static class GhostTarget<I, T extends GhostItemMenu<?, ?>> implements Target<I> {
 
 		private final Rect2i area;
 		private final AbstractSimiContainerScreen<T> gui;
@@ -67,7 +67,7 @@ public class GhostIngredientHandler<T extends GhostItemMenu<?>>
 			this.slotIndex = slotIndex;
 			this.isAttributeFilter = isAttributeFilter;
 			Slot slot = gui.getMenu().slots.get(slotIndex + 36);
-			this.area = new Rect2i(gui.getGuiLeft() + slot.x, gui.getGuiTop() + slot.y, 16, 16);
+			this.area = new Rect2i(gui.getRectangle().left() + slot.x, gui.getRectangle().top() + slot.y, 16, 16);
 		}
 
 		@Override

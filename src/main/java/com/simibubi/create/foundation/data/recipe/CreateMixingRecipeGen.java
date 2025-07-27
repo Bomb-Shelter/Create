@@ -9,6 +9,8 @@ import com.simibubi.create.Create;
 import com.simibubi.create.api.data.recipe.MixingRecipeGen;
 import com.simibubi.create.content.processing.recipe.HeatCondition;
 
+import com.simibubi.create.infrastructure.fabric.crafting.BlockTagIngredient;
+
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.tags.BlockTags;
@@ -17,8 +19,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluids;
 
-import net.neoforged.neoforge.common.Tags;
-import net.neoforged.neoforge.common.crafting.BlockTagIngredient;
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
 
 /**
  * Create's own Data Generation for Mixing recipes

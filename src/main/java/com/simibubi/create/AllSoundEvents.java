@@ -12,8 +12,12 @@ import java.util.function.Supplier;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 
+import io.github.fabricators_of_create.porting_lib.registry.DeferredHolder;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
 import net.minecraft.core.Vec3i;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataGenerator;
@@ -27,8 +31,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.RegisterEvent;
 
 public class AllSoundEvents {
 
@@ -60,7 +62,7 @@ public class AllSoundEvents {
 			.playExisting(SoundEvents.WOOL_BREAK, .0425f, .75f)
 			.category(SoundSource.BLOCKS)
 			.build(),
-			
+
 		PACKAGER = create("packager").subtitle("Packager packages")
 			.playExisting(SoundEvents.SHULKER_OPEN, 0.5f, 0.75f)
 			.category(SoundSource.BLOCKS)
@@ -138,12 +140,12 @@ public class AllSoundEvents {
 		CARDBOARD_SWORD = create("cardboard_bonk").subtitle("Resonant bonk")
 			.category(SoundSource.PLAYERS)
 			.build(),
-			
+
 		FROGPORT_OPEN = create("frogport_open").subtitle("Frogport opens")
 			.playExisting(SoundEvents.WARDEN_TENDRIL_CLICKS, 1f, 2f)
 			.category(SoundSource.BLOCKS)
 			.build(),
-			
+
 		FROGPORT_CLOSE = create("frogport_close").subtitle("Frogport shuts")
 			.category(SoundSource.BLOCKS)
 			.build(),
@@ -154,7 +156,7 @@ public class AllSoundEvents {
 			.addVariant("frogport_catch_3")
 			.category(SoundSource.BLOCKS)
 			.build(),
-			
+
 		STOCK_LINK = create("stock_link").subtitle("Stock link reacts")
 			.category(SoundSource.BLOCKS)
 			.build(),
@@ -191,7 +193,7 @@ public class AllSoundEvents {
 			.playExisting(SoundEvents.NETHERITE_BLOCK_HIT, .25f, .75f)
 			.category(SoundSource.BLOCKS)
 			.build(),
-			
+
 		PACKAGE_POP = create("package_pop").subtitle("Package breaks")
 			.playExisting(SoundEvents.CHISELED_BOOKSHELF_BREAK, .75f, 1f)
 			.playExisting(SoundEvents.WOOL_BREAK, .25f, 1.15f)
@@ -252,7 +254,7 @@ public class AllSoundEvents {
 			.playExisting(SoundEvents.GENERIC_EAT, .5f, 1f)
 			.category(SoundSource.BLOCKS)
 			.build(),
-			
+
 		ITEM_HATCH = create("item_hatch").subtitle("Item Hatch opens")
 			.playExisting(SoundEvents.BARREL_OPEN, .25f, 1.4f)
 			.playExisting(SoundEvents.NETHERITE_BLOCK_PLACE, .75f, 1.15f)
@@ -278,7 +280,7 @@ public class AllSoundEvents {
 			.playExisting(SoundEvents.BELL_BLOCK)
 			.category(SoundSource.BLOCKS)
 			.build(),
-			
+
 		DESK_BELL_USE = create("desk_bell").subtitle("Reception bell dings")
 			.category(SoundSource.BLOCKS)
 			.attenuationDistance(64)
@@ -388,11 +390,9 @@ public class AllSoundEvents {
 			entry.prepare();
 	}
 
-	public static void register(RegisterEvent event) {
-		event.register(Registries.SOUND_EVENT, helper -> {
-			for (SoundEntry entry : ALL.values())
-				entry.register(helper);
-		});
+	public static void register() {
+		for (SoundEntry entry : ALL.values())
+			entry.register();
 	}
 
 	public static void provideLang(BiConsumer<String, String> consumer) {
@@ -401,8 +401,8 @@ public class AllSoundEvents {
 				consumer.accept(entry.getSubtitleKey(), entry.getSubtitle());
 	}
 
-	public static SoundEntryProvider provider(DataGenerator generator) {
-		return new SoundEntryProvider(generator);
+	public static SoundEntryProvider provider(DataGenerator generator, FabricDataOutput output) {
+		return new SoundEntryProvider(generator, output);
 	}
 
 	public static void playItemPickup(Player player) {
@@ -423,10 +423,10 @@ public class AllSoundEvents {
 
 	public static class SoundEntryProvider implements DataProvider {
 
-		private PackOutput output;
+		private FabricDataOutput output;
 
-		public SoundEntryProvider(DataGenerator generator) {
-			output = generator.getPackOutput();
+		public SoundEntryProvider(DataGenerator generator, FabricDataOutput output) {
+			this.output = output;
 		}
 
 		@Override
@@ -543,7 +543,7 @@ public class AllSoundEvents {
 
 		public abstract void prepare();
 
-		public abstract void register(RegisterEvent.RegisterHelper<SoundEvent> registry);
+		public abstract void register();
 
 		public abstract void write(JsonObject json);
 
@@ -633,10 +633,10 @@ public class AllSoundEvents {
 		}
 
 		@Override
-		public void register(RegisterEvent.RegisterHelper<SoundEvent> helper) {
+		public void register() {
 			for (CompiledSoundEvent compiledEvent : compiledEvents) {
 				ResourceLocation location = compiledEvent.event().getId();
-				helper.register(location, SoundEvent.createVariableRangeEvent(location));
+				Registry.register(BuiltInRegistries.SOUND_EVENT, location, SoundEvent.createVariableRangeEvent(location));
 			}
 		}
 
@@ -714,9 +714,9 @@ public class AllSoundEvents {
 		}
 
 		@Override
-		public void register(RegisterEvent.RegisterHelper<SoundEvent> helper) {
+		public void register() {
 			ResourceLocation location = event.getId();
-			helper.register(location, SoundEvent.createVariableRangeEvent(location));
+			Registry.register(BuiltInRegistries.SOUND_EVENT, location, SoundEvent.createVariableRangeEvent(location));
 		}
 
 		@Override

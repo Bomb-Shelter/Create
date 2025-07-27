@@ -3,6 +3,12 @@ package com.simibubi.create.content.kinetics.waterwheel;
 import java.util.HashSet;
 import java.util.Set;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomDestroyEffectsBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomHitEffectsBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomLandingEffectsBlock;
+
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.FlammableBlock;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,9 +46,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
 
-import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
-
-public class WaterWheelStructuralBlock extends DirectionalBlock implements IWrenchable, IProxyHoveringInformation {
+public class WaterWheelStructuralBlock extends DirectionalBlock implements IWrenchable, IProxyHoveringInformation, CustomLandingEffectsBlock, CustomHitEffectsBlock, CustomDestroyEffectsBlock, FlammableBlock, MultiPosDestructionHandler {
 
 	public static final MapCodec<WaterWheelStructuralBlock> CODEC = simpleCodec(WaterWheelStructuralBlock::new);
 
@@ -60,10 +64,11 @@ public class WaterWheelStructuralBlock extends DirectionalBlock implements IWren
 		return RenderShape.INVISIBLE;
 	}
 
-	@Override
+	// Fabric TODO: impl
+	/*@Override
 	public PushReaction getPistonPushReaction(BlockState pState) {
 		return PushReaction.BLOCK;
-	}
+	}*/
 
 	@Override
 	public InteractionResult onWrenched(BlockState state, UseOnContext context) {
@@ -71,7 +76,7 @@ public class WaterWheelStructuralBlock extends DirectionalBlock implements IWren
 	}
 
 	@Override
-	public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
+	public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
 		return AllBlocks.LARGE_WATER_WHEEL.asStack();
 	}
 
@@ -169,35 +174,32 @@ public class WaterWheelStructuralBlock extends DirectionalBlock implements IWren
 		return true;
 	}
 
-	public static class RenderProperties implements IClientBlockExtensions, MultiPosDestructionHandler {
+	@Override
+	public boolean addDestroyEffects(BlockState state, ClientLevel Level, BlockPos pos, ParticleEngine engine) {
+		return true;
+	}
 
-		@Override
-		public boolean addDestroyEffects(BlockState state, Level Level, BlockPos pos, ParticleEngine manager) {
+	@Override
+	public boolean addHitEffects(BlockState state, Level level, HitResult target, ParticleEngine manager) {
+		if (target instanceof BlockHitResult bhr) {
+			BlockPos targetPos = bhr.getBlockPos();
+			WaterWheelStructuralBlock waterWheelStructuralBlock = AllBlocks.WATER_WHEEL_STRUCTURAL.get();
+			if (waterWheelStructuralBlock.stillValid(level, targetPos, state, false))
+				manager.crack(WaterWheelStructuralBlock.getMaster(level, targetPos, state), bhr.getDirection());
 			return true;
 		}
+		return CustomHitEffectsBlock.super.addHitEffects(state, level, target, manager);
+	}
 
-		@Override
-		public boolean addHitEffects(BlockState state, Level level, HitResult target, ParticleEngine manager) {
-			if (target instanceof BlockHitResult bhr) {
-				BlockPos targetPos = bhr.getBlockPos();
-				WaterWheelStructuralBlock waterWheelStructuralBlock = AllBlocks.WATER_WHEEL_STRUCTURAL.get();
-				if (waterWheelStructuralBlock.stillValid(level, targetPos, state, false))
-					manager.crack(WaterWheelStructuralBlock.getMaster(level, targetPos, state), bhr.getDirection());
-				return true;
-			}
-			return IClientBlockExtensions.super.addHitEffects(state, level, target, manager);
-		}
-
-		@Override
-		@Nullable
-		public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
-			WaterWheelStructuralBlock waterWheelStructuralBlock = AllBlocks.WATER_WHEEL_STRUCTURAL.get();
-			if (!waterWheelStructuralBlock.stillValid(level, pos, blockState, false))
-				return null;
-			HashSet<BlockPos> set = new HashSet<>();
-			set.add(WaterWheelStructuralBlock.getMaster(level, pos, blockState));
-			return set;
-		}
+	@Override
+	@Nullable
+	public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
+		WaterWheelStructuralBlock waterWheelStructuralBlock = AllBlocks.WATER_WHEEL_STRUCTURAL.get();
+		if (!waterWheelStructuralBlock.stillValid(level, pos, blockState, false))
+			return null;
+		HashSet<BlockPos> set = new HashSet<>();
+		set.add(WaterWheelStructuralBlock.getMaster(level, pos, blockState));
+		return set;
 	}
 
 	@Override

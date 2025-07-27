@@ -7,14 +7,15 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import io.github.fabricators_of_create.porting_lib.registry.DeferredHolder;
+import io.github.fabricators_of_create.porting_lib.registry.DeferredRegister;
 import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
+import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.network.chat.Component;
-
-import net.neoforged.neoforge.registries.DeferredHolder;
 
 import org.apache.commons.lang3.mutable.MutableObject;
 
@@ -52,9 +53,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.registries.DeferredRegister;
-
 import org.jetbrains.annotations.ApiStatus.Internal;
 
 public class AllCreativeModeTabs {
@@ -62,24 +60,24 @@ public class AllCreativeModeTabs {
 		DeferredRegister.create(Registries.CREATIVE_MODE_TAB, Create.ID);
 
 	public static final DeferredHolder<CreativeModeTab, CreativeModeTab> BASE_CREATIVE_TAB = REGISTER.register("base",
-		() -> CreativeModeTab.builder()
+		() -> FabricItemGroup.builder()
 			.title(Component.translatable("itemGroup.create.base"))
-			.withTabsBefore(CreativeModeTabs.SPAWN_EGGS)
+			//.withTabsBefore(CreativeModeTabs.SPAWN_EGGS)
 			.icon(() -> AllBlocks.COGWHEEL.asStack())
 			.displayItems(new RegistrateDisplayItemsGenerator(true, AllCreativeModeTabs.BASE_CREATIVE_TAB))
 			.build());
 
 	public static final DeferredHolder<CreativeModeTab, CreativeModeTab> PALETTES_CREATIVE_TAB = REGISTER.register("palettes",
-		() -> CreativeModeTab.builder()
+		() -> FabricItemGroup.builder()
 			.title(Component.translatable("itemGroup.create.palettes"))
-			.withTabsBefore(BASE_CREATIVE_TAB.getKey())
+			//.withTabsBefore(BASE_CREATIVE_TAB.getKey())
 			.icon(() -> AllPaletteBlocks.ORNATE_IRON_WINDOW.asStack())
 			.displayItems(new RegistrateDisplayItemsGenerator(false, AllCreativeModeTabs.PALETTES_CREATIVE_TAB))
 			.build());
 
 	@Internal
-	public static void register(IEventBus modEventBus) {
-		REGISTER.register(modEventBus);
+	public static void register() {
+		REGISTER.register();
 	}
 
 	private static class RegistrateDisplayItemsGenerator implements DisplayItemsGenerator {

@@ -1,0 +1,34 @@
+{
+  "type": "create:milling",
+  "ingredients": [
+    {
+      "fabric:type": "create:simple_datagen",
+      "ingredients": [
+        {
+          "item": "atmospheric:hot_monkey_brush"
+        }
+      ]
+    }
+  ],
+  "porting_lib:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "atmospheric"
+    }
+  ],
+  "processing_time": 50,
+  "results": [
+    {
+      "count": 2,
+      "id": "minecraft:orange_dye"
+    },
+    {
+      "chance": 0.05,
+      "id": "minecraft:red_dye"
+    },
+    {
+      "chance": 0.05,
+      "id": "minecraft:yellow_dye"
+    }
+  ]
+}

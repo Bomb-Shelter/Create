@@ -5,8 +5,14 @@ import javax.annotation.Nullable;
 import com.simibubi.create.api.registry.CreateBuiltInRegistries;
 import com.simibubi.create.content.contraptions.StructureTransform;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemHandlerHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -19,11 +25,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-
 public class ArmInteractionPoint {
 
 	protected final ArmInteractionPointType type;
@@ -32,7 +33,7 @@ public class ArmInteractionPoint {
 	protected Mode mode = Mode.DEPOSIT;
 
 	protected BlockState cachedState;
-	protected BlockCapabilityCache<IItemHandler, Direction> cachedHandler;
+	//protected BlockCapabilityCache<Storage<ItemVariant>, Direction> cachedHandler;
 	protected ArmAngleTarget cachedAngles;
 
 	public ArmInteractionPoint(ArmInteractionPointType type, Level level, BlockPos pos, BlockState state) {
@@ -95,8 +96,15 @@ public class ArmInteractionPoint {
 	}
 
 	@Nullable
-	protected IItemHandler getHandler(ArmBlockEntity armBlockEntity) {
-		if (cachedHandler == null && level instanceof ServerLevel serverLevel) {
+	protected Storage<ItemVariant> getHandler(ArmBlockEntity armBlockEntity) {
+		BlockEntity be = level.getBlockEntity(pos);
+		if (be == null)
+			return null;
+
+		return TransferUtil.getItemStorage(level, pos, be, null);
+
+		// Fabric TODO: how the fuck
+		/*if (cachedHandler == null && level instanceof ServerLevel serverLevel) {
 			BlockEntity be = level.getBlockEntity(pos);
 			if (be == null)
 				return null;
@@ -109,21 +117,21 @@ public class ArmInteractionPoint {
 				() -> cachedHandler = null
 			);
 		}
-		return cachedHandler.getCapability();
+		return cachedHandler.getCapability();*/
 	}
 
 	public ItemStack insert(ArmBlockEntity armBlockEntity, ItemStack stack, boolean simulate) {
-		IItemHandler handler = getHandler(armBlockEntity);
+		Storage<ItemVariant> handler = getHandler(armBlockEntity);
 		if (handler == null)
 			return stack;
-		return ItemHandlerHelper.insertItem(handler, stack, simulate);
+		return CreateTransferUtil.insertItem(handler, stack, simulate);
 	}
 
 	public ItemStack extract(ArmBlockEntity armBlockEntity, int slot, int amount, boolean simulate) {
-		IItemHandler handler = getHandler(armBlockEntity);
+		Storage<ItemVariant> handler = getHandler(armBlockEntity);
 		if (handler == null)
 			return ItemStack.EMPTY;
-		return handler.extractItem(slot, amount, simulate);
+		return CreateTransferUtil.extractItem(handler, slot, amount, simulate);
 	}
 
 	public ItemStack extract(ArmBlockEntity armBlockEntity, int slot, boolean simulate) {
@@ -131,10 +139,10 @@ public class ArmInteractionPoint {
 	}
 
 	public int getSlotCount(ArmBlockEntity armBlockEntity) {
-		IItemHandler handler = getHandler(armBlockEntity);
+		Storage<ItemVariant> handler = getHandler(armBlockEntity);
 		if (handler == null)
 			return 0;
-		return handler.getSlots();
+		return CreateTransferUtil.getSlotCount(handler);
 	}
 
 	protected void serialize(CompoundTag nbt, BlockPos anchor) {

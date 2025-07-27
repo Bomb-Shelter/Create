@@ -18,9 +18,14 @@ import com.simibubi.create.foundation.sound.SoundScapes;
 import com.simibubi.create.foundation.sound.SoundScapes.AmbienceGroup;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
+import com.simibubi.create.infrastructure.fabric.CreateRecipeWrapper;
+
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.platform.CatnipServices;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -44,20 +49,19 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public class CrushingWheelControllerBlockEntity extends SmartBlockEntity {
+import org.jetbrains.annotations.Nullable;
+
+public class CrushingWheelControllerBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity {
 
 	public Entity processingEntity;
 	private UUID entityUUID;
 	protected boolean searchForEntity;
 
 	public ProcessingInventory inventory;
-	private RecipeWrapper wrapper;
+	private CreateRecipeWrapper wrapper;
 	public float crushingspeed;
 
 	public CrushingWheelControllerBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -65,20 +69,20 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity {
 		inventory = new ProcessingInventory(this::itemInserted) {
 
 			@Override
-			public boolean isItemValid(int slot, ItemStack stack) {
-				return super.isItemValid(slot, stack) && processingEntity == null;
+			public boolean isItemValid(int slot, ItemVariant resource, int count) {
+				return super.isItemValid(slot, resource, count) && processingEntity == null;
 			}
 
 		};
-		wrapper = new RecipeWrapper(inventory);
+		wrapper = new CreateRecipeWrapper(inventory);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.CRUSHING_WHEEL_CONTROLLER.get(),
-				(be, context) -> be.inventory
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		return inventory;
 	}
 
 	@Override
@@ -164,7 +168,7 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity {
 					boolean changed = false;
 					if (!behaviour.canInsertFromSide(facing))
 						return;
-					for (int slot = 0; slot < inventory.getSlots(); slot++) {
+					for (int slot = 0; slot < inventory.getSlotCount(); slot++) {
 						ItemStack stack = inventory.getStackInSlot(slot);
 						if (stack.isEmpty())
 							continue;
@@ -183,13 +187,13 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity {
 			}
 
 			// Eject Items
-			for (int slot = 0; slot < inventory.getSlots(); slot++) {
+			for (int slot = 0; slot < inventory.getSlotCount(); slot++) {
 				ItemStack stack = inventory.getStackInSlot(slot);
 				if (stack.isEmpty())
 					continue;
 				ItemEntity entityIn = new ItemEntity(level, outPos.x, outPos.y, outPos.z, stack);
 				entityIn.setDeltaMovement(outSpeed);
-				entityIn.getPersistentData()
+				entityIn.getCustomData()
 					.put("BypassCrushingWheel", NbtUtils.writeBlockPos(worldPosition));
 				level.addFreshEntity(entityIn);
 			}
@@ -264,7 +268,7 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity {
 		}
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void tickAudio() {
 		float pitch = Mth.clamp((crushingspeed / 256f) + .45f, .85f, 1f);
 		if (entityUUID == null && inventory.getStackInSlot(0)
@@ -300,7 +304,7 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity {
 	}
 
 	private void applyRecipe() {
-		Optional<RecipeHolder<StandardProcessingRecipe<RecipeWrapper>>> recipe = findRecipe();
+		Optional<RecipeHolder<StandardProcessingRecipe<CreateRecipeWrapper>>> recipe = findRecipe();
 
 		List<ItemStack> list = new ArrayList<>();
 		if (recipe.isPresent()) {
@@ -314,7 +318,7 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity {
 					ItemHelper.addToList(stack, list);
 				}
 			}
-			for (int slot = 0; slot < list.size() && slot + 1 < inventory.getSlots(); slot++)
+			for (int slot = 0; slot < list.size() && slot + 1 < inventory.getSlotCount(); slot++)
 				inventory.setStackInSlot(slot + 1, list.get(slot));
 		} else {
 			inventory.clear();
@@ -322,8 +326,8 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity {
 
 	}
 
-	public Optional<RecipeHolder<StandardProcessingRecipe<RecipeWrapper>>> findRecipe() {
-		Optional<RecipeHolder<StandardProcessingRecipe<RecipeWrapper>>> crushingRecipe = AllRecipeTypes.CRUSHING.find(wrapper, level);
+	public Optional<RecipeHolder<StandardProcessingRecipe<CreateRecipeWrapper>>> findRecipe() {
+		Optional<RecipeHolder<StandardProcessingRecipe<CreateRecipeWrapper>>> crushingRecipe = AllRecipeTypes.CRUSHING.find(wrapper, level);
 		if (!crushingRecipe.isPresent())
 			crushingRecipe = AllRecipeTypes.MILLING.find(wrapper, level);
 		return crushingRecipe;
@@ -355,7 +359,7 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity {
 	}
 
 	private void itemInserted(ItemStack stack) {
-		Optional<RecipeHolder<StandardProcessingRecipe<RecipeWrapper>>> recipe = findRecipe();
+		Optional<RecipeHolder<StandardProcessingRecipe<CreateRecipeWrapper>>> recipe = findRecipe();
 		inventory.remainingTime = recipe.isPresent() ? recipe.get().value()
 			.getProcessingDuration() : 100;
 		inventory.appliedRecipe = false;

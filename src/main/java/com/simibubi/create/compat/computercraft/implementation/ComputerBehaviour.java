@@ -59,8 +59,8 @@ public class ComputerBehaviour extends AbstractComputerBehaviour {
 
 	@Override
 	public void removePeripheral() {
-		if (peripheral != null)
-			getWorld().invalidateCapabilities(be.getBlockPos());
+		//if (peripheral != null)
+			//getWorld().invalidateCapabilities(be.getBlockPos());
 	}
 
 }

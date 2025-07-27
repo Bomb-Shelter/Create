@@ -18,8 +18,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.entity.Entity;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public enum DoorControl {
 
@@ -46,7 +46,7 @@ public enum DoorControl {
 		};
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public static Pair<ScrollInput, Label> createWidget(int x, int y, Consumer<DoorControl> callback,
 		DoorControl initial) {
 

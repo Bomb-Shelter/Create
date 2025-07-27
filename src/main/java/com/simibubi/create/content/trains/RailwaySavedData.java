@@ -26,7 +26,8 @@ public class RailwaySavedData extends SavedData {
 	private Map<UUID, Train> trains = new HashMap<>();
 
 	public static SavedData.Factory<RailwaySavedData> factory() {
-		return new SavedData.Factory<>(RailwaySavedData::new, RailwaySavedData::load);
+		// Fabric TODO: surely I can set this as null
+		return new SavedData.Factory<>(RailwaySavedData::new, RailwaySavedData::load, null);
 	}
 
 	@Override

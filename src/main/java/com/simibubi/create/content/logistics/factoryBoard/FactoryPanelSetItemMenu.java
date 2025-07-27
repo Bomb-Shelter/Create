@@ -5,6 +5,8 @@ import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.foundation.gui.menu.GhostItemMenu;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlotItemHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.sounds.SoundEvents;
@@ -12,19 +14,17 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.SlotItemHandler;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public class FactoryPanelSetItemMenu extends GhostItemMenu<FactoryPanelBehaviour> {
+public class FactoryPanelSetItemMenu extends GhostItemMenu<FactoryPanelBehaviour, FactoryPanelPosition> {
 
 	public FactoryPanelSetItemMenu(MenuType<?> type, int id, Inventory inv, FactoryPanelBehaviour contentHolder) {
 		super(type, id, inv, contentHolder);
 	}
 
-	public FactoryPanelSetItemMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
-		super(type, id, inv, extraData);
+	public FactoryPanelSetItemMenu(MenuType<?> type, int id, Inventory inv, FactoryPanelPosition extraData) {
+		super(type, id, inv, extraData, true);
 	}
 
 	public static FactoryPanelSetItemMenu create(int id, Inventory inv, FactoryPanelBehaviour be) {
@@ -42,9 +42,8 @@ public class FactoryPanelSetItemMenu extends GhostItemMenu<FactoryPanelBehaviour
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
-	protected FactoryPanelBehaviour createOnClient(RegistryFriendlyByteBuf extraData) {
-		FactoryPanelPosition pos = FactoryPanelPosition.STREAM_CODEC.decode(extraData);
+	@Environment(EnvType.CLIENT)
+	protected FactoryPanelBehaviour createOnClient(FactoryPanelPosition pos) {
 		return FactoryPanelBehaviour.at(Minecraft.getInstance().level, pos);
 	}
 

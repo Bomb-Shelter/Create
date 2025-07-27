@@ -70,6 +70,7 @@ import com.tterrag.registrate.providers.ProviderType;
 import com.tterrag.registrate.util.entry.ItemEntry;
 import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
 
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.tags.TagKey;
@@ -82,8 +83,6 @@ import net.minecraft.world.item.ArmorMaterials;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
 import net.minecraft.world.item.SwordItem;
-
-import net.neoforged.neoforge.common.Tags;
 
 public class AllItems {
 	private static final CreateRegistrate REGISTRATE = Create.registrate();
@@ -164,7 +163,7 @@ public class AllItems {
 				.nutrition(1)
 				.saturationModifier(.6F)
 				.alwaysEdible()
-				.effect(() -> new MobEffectInstance(MobEffects.DIG_SPEED, 3 * 60 * 20, 0, false, false, false), 1F)
+				.effect(new MobEffectInstance(MobEffects.DIG_SPEED, 3 * 60 * 20, 0, false, false, false), 1F)
 				.build()
 			)
 		)
@@ -202,9 +201,9 @@ public class AllItems {
 			.register();
 
 	public static final ItemEntry<Item>
-		COPPER_NUGGET = taggedIngredient("copper_nugget", commonItemTag("nuggets/copper"), net.neoforged.neoforge.common.Tags.Items.NUGGETS),
-		ZINC_NUGGET = taggedIngredient("zinc_nugget", commonItemTag("nuggets/zinc"), net.neoforged.neoforge.common.Tags.Items.NUGGETS),
-		BRASS_NUGGET = taggedIngredient("brass_nugget", commonItemTag("nuggets/brass"), net.neoforged.neoforge.common.Tags.Items.NUGGETS);
+		COPPER_NUGGET = taggedIngredient("copper_nugget", commonItemTag("nuggets/copper"), io.github.fabricators_of_create.porting_lib.tags.Tags.Items.NUGGETS),
+		ZINC_NUGGET = taggedIngredient("zinc_nugget", commonItemTag("nuggets/zinc"), io.github.fabricators_of_create.porting_lib.tags.Tags.Items.NUGGETS),
+		BRASS_NUGGET = taggedIngredient("brass_nugget", commonItemTag("nuggets/brass"), io.github.fabricators_of_create.porting_lib.tags.Tags.Items.NUGGETS);
 
 	public static final ItemEntry<ExperienceNuggetItem> EXP_NUGGET =
 		REGISTRATE.item("experience_nugget", ExperienceNuggetItem::new)
@@ -346,7 +345,7 @@ public class AllItems {
 			.tag(ItemTags.HEAD_ARMOR)
 			.onRegisterAfter(Registries.ITEM, v -> ItemDescription.useKey(v, "item.create.cardboard_armor"))
 			.model(TrimmableArmorModelGenerator::generate)
-			.clientExtension(() -> () -> new CardboardArmorStealthOverlay())
+			//.clientExtension(() -> () -> new CardboardArmorStealthOverlay())
 			.register(),
 
 		CARDBOARD_CHESTPLATE =

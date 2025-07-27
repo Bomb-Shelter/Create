@@ -14,8 +14,8 @@ import net.minecraft.network.codec.ByteBufCodecs;
 
 import net.minecraft.network.codec.StreamCodec;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class CubeParticleData implements ParticleOptions, ICustomParticleData<CubeParticleData> {
 
@@ -70,7 +70,7 @@ public class CubeParticleData implements ParticleOptions, ICustomParticleData<Cu
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public ParticleProvider<CubeParticleData> getFactory() {
 		return new CubeParticle.Factory();
 	}

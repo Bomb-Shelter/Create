@@ -9,16 +9,16 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public abstract class MenuBase<T> extends AbstractContainerMenu {
+public abstract class MenuBase<T, D> extends AbstractContainerMenu {
 
 	public Player player;
 	public Inventory playerInventory;
 	public T contentHolder;
 
-	protected MenuBase(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
+	protected MenuBase(MenuType<?> type, int id, Inventory inv, D extraData, boolean isExtraData) {
 		super(type, id);
 		init(inv, createOnClient(extraData));
 	}
@@ -37,8 +37,8 @@ public abstract class MenuBase<T> extends AbstractContainerMenu {
 		broadcastChanges();
 	}
 
-	@OnlyIn(Dist.CLIENT)
-	protected abstract T createOnClient(RegistryFriendlyByteBuf extraData);
+	@Environment(EnvType.CLIENT)
+	protected abstract T createOnClient(D extraData);
 
 	protected abstract void initAndReadInventory(T contentHolder);
 

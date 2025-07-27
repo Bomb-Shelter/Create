@@ -18,9 +18,18 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
+import io.github.fabricators_of_create.porting_lib.fluids.FluidType;
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -32,20 +41,13 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.FluidType;
-import net.neoforged.neoforge.fluids.IFluidTank;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
-import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
-public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IMultiBlockEntityContainer.Fluid {
+public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IMultiBlockEntityContainer.Fluid, SidedStorageBlockEntity {
 
 	private static final int MAX_SIZE = 3;
 
-	protected IFluidHandler fluidCapability;
+	protected Storage<FluidVariant> fluidCapability;
 	protected boolean forceFluidLevelUpdate;
 	protected FluidTank tankInventory;
 	protected BlockPos controller;
@@ -79,16 +81,15 @@ public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggl
 		refreshCapability();
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.FluidHandler.BLOCK,
-				AllBlockEntityTypes.FLUID_TANK.get(),
-				(be, context) -> {
-					if (be.fluidCapability == null)
-						be.refreshCapability();
-					return be.fluidCapability;
-				}
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<FluidVariant> getFluidStorage(@Nullable Direction side) {
+		if (this.fluidCapability == null)
+			this.refreshCapability();
+
+		return this.fluidCapability;
 	}
 
 	protected SmartFluidTank createInventory() {
@@ -227,9 +228,9 @@ public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggl
 
 	public void applyFluidTankSize(int blocks) {
 		tankInventory.setCapacity(blocks * getCapacityMultiplier());
-		int overflow = tankInventory.getFluidAmount() - tankInventory.getCapacity();
+		long overflow = tankInventory.getFluidAmount() - tankInventory.getCapacity();
 		if (overflow > 0)
-			tankInventory.drain(overflow, FluidAction.EXECUTE);
+			TransferUtil.extractAnyFluid(tankInventory, overflow);
 		forceFluidLevelUpdate = true;
 	}
 
@@ -366,10 +367,10 @@ public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggl
 
 	void refreshCapability() {
 		fluidCapability = handlerForCapability();
-		invalidateCapabilities();
+		//invalidateCapabilities();
 	}
 
-	private IFluidHandler handlerForCapability() {
+	private Storage<FluidVariant> handlerForCapability() {
 		return isController() ? (boiler.isActive() ? boiler.createHandler() : tankInventory)
 				: ((getControllerBE() != null) ? getControllerBE().handlerForCapability() : new FluidTank(0));
 	}
@@ -403,7 +404,7 @@ public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggl
 		if (controllerBE.boiler.addToGoggleTooltip(tooltip, isPlayerSneaking, controllerBE.getTotalTankSize()))
 			return true;
 		return containedFluidTooltip(tooltip, isPlayerSneaking,
-			level.getCapability(Capabilities.FluidHandler.BLOCK, controllerBE.getBlockPos(), null));
+			FluidStorage.SIDED.find(controllerBE.getLevel(), controllerBE.getBlockPos(), controllerBE.getBlockState(), controllerBE, null));
 	}
 
 	@Override
@@ -434,7 +435,7 @@ public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggl
 
 			tankInventory.readFromNBT(registries, compound.getCompound("TankContent"));
 			if (tankInventory.getSpace() < 0)
-				tankInventory.drain(-tankInventory.getSpace(), FluidAction.EXECUTE);
+				TransferUtil.extractAnyFluid(tankInventory, -tankInventory.getSpace());
 		}
 
 		boiler.read(compound.getCompound("Boiler"), width * width * height);
@@ -639,7 +640,7 @@ public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggl
 	}
 
 	@Override
-	public IFluidTank getTank(int tank) {
+	public SingleSlotStorage<FluidVariant> getTank(int tank) {
 		return tankInventory;
 	}
 

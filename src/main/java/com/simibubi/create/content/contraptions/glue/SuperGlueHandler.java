@@ -6,6 +6,7 @@ import java.util.Set;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.api.contraption.BlockMovementChecks;
 
+import io.github.fabricators_of_create.porting_lib.level.events.BlockEvent.EntityPlaceEvent;
 import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.levelWrappers.RayTraceLevel;
@@ -14,6 +15,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -29,14 +31,11 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.level.BlockEvent.EntityPlaceEvent;
-
-@EventBusSubscriber
 public class SuperGlueHandler {
+	public static void init() {
+		EntityPlaceEvent.EVENT.register(SuperGlueHandler::glueListensForBlockPlacement);
+	}
 
-	@SubscribeEvent
 	public static void glueListensForBlockPlacement(EntityPlaceEvent event) {
 		LevelAccessor world = event.getLevel();
 		Entity entity = event.getEntity();
@@ -106,7 +105,7 @@ public class SuperGlueHandler {
 					new GlueEffectPacket(gluePos, face, true));
 			}
 			if (placer.level() instanceof ServerLevel serverLevel)
-				itemstack.hurtAndBreak(1, serverLevel, placer, $ -> SuperGlueItem.onBroken(placer));
+				itemstack.hurtAndBreak(1, serverLevel, (ServerPlayer) placer, $ -> SuperGlueItem.onBroken(placer));
 		}
 	}
 

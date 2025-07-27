@@ -10,28 +10,31 @@ import com.simibubi.create.content.logistics.box.PackageRenderer;
 import com.simibubi.create.foundation.utility.TickBasedCache;
 
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.PlayerTickEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.PlayerTickEvent.Post;
+import io.github.fabricators_of_create.porting_lib.event.client.RenderPlayerEvents;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.MultiBufferSource;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderPlayerEvent;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.fabricmc.api.EnvType;
 
-@EventBusSubscriber(value = Dist.CLIENT)
 public class CardboardArmorHandlerClient {
 
 	private static final Cache<UUID, Integer> BOXES_PLAYERS_ARE_HIDING_AS = new TickBasedCache<>(20, true);
 
-	@SubscribeEvent
+	public static void init() {
+		Post.EVENT.register(CardboardArmorHandlerClient::keepCacheAliveDesignDespiteNotRendering);
+		RenderPlayerEvents.PRE.register(CardboardArmorHandlerClient::playerRendersAsBoxWhenSneaking);
+	}
+
 	public static void keepCacheAliveDesignDespiteNotRendering(PlayerTickEvent.Post event) {
 		Player player = event.getEntity();
 		if (!CardboardArmorHandler.testForStealth(player))
@@ -43,22 +46,18 @@ public class CardboardArmorHandlerClient {
 		}
 	}
 
-	@SubscribeEvent(priority = EventPriority.HIGH)
-	public static void playerRendersAsBoxWhenSneaking(RenderPlayerEvent.Pre event) {
-		Player player = event.getEntity();
+	//@SubscribeEvent(priority = EventPriority.HIGH)
+	public static boolean playerRendersAsBoxWhenSneaking(Player player, PlayerRenderer renderer, float partialTick, PoseStack ms, MultiBufferSource bufferSource, int packedLight) {
 		if (!CardboardArmorHandler.testForStealth(player))
-			return;
-
-		event.setCanceled(true);
+			return false;
 
 		if (player == Minecraft.getInstance().player
 			&& Minecraft.getInstance().options.getCameraType() == CameraType.FIRST_PERSON)
-			return;
+			return true;
 
-		PoseStack ms = event.getPoseStack();
 		ms.pushPose();
 
-		Vec3 renderOffset = event.getRenderer().getRenderOffset((AbstractClientPlayer)player, event.getPartialTick());
+		Vec3 renderOffset = renderer.getRenderOffset((AbstractClientPlayer)player, partialTick);
 		ms.translate(0, -renderOffset.y, 0);
 
 		float movement = (float) player.position()
@@ -70,20 +69,21 @@ public class CardboardArmorHandlerClient {
 				Math.min(Math.abs(Mth.cos((AnimationTickHolder.getRenderTime() % 256) / 2.0f)) * -renderOffset.y, movement * 5),
 				0);
 
-		float interpolatedYaw = Mth.lerp(event.getPartialTick(), player.yRotO, player.getYRot());
+		float interpolatedYaw = Mth.lerp(partialTick, player.yRotO, player.getYRot());
 
 		float scale = player.getScale();
 		ms.scale(scale, scale, scale);
 
 		try {
 			PartialModel model = AllPartialModels.PACKAGES_TO_HIDE_AS.get(getCurrentBoxIndex(player));
-			PackageRenderer.renderBox(player, interpolatedYaw, ms, event.getMultiBufferSource(),
-				event.getPackedLight(), model);
+			PackageRenderer.renderBox(player, interpolatedYaw, ms, bufferSource,
+				packedLight, model);
 		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
 
 		ms.popPose();
+		return true;
 	}
 
 	private static Integer getCurrentBoxIndex(Player player) throws ExecutionException {

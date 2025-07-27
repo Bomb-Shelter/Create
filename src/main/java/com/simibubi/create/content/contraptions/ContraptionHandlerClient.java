@@ -5,7 +5,14 @@ import java.util.Collection;
 
 import javax.annotation.Nullable;
 
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.PlayerTickEvent;
+
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.PlayerTickEvent.Post;
+
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.minecraft.world.InteractionResult;
 
 import org.apache.commons.lang3.mutable.MutableObject;
 
@@ -35,22 +42,27 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.InputEvent;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-@EventBusSubscriber(Dist.CLIENT)
 public class ContraptionHandlerClient {
+	public static void init() {
+		Post.EVENT.register(ContraptionHandlerClient::preventRemotePlayersWalkingAnimations);
+		UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
+			return rightClickingOnContraptionsGetsHandledLocally(hand);
+		});
 
-	@SubscribeEvent
-	@OnlyIn(Dist.CLIENT)
+		UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
+			return rightClickingOnContraptionsGetsHandledLocally(hand);
+		});
+	}
+
+	@Environment(EnvType.CLIENT)
 	public static void preventRemotePlayersWalkingAnimations(PlayerTickEvent.Post event) {
 		if (!(event.getEntity() instanceof RemotePlayer remotePlayer))
 			return;
 
-		CompoundTag data = remotePlayer.getPersistentData();
+		CompoundTag data = remotePlayer.getCustomData();
 		if (!data.contains("LastOverrideLimbSwingUpdate"))
 			return;
 
@@ -67,20 +79,19 @@ public class ContraptionHandlerClient {
 		remotePlayer.zo = remotePlayer.getZ();
 	}
 
-	@SubscribeEvent
-	@OnlyIn(Dist.CLIENT)
-	public static void rightClickingOnContraptionsGetsHandledLocally(InputEvent.InteractionKeyMappingTriggered event) {
+	@Environment(EnvType.CLIENT)
+	public static InteractionResult rightClickingOnContraptionsGetsHandledLocally(InteractionHand hand) {
 		Minecraft mc = Minecraft.getInstance();
 		LocalPlayer player = mc.player;
 
 		if (player == null)
-			return;
+			return InteractionResult.PASS;
 		if (player.isSpectator())
-			return;
+			return InteractionResult.PASS;
 		if (mc.level == null)
-			return;
-		if (!event.isUseItem())
-			return;
+			return InteractionResult.PASS;
+		//if (!event.isUseItem())
+			//return;
 
 		Couple<Vec3> rayInputs = getRayInputs(player);
 		Vec3 origin = rayInputs.getFirst();
@@ -117,9 +128,8 @@ public class ContraptionHandlerClient {
 		}
 
 		if (bestResult == null)
-			return;
+			return InteractionResult.PASS;
 
-		InteractionHand hand = event.getHand();
 		Direction face = bestResult.getDirection();
 		BlockPos pos = bestResult.getBlockPos();
 
@@ -128,8 +138,7 @@ public class ContraptionHandlerClient {
 		} else
 			handleSpecialInteractions(bestEntity, player, pos, face, hand);
 
-		event.setCanceled(true);
-		event.setSwingHand(false);
+		return InteractionResult.FAIL;
 	}
 
 	private static boolean handleSpecialInteractions(AbstractContraptionEntity contraptionEntity, Player player,
@@ -140,7 +149,7 @@ public class ContraptionHandlerClient {
 		return false;
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public static Couple<Vec3> getRayInputs(LocalPlayer player) {
 		Minecraft mc = Minecraft.getInstance();
 		Vec3 origin = RaycastHelper.getTraceOrigin(player);

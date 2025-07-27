@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 
-import net.neoforged.neoforge.client.model.generators.ModelFile;
+import io.github.fabricators_of_create.porting_lib.models.generators.ModelFile;
 
 public class PackagerLinkGenerator extends SpecialBlockStateGen {
 

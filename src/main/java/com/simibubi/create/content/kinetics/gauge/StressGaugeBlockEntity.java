@@ -10,10 +10,11 @@ import com.simibubi.create.content.kinetics.base.IRotate.StressImpact;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.item.TooltipHelper;
+
+import dan200.computercraft.api.peripheral.PeripheralLookup;
 import net.createmod.catnip.platform.CatnipServices;
 import com.simibubi.create.foundation.utility.CreateLang;
 
-import dan200.computercraft.api.peripheral.PeripheralCapability;
 import net.createmod.catnip.lang.LangBuilder;
 import net.createmod.catnip.theme.Color;
 import net.minecraft.ChatFormatting;
@@ -24,7 +25,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 public class StressGaugeBlockEntity extends GaugeBlockEntity {
 
@@ -36,13 +36,9 @@ public class StressGaugeBlockEntity extends GaugeBlockEntity {
 		super(type, pos, state);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+	public static void registerCapabilities() {
 		if (Mods.COMPUTERCRAFT.isLoaded()) {
-			event.registerBlockEntity(
-					PeripheralCapability.get(),
-					AllBlockEntityTypes.STRESSOMETER.get(),
-					(be, context) -> be.computerBehaviour.getPeripheralCapability()
-			);
+			PeripheralLookup.get().registerForBlockEntity((be, context) -> be.computerBehaviour.getPeripheralCapability(), AllBlockEntityTypes.STRESSOMETER.get());
 		}
 	}
 

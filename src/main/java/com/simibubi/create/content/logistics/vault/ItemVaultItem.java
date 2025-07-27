@@ -127,10 +127,10 @@ public class ItemVaultItem extends BlockItem {
 				if (ItemVaultBlock.isVault(blockState))
 					continue;
 				BlockPlaceContext context = BlockPlaceContext.at(ctx, offsetPos, face);
-				player.getPersistentData()
+				player.getCustomData()
 					.putBoolean("SilenceVaultSound", true);
 				super.place(context);
-				player.getPersistentData()
+				player.getCustomData()
 					.remove("SilenceVaultSound");
 			}
 		}

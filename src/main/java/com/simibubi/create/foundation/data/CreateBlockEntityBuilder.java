@@ -7,6 +7,8 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.simibubi.create.api.behaviour.display.DisplaySource;
@@ -15,7 +17,6 @@ import com.simibubi.create.api.registry.CreateRegistries;
 import com.tterrag.registrate.AbstractRegistrate;
 import com.tterrag.registrate.builders.BlockEntityBuilder;
 import com.tterrag.registrate.builders.BuilderCallback;
-import com.tterrag.registrate.util.OneTimeEventReceiver;
 import com.tterrag.registrate.util.entry.RegistryEntry;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
 
@@ -24,8 +25,6 @@ import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 
 
 public class CreateBlockEntityBuilder<T extends BlockEntity, P> extends BlockEntityBuilder<T, P> {
@@ -103,7 +102,7 @@ public class CreateBlockEntityBuilder<T extends BlockEntity, P> extends BlockEnt
 	}
 
 	protected void registerVisualizer() {
-		OneTimeEventReceiver.addModListener(getOwner(), FMLClientSetupEvent.class, $ -> {
+		ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
 			var visualFactory = this.visualFactory;
 			if (visualFactory != null) {
 				Predicate<@NotNull T> renderNormally = this.renderNormally;

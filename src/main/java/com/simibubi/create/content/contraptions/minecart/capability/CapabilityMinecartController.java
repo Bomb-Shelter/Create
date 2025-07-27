@@ -15,21 +15,25 @@ import com.simibubi.create.AllAttachmentTypes;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.contraptions.minecart.CouplingHandler;
 
+import io.github.fabricators_of_create.porting_lib.core.event.entity.player.PlayerEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityEvents;
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityJoinLevelEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityLeaveLevelEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerEvents.StartTracking;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerEvents.StopTracking;
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.EntityTickEvent;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectLists;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.data.WorldAttached;
+import net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.level.ChunkEvent;
-import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 public class CapabilityMinecartController {
 
@@ -73,7 +77,7 @@ public class CapabilityMinecartController {
 
 			cartsWithCoupling.remove(uniqueID);
 
-			MinecartController controller = cart.getData(AllAttachmentTypes.MINECART_CONTROLLER);
+			MinecartController controller = cart.getAttachedOrCreate(AllAttachmentTypes.MINECART_CONTROLLER);
 			if (controller != MinecartController.EMPTY) {
 				carts.put(uniqueID, controller);
 				if (controller.isLeadingCoupling())
@@ -105,15 +109,15 @@ public class CapabilityMinecartController {
 		Entity entity = event.getEntity();
 		if (!(entity instanceof AbstractMinecart))
 			return;
-		MinecartController data = entity.getData(AllAttachmentTypes.MINECART_CONTROLLER);
+		MinecartController data = entity.getAttachedOrCreate(AllAttachmentTypes.MINECART_CONTROLLER);
 		if (data != MinecartController.EMPTY)
 			data.tick();
 	}
 
-	public static void onChunkUnloaded(ChunkEvent.Unload event) {
-		ChunkPos chunkPos = event.getChunk()
+	public static void onChunkUnloaded(Level level, LevelChunk chunk) {
+		ChunkPos chunkPos = chunk
 			.getPos();
-		Map<UUID, MinecartController> carts = loadedMinecartsByUUID.get(event.getLevel());
+		Map<UUID, MinecartController> carts = loadedMinecartsByUUID.get(level);
 		for (MinecartController minecartController : carts.values()) {
 			if (minecartController == null)
 				continue;
@@ -122,13 +126,13 @@ public class CapabilityMinecartController {
 			AbstractMinecart cart = minecartController.cart();
 			if (cart.chunkPosition()
 				.equals(chunkPos))
-				queuedUnloads.get(event.getLevel())
+				queuedUnloads.get(level)
 					.add(cart.getUUID());
 		}
 	}
 
 	protected static void onCartRemoved(Level world, AbstractMinecart entity) {
-		entity.removeData(AllAttachmentTypes.MINECART_CONTROLLER);
+		entity.removeAttached(AllAttachmentTypes.MINECART_CONTROLLER);
 
 		Map<UUID, MinecartController> carts = loadedMinecartsByUUID.get(world);
 		List<UUID> unloads = queuedUnloads.get(world);
@@ -185,7 +189,7 @@ public class CapabilityMinecartController {
 			return;
 
 		MinecartController controller = new MinecartController(abstractMinecart);
-		abstractMinecart.setData(AllAttachmentTypes.MINECART_CONTROLLER, controller);
+		abstractMinecart.setAttached(AllAttachmentTypes.MINECART_CONTROLLER, controller);
 		queuedAdditions.get(entity.level())
 			.add(abstractMinecart);
 	}
@@ -195,12 +199,12 @@ public class CapabilityMinecartController {
 			onCartRemoved(event.getLevel(), abstractMinecart);
 	}
 
-	public static void startTracking(PlayerEvent.StartTracking event) {
+	public static void startTracking(StartTracking event) {
 		Entity entity = event.getTarget();
 		if (!(entity instanceof AbstractMinecart abstractMinecart))
 			return;
 
-		MinecartController controller = entity.getData(AllAttachmentTypes.MINECART_CONTROLLER);
+		MinecartController controller = entity.getAttachedOrCreate(AllAttachmentTypes.MINECART_CONTROLLER);
 		if (controller != MinecartController.EMPTY)
 			controller.sendData(abstractMinecart);
 	}

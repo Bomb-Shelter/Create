@@ -168,8 +168,8 @@ public class WaterWheelBlockEntity extends GeneratingKineticBlockEntity {
 	}
 
 	private void redraw() {
-		if (!isVirtual())
-			requestModelDataUpdate();
+		//if (!isVirtual())
+			//requestModelDataUpdate();
 		if (hasLevel()) {
 			level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 16);
 			level.getChunkSource()

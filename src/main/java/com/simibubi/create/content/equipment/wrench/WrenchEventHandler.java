@@ -3,6 +3,8 @@ package com.simibubi.create.content.equipment.wrench;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.AllTags.AllItemTags;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickBlock;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -11,15 +13,12 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-
-@EventBusSubscriber
 public class WrenchEventHandler {
+	public static void init() {
+		RightClickBlock.EVENT.register(WrenchEventHandler::useOwnWrenchLogicForCreateBlocks);
+	}
 
-	@SubscribeEvent(priority = EventPriority.HIGH)
+	//@SubscribeEvent(priority = EventPriority.HIGH)
 	public static void useOwnWrenchLogicForCreateBlocks(PlayerInteractEvent.RightClickBlock event) {
 		Player player = event.getEntity();
 		ItemStack itemStack = event.getItemStack();

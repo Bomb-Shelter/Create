@@ -10,6 +10,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import io.github.fabricators_of_create.porting_lib.util.KeyBindingHelper;
+
 import org.joml.Matrix4f;
 
 import com.mojang.blaze3d.platform.InputConstants;
@@ -272,7 +274,7 @@ public class RadialWrenchMenu extends AbstractSimiScreen {
 					.rotateZDegrees(-i * sectorAngle);
 
 			poseStack.translate(0, 0, 100);
-			
+
 			try {
 				GuiGameElement.of(blockState, blockEntity)
 						.rotateBlock(player.getXRot(), player.getYRot() + 180, 0f)
@@ -366,7 +368,7 @@ public class RadialWrenchMenu extends AbstractSimiScreen {
 	@Override
 	public boolean keyReleased(int code, int scanCode, int modifiers) {
 		InputConstants.Key mouseKey = InputConstants.getKey(code, scanCode);
-		if (AllKeys.ROTATE_MENU.getKeybind().isActiveAndMatches(mouseKey)) {
+		if (KeyBindingHelper.isActiveAndMatches(AllKeys.ROTATE_MENU.getKeybind(), mouseKey)) {
 			submitChange();
 			return true;
 		}

@@ -11,6 +11,12 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.simibubi.create.AllBlockEntityTypes;
@@ -54,11 +60,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.IItemHandler;
-
-public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHaveGoggleInformation {
+public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity {
 
 	SidedFilteringBehaviour filtering;
 
@@ -81,8 +83,8 @@ public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHa
 	private Set<BrassTunnelBlockEntity> syncSet;
 
 	protected ScrollOptionBehaviour<SelectionMode> selectionMode;
-	private IItemHandler beltCapability;
-	private IItemHandler tunnelCapability;
+	private Storage<ItemVariant> beltCapability;
+	private Storage<ItemVariant> tunnelCapability;
 
 	public BrassTunnelBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
@@ -96,12 +98,12 @@ public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHa
 		syncedOutputActive = false;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.BRASS_TUNNEL.get(),
-				(be, context) -> be.tunnelCapability
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @org.jetbrains.annotations.Nullable Storage<ItemVariant> getItemStorage(@org.jetbrains.annotations.Nullable Direction side) {
+		return this.tunnelCapability;
 	}
 
 	@Override
@@ -654,7 +656,7 @@ public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHa
 		if (!clientPacket)
 			return;
 		if (wasConnectedLeft != connectedLeft || wasConnectedRight != connectedRight) {
-			requestModelDataUpdate();
+			//requestModelDataUpdate();
 			if (hasLevel())
 				level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 16);
 		}
@@ -735,7 +737,7 @@ public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHa
 	@Override
 	public void invalidate() {
 		super.invalidate();
-		invalidateCapabilities();
+		//invalidateCapabilities();
 	}
 
 	@Override
@@ -745,11 +747,11 @@ public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHa
 		stackEnteredFrom = null;
 	}
 
-	public IItemHandler getBeltCapability() {
+	public Storage<ItemVariant> getBeltCapability() {
 		if (beltCapability == null) {
 			BlockEntity blockEntity = level.getBlockEntity(worldPosition.below());
 			if (blockEntity != null)
-				beltCapability = level.getCapability(Capabilities.ItemHandler.BLOCK, blockEntity.getBlockPos(), null);
+				beltCapability = TransferUtil.getItemStorage(level, this.worldPosition, blockEntity, null);
 		}
 		return beltCapability;
 	}

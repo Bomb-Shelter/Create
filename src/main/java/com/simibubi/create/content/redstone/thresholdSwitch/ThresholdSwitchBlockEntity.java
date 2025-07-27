@@ -20,7 +20,14 @@ import com.simibubi.create.foundation.blockEntity.behaviour.inventory.TankManipu
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.VersionedInventoryTrackerBehaviour;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.createmod.catnip.math.BlockFace;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
@@ -33,10 +40,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.ticks.TickPriority;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.items.IItemHandler;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class ThresholdSwitchBlockEntity extends SmartBlockEntity {
 
@@ -154,30 +158,27 @@ public class ThresholdSwitchBlockEntity extends SmartBlockEntity {
 			if (observedInventory.hasInventory()) {
 
 				// Item inventory
-				IItemHandler inv = observedInventory.getInventory();
+				Storage<ItemVariant> inv = observedInventory.getInventory();
 				if (invVersionTracker.stillWaiting(inv)) {
 					currentLevel = prevLevel;
 					currentMaxLevel = prevMaxLevel;
 
 				} else {
 					invVersionTracker.awaitNewVersion(inv);
-					for (int slot = 0; slot < inv.getSlots(); slot++) {
-						ItemStack stackInSlot = inv.getStackInSlot(slot);
-
-						int finalSlot = slot;
+					for (StorageView<ItemVariant> view : inv) {
 						long space = COMPAT
 							.stream()
 							.filter(compat -> compat.isFromThisMod(targetBlockEntity))
-							.map(compat -> compat.getSpaceInSlot(inv, finalSlot))
+							.map(compat -> view.getCapacity())
 							.findFirst()
-							.orElseGet(() -> (long) Math.min(stackInSlot.getOrDefault(DataComponents.MAX_STACK_SIZE, 64), inv.getSlotLimit(finalSlot)));
+							.orElseGet(() -> (long) Math.min(view.getResource().getComponentMap().getOrDefault(DataComponents.MAX_STACK_SIZE, 64), view.getCapacity()));
 
-						int count = stackInSlot.getCount();
+						long count = view.getAmount();
 						if (space == 0)
 							continue;
 
 						currentMaxLevel += space;
-						if (filtering.test(stackInSlot))
+						if (filtering.test(CreateTransferUtil.getLimitedStack(view.getResource(), view.getAmount())))
 							currentLevel += count;
 					}
 				}
@@ -185,16 +186,15 @@ public class ThresholdSwitchBlockEntity extends SmartBlockEntity {
 
 			if (observedTank.hasInventory()) {
 				// Fluid inventory
-				IFluidHandler tank = observedTank.getInventory();
-				for (int slot = 0; slot < tank.getTanks(); slot++) {
-					FluidStack stackInSlot = tank.getFluidInTank(slot);
-					int space = tank.getTankCapacity(slot);
-					int count = stackInSlot.getAmount();
+				Storage<FluidVariant> tank = observedTank.getInventory();
+				for (StorageView<FluidVariant> view : tank) {
+					long space = view.getCapacity();
+					long count = view.getAmount();
 					if (space == 0)
 						continue;
 
 					currentMaxLevel += space;
-					if (filtering.test(stackInSlot))
+					if (filtering.test(new FluidStack(view)))
 						currentLevel += count;
 				}
 			}
@@ -241,7 +241,7 @@ public class ThresholdSwitchBlockEntity extends SmartBlockEntity {
 	}
 
 	private boolean isSuitableInventory(BlockEntity be) {
-		return be != null && !(be instanceof StockTickerBlockEntity || level.getCapability(Capabilities.ItemHandler.BLOCK, be.getBlockPos(), null, be, null) instanceof ProcessingInventory);
+		return be != null && !(be instanceof StockTickerBlockEntity || TransferUtil.getItemStorage(be.getLevel(), be.getBlockPos(), be, null) instanceof ProcessingInventory);
 	}
 
 	private BlockPos getTargetPos() {

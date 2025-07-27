@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import net.createmod.catnip.data.LongAttached;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.mutable.MutableInt;
 
@@ -23,53 +27,52 @@ import net.createmod.catnip.data.IntAttached;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.material.Fluid;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class FluidListDisplaySource extends ValueListDisplaySource {
 
 
 	@Override
-	protected Stream<IntAttached<MutableComponent>> provideEntries(DisplayLinkContext context, int maxRows) {
+	protected Stream<LongAttached<MutableComponent>> provideEntries(DisplayLinkContext context, int maxRows) {
 		BlockEntity sourceBE = context.getSourceBlockEntity();
 		if (!(sourceBE instanceof SmartObserverBlockEntity cobe))
 			return Stream.empty();
 
 		TankManipulationBehaviour tankManipulationBehaviour = cobe.getBehaviour(TankManipulationBehaviour.OBSERVE);
 		FilteringBehaviour filteringBehaviour = cobe.getBehaviour(FilteringBehaviour.TYPE);
-		IFluidHandler handler = tankManipulationBehaviour.getInventory();
+		Storage<FluidVariant> handler = tankManipulationBehaviour.getInventory();
 
 		if (handler == null)
 			return Stream.empty();
 
 
-		Map<Fluid, Integer> fluids = new HashMap<>();
+		Map<Fluid, Long> fluids = new HashMap<>();
 		Map<Fluid, FluidStack> fluidNames = new HashMap<>();
 
-		for (int i = 0; i < handler.getTanks(); i++) {
-			FluidStack stack = handler.getFluidInTank(i);
+		for (StorageView<FluidVariant> view : handler) {
+			FluidStack stack = new FluidStack(view);
 			if (stack.isEmpty())
 				continue;
 			if (!filteringBehaviour.test(stack))
 				continue;
 
-			fluids.merge(stack.getFluid(), stack.getAmount(), Integer::sum);
+			fluids.merge(stack.getFluid(), stack.getAmount(), Long::sum);
 			fluidNames.putIfAbsent(stack.getFluid(), stack);
 		}
 
 		return fluids.entrySet()
 				.stream()
-				.sorted(Comparator.<Map.Entry<Fluid, Integer>>comparingInt(value -> value.getValue()).reversed())
+				.sorted(Comparator.<Map.Entry<Fluid, Long>>comparingLong(value -> value.getValue()).reversed())
 				.limit(maxRows)
-				.map(entry -> IntAttached.with(
+				.map(entry -> LongAttached.with(
 						entry.getValue(),
 						fluidNames.get(entry.getKey()).getHoverName().copy())
 				);
 	}
 
 	@Override
-	protected List<MutableComponent> createComponentsFromEntry(DisplayLinkContext context, IntAttached<MutableComponent> entry) {
-		int amount = entry.getFirst();
+	protected List<MutableComponent> createComponentsFromEntry(DisplayLinkContext context, LongAttached<MutableComponent> entry) {
+		long amount = entry.getFirst();
 		MutableComponent name = entry.getSecond().append(WHITESPACE);
 
 		Couple<MutableComponent> formatted = FluidFormatter.asComponents(amount, shortenNumbers(context));

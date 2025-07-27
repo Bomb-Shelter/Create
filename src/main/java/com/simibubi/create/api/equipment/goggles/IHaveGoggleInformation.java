@@ -6,12 +6,14 @@ import java.util.Optional;
 import com.simibubi.create.foundation.utility.CreateLang;
 
 import net.createmod.catnip.lang.LangBuilder;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 /**
  * Implement this interface on the {@link BlockEntity} that wants to add info to the goggle overlay
@@ -28,11 +30,8 @@ public non-sealed interface IHaveGoggleInformation extends IHaveCustomOverlayIco
 	}
 
 	default boolean containedFluidTooltip(List<Component> tooltip, boolean isPlayerSneaking,
-										  IFluidHandler handler) {
+										  Storage<FluidVariant> handler) {
 		if (handler == null)
-			return false;
-
-		if (handler.getTanks() == 0)
 			return false;
 
 		LangBuilder mb = CreateLang.translate("generic.unit.millibuckets");
@@ -40,21 +39,22 @@ public non-sealed interface IHaveGoggleInformation extends IHaveCustomOverlayIco
 			.forGoggles(tooltip);
 
 		boolean isEmpty = true;
-		for (int i = 0; i < handler.getTanks(); i++) {
-			FluidStack fluidStack = handler.getFluidInTank(i);
-			if (fluidStack.isEmpty())
+		int slotCount = 0;
+		for (StorageView<FluidVariant> fluidStorage : handler) {
+			slotCount++;
+			if (fluidStorage.isResourceBlank() || fluidStorage.getAmount() <= 0)
 				continue;
 
-			CreateLang.fluidName(fluidStack)
+			CreateLang.fluidName(fluidStorage.getResource())
 				.style(ChatFormatting.GRAY)
 				.forGoggles(tooltip, 1);
 
 			CreateLang.builder()
-				.add(CreateLang.number(fluidStack.getAmount())
+				.add(CreateLang.number(fluidStorage.getAmount())
 					.add(mb)
 					.style(ChatFormatting.GOLD))
 				.text(ChatFormatting.GRAY, " / ")
-				.add(CreateLang.number(handler.getTankCapacity(i))
+				.add(CreateLang.number(fluidStorage.getCapacity())
 					.add(mb)
 					.style(ChatFormatting.DARK_GRAY))
 				.forGoggles(tooltip, 1);
@@ -62,7 +62,10 @@ public non-sealed interface IHaveGoggleInformation extends IHaveCustomOverlayIco
 			isEmpty = false;
 		}
 
-		if (handler.getTanks() > 1) {
+		if (slotCount == 0)
+			return false;
+
+		if (slotCount > 1) {
 			if (isEmpty)
 				tooltip.remove(tooltip.size() - 1);
 			return true;
@@ -72,7 +75,7 @@ public non-sealed interface IHaveGoggleInformation extends IHaveCustomOverlayIco
 			return true;
 
 		CreateLang.translate("gui.goggles.fluid_container.capacity")
-			.add(CreateLang.number(handler.getTankCapacity(0))
+			.add(CreateLang.number(handler.iterator().next().getCapacity())
 				.add(mb)
 				.style(ChatFormatting.GOLD))
 			.style(ChatFormatting.GRAY)

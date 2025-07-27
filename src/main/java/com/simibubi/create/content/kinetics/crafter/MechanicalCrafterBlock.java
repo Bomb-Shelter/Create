@@ -12,10 +12,15 @@ import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.InvManipulationBehaviour;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.Pointing;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.math.AngleHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -36,10 +41,6 @@ import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class MechanicalCrafterBlock extends HorizontalKineticBlock
 	implements IBE<MechanicalCrafterBlockEntity>, ICogWheel {
@@ -189,11 +190,11 @@ public class MechanicalCrafterBlock extends HorizontalKineticBlock
 					return ItemInteractionResult.SUCCESS;
 				}
 
-				IItemHandler capability = level.getCapability(Capabilities.ItemHandler.BLOCK, crafter.getBlockPos(), null);
+				Storage<ItemVariant> capability = TransferUtil.getItemStorage(level, crafter.getBlockPos(), crafter, null);
 				if (capability == null)
 					return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 				ItemStack remainder =
-					ItemHandlerHelper.insertItem(capability, stack.copy(), false);
+					CreateTransferUtil.insertItem(capability, stack.copy(), false);
 				if (remainder.getCount() != stack.getCount())
 					player.setItemInHand(hand, remainder);
 				return ItemInteractionResult.SUCCESS;

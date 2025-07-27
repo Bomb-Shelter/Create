@@ -2,6 +2,9 @@ package com.simibubi.create.foundation.particle;
 
 import com.mojang.serialization.MapCodec;
 
+import net.fabricmc.fabric.api.client.particle.v1.FabricSpriteProvider;
+import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
+import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry.PendingParticleFactory;
 import net.minecraft.client.particle.ParticleEngine.SpriteParticleRegistration;
 import net.minecraft.client.particle.ParticleProvider;
 import net.minecraft.core.particles.ParticleOptions;
@@ -9,9 +12,8 @@ import net.minecraft.core.particles.ParticleType;
 
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -33,18 +35,18 @@ public interface ICustomParticleDataWithSprite<T extends ParticleOptions> extend
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	default ParticleProvider<T> getFactory() {
 		throw new IllegalAccessError("This particle type uses a metaFactory!");
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public SpriteParticleRegistration<T> getMetaFactory();
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
-	public default void register(ParticleType<T> type, RegisterParticleProvidersEvent event) {
-		event.registerSpriteSet(type, getMetaFactory());
+	@Environment(EnvType.CLIENT)
+	public default void register(ParticleType<T> type) {
+		ParticleFactoryRegistry.getInstance().register(type, provider -> getMetaFactory().create(provider));
 	}
 
 }

@@ -36,7 +36,6 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.SpecialPlantable;
 
 public class HarvesterMovementBehaviour implements MovementBehaviour {
 
@@ -152,8 +151,9 @@ public class HarvesterMovementBehaviour implements MovementBehaviour {
 				return false;
 			}
 
-			if (state.getBlock() instanceof SpecialPlantable)
-				return true;
+			// Fabric TODO: impl
+			//if (state.getBlock() instanceof SpecialPlantable)
+				//return true;
 		}
 
 		return false;

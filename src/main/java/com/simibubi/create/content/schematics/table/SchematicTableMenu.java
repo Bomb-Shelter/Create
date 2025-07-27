@@ -2,8 +2,10 @@ package com.simibubi.create.content.schematics.table;
 
 import com.simibubi.create.AllItems;
 import com.simibubi.create.AllMenuTypes;
+import com.simibubi.create.foundation.blockEntity.SmartBlockEntity.SmartBlockData;
 import com.simibubi.create.foundation.gui.menu.MenuBase;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlotItemHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.FriendlyByteBuf;
@@ -14,15 +16,14 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.items.SlotItemHandler;
 
-public class SchematicTableMenu extends MenuBase<SchematicTableBlockEntity> {
+public class SchematicTableMenu extends MenuBase<SchematicTableBlockEntity, SmartBlockData> {
 
 	private Slot inputSlot;
 	private Slot outputSlot;
 
-	public SchematicTableMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
-		super(type, id, inv, extraData);
+	public SchematicTableMenu(MenuType<?> type, int id, Inventory inv, SmartBlockData extraData) {
+		super(type, id, inv, extraData, true);
 	}
 
 	public SchematicTableMenu(MenuType<?> type, int id, Inventory inv, SchematicTableBlockEntity be) {
@@ -53,11 +54,11 @@ public class SchematicTableMenu extends MenuBase<SchematicTableBlockEntity> {
 	}
 
 	@Override
-	protected SchematicTableBlockEntity createOnClient(RegistryFriendlyByteBuf extraData) {
+	protected SchematicTableBlockEntity createOnClient(SmartBlockData extraData) {
 		ClientLevel world = Minecraft.getInstance().level;
-		BlockEntity blockEntity = world.getBlockEntity(extraData.readBlockPos());
+		BlockEntity blockEntity = world.getBlockEntity(extraData.pos());
 		if (blockEntity instanceof SchematicTableBlockEntity schematicTable) {
-			schematicTable.readClient(extraData.readNbt(), extraData.registryAccess());
+			schematicTable.readClient(extraData.nbt(), world.registryAccess());
 			return schematicTable;
 		}
 		return null;

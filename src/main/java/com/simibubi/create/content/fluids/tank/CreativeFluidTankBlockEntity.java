@@ -8,11 +8,13 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
+import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.ExtraCodecs;
@@ -25,16 +27,12 @@ public class CreativeFluidTankBlockEntity extends FluidTankBlockEntity {
 		super(type, pos, state);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.FluidHandler.BLOCK,
-				AllBlockEntityTypes.CREATIVE_FLUID_TANK.get(),
-				(be, context) -> {
-					if (be.fluidCapability == null)
-						be.refreshCapability();
-					return be.fluidCapability;
-				}
-		);
+	public static void registerCapabilities() {
+		FluidStorage.SIDED.registerForBlockEntity((be, context) -> {
+			if (be.fluidCapability == null)
+				be.refreshCapability();
+			return be.fluidCapability;
+		}, AllBlockEntityTypes.CREATIVE_FLUID_TANK.get());
 	}
 
 	@Override
@@ -50,42 +48,39 @@ public class CreativeFluidTankBlockEntity extends FluidTankBlockEntity {
 	public static class CreativeSmartFluidTank extends SmartFluidTank {
 		public static final Codec<CreativeSmartFluidTank> CODEC = RecordCodecBuilder.create(i -> i.group(
 			FluidStack.OPTIONAL_CODEC.fieldOf("fluid").forGetter(FluidTank::getFluid),
-			ExtraCodecs.NON_NEGATIVE_INT.fieldOf("capacity").forGetter(FluidTank::getCapacity)
+			Codec.LONG.fieldOf("capacity").forGetter(FluidTank::getCapacity)
 		).apply(i, (fluid, capacity) -> {
 			CreativeSmartFluidTank tank = new CreativeSmartFluidTank(capacity, $ -> {});
 			tank.setFluid(fluid);
 			return tank;
 		}));
 
-		public CreativeSmartFluidTank(int capacity, Consumer<FluidStack> updateCallback) {
+		public CreativeSmartFluidTank(long capacity, Consumer<FluidStack> updateCallback) {
 			super(capacity, updateCallback);
 		}
 
 		@Override
-		public int getFluidAmount() {
-			return getFluid().isEmpty() ? 0 : getTankCapacity(0);
+		public long getFluidAmount() {
+			return getFluid().isEmpty() ? 0 : getSlot(0).getCapacity();
 		}
 
 		public void setContainedFluid(FluidStack fluidStack) {
-			fluid = fluidStack.copy();
+			setFluid(fluidStack.copy());
 			if (!fluidStack.isEmpty())
-				fluid.setAmount(getTankCapacity(0));
+				getFluid().setAmount(getSlot(0).getCapacity());
 			onContentsChanged();
 		}
 
 		@Override
-		public int fill(FluidStack resource, FluidAction action) {
-			return resource.getAmount();
+		public long insert(FluidVariant insertedVariant, long maxAmount, TransactionContext transaction) {
+			return 0;
 		}
 
 		@Override
-		public FluidStack drain(FluidStack resource, FluidAction action) {
-			return super.drain(resource, FluidAction.SIMULATE);
-		}
-
-		@Override
-		public FluidStack drain(int maxDrain, FluidAction action) {
-			return super.drain(maxDrain, FluidAction.SIMULATE);
+		public long extract(FluidVariant extractedVariant, long maxAmount, TransactionContext transaction) {
+			try (Transaction transaction1 = Transaction.openNested(transaction)) {
+				return super.extract(extractedVariant, maxAmount, transaction1);
+			}
 		}
 
 	}

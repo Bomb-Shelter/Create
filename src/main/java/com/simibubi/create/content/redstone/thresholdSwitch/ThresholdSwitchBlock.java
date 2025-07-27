@@ -5,6 +5,8 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.content.redstone.DirectedDirectionalBlock;
 import com.simibubi.create.foundation.block.IBE;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.ConnectableRedstoneBlock;
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.createmod.catnip.gui.ScreenOpener;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.client.player.LocalPlayer;
@@ -29,11 +31,10 @@ import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.phys.BlockHitResult;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.capabilities.Capabilities;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public class ThresholdSwitchBlock extends DirectedDirectionalBlock implements IBE<ThresholdSwitchBlockEntity> {
+public class ThresholdSwitchBlock extends DirectedDirectionalBlock implements IBE<ThresholdSwitchBlockEntity>, ConnectableRedstoneBlock {
 
 	public static final IntegerProperty LEVEL = IntegerProperty.create("level", 0, 5);
 
@@ -88,7 +89,7 @@ public class ThresholdSwitchBlock extends DirectedDirectionalBlock implements IB
 		return ItemInteractionResult.SUCCESS;
 	}
 
-	@OnlyIn(value = Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	protected void displayScreen(ThresholdSwitchBlockEntity be, Player player) {
 		if (player instanceof LocalPlayer)
 			ScreenOpener.open(new ThresholdSwitchScreen(be));
@@ -103,8 +104,8 @@ public class ThresholdSwitchBlock extends DirectedDirectionalBlock implements IB
 			BlockEntity be = context.getLevel()
 				.getBlockEntity(context.getClickedPos()
 					.relative(face));
-			if (be != null && (be.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, be.getBlockPos(), null) != null ||
-					be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null) != null)) {
+			if (be != null && (TransferUtil.getItemStorage(be.getLevel(), be.getBlockPos(), be, null) != null ||
+					TransferUtil.getFluidStorage(be.getLevel(), be.getBlockPos(), be, null) != null)) {
 				preferredFacing = face;
 				break;
 			}

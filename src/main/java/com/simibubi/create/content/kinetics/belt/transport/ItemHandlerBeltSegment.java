@@ -2,13 +2,21 @@ package com.simibubi.create.content.kinetics.belt.transport;
 
 import com.simibubi.create.foundation.item.ItemHelper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import com.simibubi.create.infrastructure.fabric.transfer.FinalCommitSnapshot;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.IItemHandler;
 
-public class ItemHandlerBeltSegment implements IItemHandler {
+public class ItemHandlerBeltSegment implements SlottedStackStorage {
 
 	private final BeltInventory beltInventory;
+	private final BeltSegmentSingleSlot segmentSlot = new BeltSegmentSingleSlot();
 	int offset;
 
 	public ItemHandlerBeltSegment(BeltInventory beltInventory, int offset) {
@@ -17,8 +25,13 @@ public class ItemHandlerBeltSegment implements IItemHandler {
 	}
 
 	@Override
-	public int getSlots() {
+	public int getSlotCount() {
 		return 1;
+	}
+
+	@Override
+	public SingleSlotStorage<ItemVariant> getSlot(int slot) {
+		return segmentSlot;
 	}
 
 	@Override
@@ -30,40 +43,13 @@ public class ItemHandlerBeltSegment implements IItemHandler {
 	}
 
 	@Override
-	public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-		if (this.beltInventory.canInsertAt(offset)) {
-			ItemStack remainder = ItemHelper.limitCountToMaxStackSize(stack, simulate);
-			if (!simulate) {
-				TransportedItemStack newStack = new TransportedItemStack(stack);
-				newStack.insertedAt = offset;
-				newStack.beltPosition = offset + .5f + (beltInventory.beltMovementPositive ? -1 : 1) / 16f;
-				newStack.prevBeltPosition = newStack.beltPosition;
-				this.beltInventory.addItem(newStack);
-				this.beltInventory.belt.setChanged();
-				this.beltInventory.belt.sendData();
-			}
-			return remainder;
-		}
-		return stack;
-	}
+	public void setStackInSlot(int slot, ItemStack stack) {
+		TransportedItemStack stackAtOffset = this.beltInventory.getStackAtOffset(offset);
 
-	@Override
-	public ItemStack extractItem(int slot, int amount, boolean simulate) {
-		TransportedItemStack transported = this.beltInventory.getStackAtOffset(offset);
-		if (transported == null)
-			return ItemStack.EMPTY;
+		if (stackAtOffset == null)
+			return;
 
-		amount = Math.min(amount, transported.stack.getCount());
-		ItemStack extracted = simulate ? transported.stack.copy()
-			.split(amount) : transported.stack.split(amount);
-		if (!simulate) {
-			if (transported.stack.isEmpty())
-				beltInventory.toRemove.add(transported);
-			else
-				beltInventory.belt.notifyUpdate();
-		}
-
-		return extracted;
+		stackAtOffset.stack = stack;
 	}
 
 	@Override
@@ -72,8 +58,98 @@ public class ItemHandlerBeltSegment implements IItemHandler {
 	}
 
 	@Override
-	public boolean isItemValid(int slot, ItemStack stack) {
-		return true;
+	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+		return segmentSlot.insert(resource, maxAmount, transaction);
 	}
 
+	@Override
+	public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+		return segmentSlot.extract(resource, maxAmount, transaction);
+	}
+
+	public class BeltSegmentSingleSlot implements SingleSlotStorage<ItemVariant> {
+		@Override
+		public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+			if (beltInventory.canInsertAt(offset)) {
+				ItemStack stack = CreateTransferUtil.getLimitedStack(resource, maxAmount);
+				ItemStack remainder = ItemHelper.limitCountToMaxStackSize(stack, true);
+
+				var snapshot = new FinalCommitSnapshot(maxAmount, () -> {
+					TransportedItemStack newStack = new TransportedItemStack(stack);
+					newStack.insertedAt = offset;
+					newStack.beltPosition = offset + .5f + (beltInventory.beltMovementPositive ? -1 : 1) / 16f;
+					newStack.prevBeltPosition = newStack.beltPosition;
+					beltInventory.addItem(newStack);
+					beltInventory.belt.setChanged();
+					beltInventory.belt.sendData();
+				});
+				snapshot.updateSnapshots(transaction);
+
+				return maxAmount - remainder.getCount();
+			}
+			return 0;
+		}
+
+		@Override
+		public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+			TransportedItemStack transported = beltInventory.getStackAtOffset(offset);
+			if (transported == null)
+				return 0;
+
+			long amount = Math.min(maxAmount, transported.stack.getCount());
+			ItemStack extracted = transported.stack.copy().split((int) amount);
+
+			var snapshot = new FinalCommitSnapshot(amount, () -> {
+				transported.stack.split((int) amount);
+				if (transported.stack.isEmpty())
+					beltInventory.toRemove.add(transported);
+				else
+					beltInventory.belt.notifyUpdate();
+			});
+
+			snapshot.updateSnapshots(transaction);
+
+			return extracted.getCount();
+		}
+
+		@Override
+		public boolean isResourceBlank() {
+			TransportedItemStack transported = beltInventory.getStackAtOffset(offset);
+
+			if (transported == null)
+				return true;
+
+			return transported.stack.isEmpty();
+		}
+
+		@Override
+		public ItemVariant getResource() {
+			TransportedItemStack transported = beltInventory.getStackAtOffset(offset);
+
+			if (transported == null)
+				return ItemVariant.blank();
+
+			return ItemVariant.of(transported.stack);
+		}
+
+		@Override
+		public long getAmount() {
+			TransportedItemStack transported = beltInventory.getStackAtOffset(offset);
+
+			if (transported == null)
+				return 0;
+
+			return transported.stack.getCount();
+		}
+
+		@Override
+		public long getCapacity() {
+			TransportedItemStack transported = beltInventory.getStackAtOffset(offset);
+
+			if (transported == null)
+				return 0;
+
+			return CreateTransferUtil.getMaxStackSize(transported.stack);
+		}
+	}
 }

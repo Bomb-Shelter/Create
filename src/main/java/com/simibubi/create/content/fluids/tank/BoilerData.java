@@ -3,8 +3,22 @@ package com.simibubi.create.content.fluids.tank;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import com.simibubi.create.infrastructure.fabric.transfer.EmptySingleFluidSlotStorage;
+import com.simibubi.create.infrastructure.fabric.transfer.EmptySingleItemSlotStorage;
+
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+
+import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -38,8 +52,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class BoilerData {
 
@@ -49,7 +62,7 @@ public class BoilerData {
 	private static final float passiveEngineEfficiency = 1 / 8f;
 
 	// pooled water supply
-	int gatheredSupply;
+	long gatheredSupply;
 	float[] supplyOverTime = new float[10];
 	int ticksUntilNextSample;
 	int currentIndex;
@@ -103,7 +116,7 @@ public class BoilerData {
 		ticksUntilNextSample--;
 		if (ticksUntilNextSample > 0)
 			return;
-		int capacity = controller.tankInventory.getCapacity();
+		long capacity = controller.tankInventory.getCapacity();
 		if (capacity == 0)
 			return;
 
@@ -450,48 +463,93 @@ public class BoilerData {
 		return new BoilerFluidHandler();
 	}
 
-	public class BoilerFluidHandler implements IFluidHandler {
+	public class BoilerFluidHandler implements SlottedStorage<FluidVariant> {
+		private final BoilerFluidSlotStorage storage = new BoilerFluidSlotStorage();
 
 		@Override
-		public int getTanks() {
+		public int getSlotCount() {
 			return 1;
 		}
 
 		@Override
-		public FluidStack getFluidInTank(int tank) {
-			return FluidStack.EMPTY;
+		public SingleSlotStorage<FluidVariant> getSlot(int slot) {
+			return storage;
 		}
 
 		@Override
-		public int getTankCapacity(int tank) {
-			return 10000;
+		public long insert(FluidVariant resource, long maxAmount, TransactionContext transaction) {
+			return 0;
 		}
 
 		@Override
-		public boolean isFluidValid(int tank, FluidStack stack) {
-			return FluidHelper.isWater(stack.getFluid());
+		public long extract(FluidVariant resource, long maxAmount, TransactionContext transaction) {
+			return 0;
 		}
 
 		@Override
-		public int fill(FluidStack resource, FluidAction action) {
-			if (!isFluidValid(0, resource))
-				return 0;
-			int amount = resource.getAmount();
-			if (action.execute())
-				gatheredSupply += amount;
-			return amount;
+		public Iterator<StorageView<FluidVariant>> iterator() {
+			return storage.iterator();
 		}
-
-		@Override
-		public FluidStack drain(FluidStack resource, FluidAction action) {
-			return FluidStack.EMPTY;
-		}
-
-		@Override
-		public FluidStack drain(int maxDrain, FluidAction action) {
-			return FluidStack.EMPTY;
-		}
-
 	}
 
+	private class BoilerFluidSlotStorage implements SingleSlotStorage<FluidVariant> {
+		@Override
+		public long insert(FluidVariant resource, long maxAmount, TransactionContext transaction) {
+			if (!FluidHelper.isWater(resource))
+				return 0;
+
+			var snapshot = new BoilerFluidSnapshot(gatheredSupply + maxAmount);
+			snapshot.updateSnapshots(transaction);
+
+			return maxAmount;
+		}
+
+		@Override
+		public long extract(FluidVariant resource, long maxAmount, TransactionContext transaction) {
+			return 0;
+		}
+
+		@Override
+		public boolean isResourceBlank() {
+			return true;
+		}
+
+		@Override
+		public FluidVariant getResource() {
+			return FluidVariant.blank();
+		}
+
+		@Override
+		public long getAmount() {
+			return 0;
+		}
+
+		@Override
+		public long getCapacity() {
+			return 10000;
+		}
+	}
+
+	private class BoilerFluidSnapshot extends SnapshotParticipant<Long> {
+		private long current;
+
+		public BoilerFluidSnapshot(long current) {
+			this.current = current;
+		}
+
+		@Override
+		protected Long createSnapshot() {
+			return current;
+		}
+
+		@Override
+		protected void readSnapshot(Long snapshot) {
+			this.current = snapshot;
+		}
+
+		@Override
+		protected void onFinalCommit() {
+			gatheredSupply = current;
+		}
+	}
 }

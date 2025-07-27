@@ -10,15 +10,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public abstract class AbstractFilterMenu extends GhostItemMenu<ItemStack> {
-
-	protected AbstractFilterMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
-		super(type, id, inv, extraData);
-	}
-
+public abstract class AbstractFilterMenu extends GhostItemMenu<ItemStack, ItemStack> {
 	protected AbstractFilterMenu(MenuType<?> type, int id, Inventory inv, ItemStack contentHolder) {
 		super(type, id, inv, contentHolder);
 	}
@@ -36,9 +31,9 @@ public abstract class AbstractFilterMenu extends GhostItemMenu<ItemStack> {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
-	protected ItemStack createOnClient(RegistryFriendlyByteBuf extraData) {
-		return ItemStack.STREAM_CODEC.decode(extraData);
+	@Environment(EnvType.CLIENT)
+	protected ItemStack createOnClient(ItemStack extraData) {
+		return extraData;
 	}
 
 	protected abstract int getPlayerInventoryXOffset();
@@ -55,7 +50,7 @@ public abstract class AbstractFilterMenu extends GhostItemMenu<ItemStack> {
 
 	@Override
 	protected void saveData(ItemStack contentHolder) {
-		for (int i = 0; i < ghostInventory.getSlots(); i++) {
+		for (int i = 0; i < ghostInventory.getSlotCount(); i++) {
 			if (!ghostInventory.getStackInSlot(i).isEmpty()) {
 				contentHolder.set(AllDataComponents.FILTER_ITEMS, ItemHelper.containerContentsFromHandler(ghostInventory));
 				return;

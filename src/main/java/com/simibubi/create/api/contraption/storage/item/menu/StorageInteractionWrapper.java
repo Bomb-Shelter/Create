@@ -5,15 +5,14 @@ import java.util.function.Predicate;
 
 import com.simibubi.create.foundation.blockEntity.LegacyRecipeWrapper;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.minecraft.world.entity.player.Player;
-
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
 
 public class StorageInteractionWrapper extends LegacyRecipeWrapper {
 	private final Predicate<Player> stillValid;
 	private final Consumer<Player> onClose;
 
-	public StorageInteractionWrapper(IItemHandlerModifiable inv, Predicate<Player> stillValid, Consumer<Player> onClose) {
+	public StorageInteractionWrapper(SlottedStackStorage inv, Predicate<Player> stillValid, Consumer<Player> onClose) {
 		super(inv);
 		this.stillValid = stillValid;
 		this.onClose = onClose;

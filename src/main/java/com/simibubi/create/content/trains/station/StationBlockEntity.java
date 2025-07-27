@@ -57,18 +57,22 @@ import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 
-import dan200.computercraft.api.peripheral.PeripheralCapability;
+import dan200.computercraft.api.peripheral.PeripheralLookup;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomRenderBoundingBoxBlockEntity;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomSoundTypeBlock;
 import net.createmod.catnip.platform.CatnipServices;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
-import dan200.computercraft.api.peripheral.PeripheralCapability;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.data.WorldAttached;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockPos.MutableBlockPos;
@@ -95,12 +99,10 @@ import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public class StationBlockEntity extends SmartBlockEntity implements TransformableBlockEntity {
+public class StationBlockEntity extends SmartBlockEntity implements TransformableBlockEntity, SidedStorageBlockEntity {
 
 	public TrackTargetingBehaviour<GlobalStation> edgePoint;
 	public DoorControlBehaviour doorControls;
@@ -134,20 +136,15 @@ public class StationBlockEntity extends SmartBlockEntity implements Transformabl
 			.startWithValue(0);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.TRACK_STATION.get(),
-				(be, context) -> be.depotBehaviour.itemHandler
-		);
-
+	public static void registerCapabilities() {
 		if (Mods.COMPUTERCRAFT.isLoaded()) {
-			event.registerBlockEntity(
-					PeripheralCapability.get(),
-					AllBlockEntityTypes.TRACK_STATION.get(),
-					(be, context) -> be.computerBehaviour.getPeripheralCapability()
-			);
+			PeripheralLookup.get().registerForBlockEntity((be, context) -> be.computerBehaviour.getPeripheralCapability(), AllBlockEntityTypes.TRACK_STATION.get());
 		}
+	}
+
+	@Override
+	public @org.jetbrains.annotations.Nullable Storage<ItemVariant> getItemStorage(@org.jetbrains.annotations.Nullable Direction side) {
+		return depotBehaviour.itemHandler;
 	}
 
 	@Override
@@ -371,8 +368,10 @@ public class StationBlockEntity extends SmartBlockEntity implements Transformabl
 		bogeyAnchor = ProperWaterloggedBlock.withWater(level, bogeyAnchor, pos);
 		level.setBlock(targetPos, bogeyAnchor, 3);
 		player.displayClientMessage(CreateLang.translateDirect("train_assembly.bogey_created"), true);
-		SoundType soundtype = bogeyAnchor.getBlock()
-			.getSoundType(state, level, pos, player);
+		SoundType soundtype = bogeyAnchor.getBlock() instanceof CustomSoundTypeBlock soundTypeBlock ?
+			soundTypeBlock
+				.getSoundType(state, level, pos, player)
+			: bogeyAnchor.getSoundType();
 		level.playSound(null, pos, soundtype.getPlaceSound(), SoundSource.BLOCKS, (soundtype.getVolume() + 1.0F) / 2.0F,
 			soundtype.getPitch() * 0.8F);
 
@@ -901,10 +900,10 @@ public class StationBlockEntity extends SmartBlockEntity implements Transformabl
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public AABB getRenderBoundingBox() {
 		if (isAssembling())
-			return AABB.INFINITE;
+			return CustomRenderBoundingBoxBlockEntity.INFINITE_EXTENT_AABB;
 		return super.getRenderBoundingBox();
 	}
 
@@ -1005,7 +1004,7 @@ public class StationBlockEntity extends SmartBlockEntity implements Transformabl
 	private void restoreOfflineBuffer(PackagePortBlockEntity ppbe, GlobalPackagePort globalPackagePort) {
 		if (!globalPackagePort.primed)
 			return;
-		for (int i = 0; i < globalPackagePort.offlineBuffer.getSlots(); i++) {
+		for (int i = 0; i < globalPackagePort.offlineBuffer.getSlotCount(); i++) {
 			ppbe.inventory.setStackInSlot(i, globalPackagePort.offlineBuffer.getStackInSlot(i));
 			globalPackagePort.offlineBuffer.setStackInSlot(i, ItemStack.EMPTY);
 		}

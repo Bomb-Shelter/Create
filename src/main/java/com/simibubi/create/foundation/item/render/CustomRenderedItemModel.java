@@ -2,14 +2,15 @@ package com.simibubi.create.foundation.item.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import io.github.fabricators_of_create.porting_lib.models.TransformTypeDependentItemBakedModel;
+import net.fabricmc.fabric.api.renderer.v1.model.ForwardingBakedModel;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.world.item.ItemDisplayContext;
-import net.neoforged.neoforge.client.model.BakedModelWrapper;
 
-public class CustomRenderedItemModel extends BakedModelWrapper<BakedModel> {
+public class CustomRenderedItemModel extends ForwardingBakedModel implements TransformTypeDependentItemBakedModel {
 
 	public CustomRenderedItemModel(BakedModel originalModel) {
-		super(originalModel);
+		this.wrapped = originalModel;
 	}
 
 	@Override
@@ -18,16 +19,14 @@ public class CustomRenderedItemModel extends BakedModelWrapper<BakedModel> {
 	}
 
 	@Override
-	public BakedModel applyTransform(ItemDisplayContext cameraItemDisplayContext, PoseStack mat,
-		boolean leftHand) {
-		// Super call returns originalModel, but we want to return this, else BEWLR
-		// won't be used.
-		super.applyTransform(cameraItemDisplayContext, mat, leftHand);
+	public BakedModel applyTransform(ItemDisplayContext context, PoseStack poseStack,
+		boolean leftHand, DefaultTransform defaultTransform) {
+		// fabric: apply the wrapped model transforms, but render this model
+		defaultTransform.apply(wrapped);
 		return this;
 	}
 
 	public BakedModel getOriginalModel() {
-		return originalModel;
+		return this.wrapped;
 	}
-
 }

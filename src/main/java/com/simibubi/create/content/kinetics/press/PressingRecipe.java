@@ -20,8 +20,8 @@ import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 @ParametersAreNonnullByDefault
 public class PressingRecipe extends StandardProcessingRecipe<SingleRecipeInput> implements IAssemblyRecipe {
@@ -52,7 +52,7 @@ public class PressingRecipe extends StandardProcessingRecipe<SingleRecipeInput> 
 	public void addAssemblyIngredients(List<Ingredient> list) {}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public Component getDescriptionForAssembly() {
 		return CreateLang.translateDirect("recipe.assembly.pressing");
 	}

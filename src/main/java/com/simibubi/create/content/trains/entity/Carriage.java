@@ -53,8 +53,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class Carriage {
 	public static final StreamCodec<RegistryFriendlyByteBuf, Carriage> STREAM_CODEC = StreamCodec.composite(
@@ -784,7 +784,7 @@ public class Carriage {
 			tag.putUUID("PlayerPassenger", sp.getUUID());
 			serialisedPassengers.put(seat, tag);
 			sp.stopRiding();
-			sp.getPersistentData()
+			sp.getCustomData()
 				.remove("ContraptionDismountLocation");
 
 			for (Entry<ResourceKey<Level>, DimensionalCarriageEntity> other : entities.entrySet()) {
@@ -819,7 +819,7 @@ public class Carriage {
 			CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> invalidate(cce));
 		}
 
-		@OnlyIn(Dist.CLIENT)
+		@Environment(EnvType.CLIENT)
 		private void invalidate(CarriageContraptionEntity entity) {
 			entity.getContraption().deferInvalidate = true;
 			entity.updateRenderedPortalCutoff();

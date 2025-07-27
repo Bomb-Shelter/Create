@@ -6,12 +6,18 @@ import java.util.stream.Stream;
 
 import com.simibubi.create.AllTags;
 import com.simibubi.create.foundation.data.recipe.Mods;
+import com.simibubi.create.foundation.mixin.accessor.fabric.TagAppenderAccessor;
+import com.tterrag.registrate.AbstractRegistrate;
 import com.tterrag.registrate.builders.BlockBuilder;
 import com.tterrag.registrate.builders.ItemBuilder;
 import com.tterrag.registrate.providers.RegistrateTagsProvider;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
 
+import io.github.fabricators_of_create.porting_lib.data.PortingLibTagsProvider;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.minecraft.core.Holder;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.data.tags.TagsProvider.TagAppender;
 import net.minecraft.resources.ResourceKey;
@@ -74,7 +80,7 @@ public class TagGen {
 		}
 
 		public TagBuilder getOrCreateRawBuilder(TagKey<T> tag) {
-			return provider.addTag(tag).getInternalBuilder();
+			return ((TagAppenderAccessor) provider.addTag(tag)).getBuilder();
 		}
 	}
 
@@ -100,5 +106,11 @@ public class TagGen {
 			return this;
 		}
 
+		@Override
+		public CreateTagAppender<T> addTag(TagKey<T> tag) {
+			// Fabric: this is such a dumb workaround but so fucking funny
+			this.addOptionalTag(tag.location());
+			return this;
+		}
 	}
 }

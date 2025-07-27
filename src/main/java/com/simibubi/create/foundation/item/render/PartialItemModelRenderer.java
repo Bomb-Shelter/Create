@@ -2,9 +2,11 @@ package com.simibubi.create.foundation.item.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.simibubi.create.foundation.mixin.accessor.fabric.ItemRendererAccessor;
 import com.simibubi.create.foundation.render.RenderTypes;
 
 import net.createmod.catnip.data.Iterate;
+import net.fabricmc.fabric.api.renderer.v1.RendererAccess;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -15,8 +17,6 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
-import net.neoforged.neoforge.client.model.data.ModelData;
 
 public class PartialItemModelRenderer {
 
@@ -66,13 +66,10 @@ public class PartialItemModelRenderer {
 
 		if (!model.isCustomRenderer()) {
 			VertexConsumer vc = ItemRenderer.getFoilBufferDirect(buffer, type, true, stack.hasFoil());
-			for (BakedModel pass : model.getRenderPasses(stack, false)) {
-				renderBakedItemModel(pass, light, ms, vc);
-			}
+			renderBakedItemModel(model, light, ms, vc);
 		} else
-			IClientItemExtensions.of(stack)
-				.getCustomRenderer()
-				.renderByItem(stack, transformType, ms, buffer, light, overlay);
+			Minecraft.getInstance().getItemRenderer()
+				.render(stack, transformType, false, ms, buffer, light, overlay, model);
 
 		ms.popPose();
 	}
@@ -80,18 +77,16 @@ public class PartialItemModelRenderer {
 	private void renderBakedItemModel(BakedModel model, int light, PoseStack ms, VertexConsumer buffer) {
 		ItemRenderer ir = Minecraft.getInstance()
 			.getItemRenderer();
-		ModelData data = ModelData.EMPTY;
+		//ModelData data = ModelData.EMPTY;
 
-		for (RenderType renderType : model.getRenderTypes(stack, false)) {
-			for (Direction direction : Iterate.directions) {
-				random.setSeed(42L);
-				ir.renderQuadList(ms, buffer, model.getQuads(null, direction, random, data, renderType), stack, light,
-					overlay);
-			}
-
+		for (Direction direction : Iterate.directions) {
 			random.setSeed(42L);
-			ir.renderQuadList(ms, buffer, model.getQuads(null, null, random, data, renderType), stack, light, overlay);
+			((ItemRendererAccessor) ir).invokeRenderQuadList(ms, buffer, model.getQuads(null, direction, random/*, data, renderType*/), stack, light,
+				overlay);
 		}
+
+		random.setSeed(42L);
+		((ItemRendererAccessor) ir).invokeRenderQuadList(ms, buffer, model.getQuads(null, null, random/*, data, renderType*/), stack, light, overlay);
 	}
 
 }

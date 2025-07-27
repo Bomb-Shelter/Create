@@ -5,13 +5,12 @@ import java.util.function.Supplier;
 
 import net.createmod.catnip.lang.Lang;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Block;
-
-import net.neoforged.fml.ModList;
 
 /**
  * For compatibility with and without another mod present, we have to define load conditions of the specific code
@@ -21,7 +20,7 @@ public enum Mods {
 	AETHER_II,
 	BETTEREND,
 	COMPUTERCRAFT,
-	CURIOS,
+	//CURIOS,
 	DYNAMICTREES,
 	JEI,
 	FUNCTIONALSTORAGE,
@@ -38,6 +37,7 @@ public enum Mods {
 	JOURNEYMAP,
 	FTBLIBRARY,
 	SODIUM,
+	TRINKETS,
 	INVENTORYSORTER;
 
 	private final String id;
@@ -78,7 +78,7 @@ public enum Mods {
 	 * @return a boolean of whether the mod is loaded or not based on mod id
 	 */
 	public boolean isLoaded() {
-		return ModList.get().isLoaded(id);
+		return FabricLoader.getInstance().isModLoaded(id);
 	}
 
 	/**

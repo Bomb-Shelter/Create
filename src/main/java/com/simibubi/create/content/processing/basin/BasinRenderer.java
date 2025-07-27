@@ -6,11 +6,13 @@ import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTank
 import com.simibubi.create.foundation.blockEntity.renderer.SmartBlockEntityRenderer;
 
 import dev.engine_room.flywheel.lib.transform.TransformStack;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.data.IntAttached;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.VecHelper;
-import net.createmod.catnip.platform.NeoForgeCatnipServices;
+import net.createmod.catnip.platform.FabricCatnipServices;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
@@ -24,9 +26,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class BasinRenderer extends SmartBlockEntityRenderer<BasinBlockEntity> {
 
@@ -52,12 +52,12 @@ public class BasinRenderer extends SmartBlockEntityRenderer<BasinBlockEntity> {
 		RandomSource r = RandomSource.create(pos.hashCode());
 		Vec3 baseVector = new Vec3(.125, level, 0);
 
-		IItemHandlerModifiable inv = basin.itemCapability;
+		SlottedStackStorage inv = basin.itemCapability;
 		if (inv == null)
 			inv = new ItemStackHandler();
 
 		int itemCount = 0;
-		for (int slot = 0; slot < inv.getSlots(); slot++)
+		for (int slot = 0; slot < inv.getSlotCount(); slot++)
 			if (!inv.getStackInSlot(slot)
 				.isEmpty())
 				itemCount++;
@@ -66,7 +66,7 @@ public class BasinRenderer extends SmartBlockEntityRenderer<BasinBlockEntity> {
 			baseVector = new Vec3(0, level, 0);
 
 		float anglePartition = 360f / itemCount;
-		for (int slot = 0; slot < inv.getSlots(); slot++) {
+		for (int slot = 0; slot < inv.getSlotCount(); slot++) {
 			ItemStack stack = inv.getStackInSlot(slot);
 			if (stack.isEmpty())
 				continue;
@@ -175,7 +175,7 @@ public class BasinRenderer extends SmartBlockEntityRenderer<BasinBlockEntity> {
 
 				float partial = Mth.clamp(units / totalUnits, 0, 1);
 				xMax += partial * 12 / 16f;
-				NeoForgeCatnipServices.FLUID_RENDERER.renderFluidBox(renderedFluid, xMin, yMin, zMin, xMax, yMax, zMax,
+				FabricCatnipServices.FLUID_RENDERER.renderFluidBox(renderedFluid.getVariant(), xMin, yMin, zMin, xMax, yMax, zMax,
 					buffer, ms, light, false, false);
 
 				xMin = xMax;

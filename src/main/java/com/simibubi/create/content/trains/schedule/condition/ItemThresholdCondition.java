@@ -10,7 +10,10 @@ import com.simibubi.create.content.trains.entity.Train;
 import com.simibubi.create.foundation.gui.ModularGuiLineBuilder;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.createmod.catnip.lang.Lang;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
@@ -20,9 +23,8 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class ItemThresholdCondition extends CargoThresholdCondition {
 
@@ -46,8 +48,8 @@ public class ItemThresholdCondition extends CargoThresholdCondition {
 
 		int foundItems = 0;
 		for (Carriage carriage : train.carriages) {
-			IItemHandlerModifiable items = carriage.storage.getAllItems();
-			for (int i = 0; i < items.getSlots(); i++) {
+			SlottedStackStorage items = carriage.storage.getAllItems();
+			for (int i = 0; i < items.getSlotCount(); i++) {
 				ItemStack stackInSlot = items.getStackInSlot(i);
 				if (!stack.test(level, stackInSlot))
 					continue;
@@ -115,7 +117,7 @@ public class ItemThresholdCondition extends CargoThresholdCondition {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void initConfigurationWidgets(ModularGuiLineBuilder builder) {
 		super.initConfigurationWidgets(builder);
 		builder.addSelectionScrollInput(71, 50, (i, l) -> {

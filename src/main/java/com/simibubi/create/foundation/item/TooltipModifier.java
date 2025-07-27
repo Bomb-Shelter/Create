@@ -1,6 +1,13 @@
 package com.simibubi.create.foundation.item;
 
+import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.core.registries.BuiltInRegistries;
+
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.Item.TooltipContext;
+import net.minecraft.world.item.ItemStack;
+
+import net.minecraft.world.item.TooltipFlag;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -8,7 +15,7 @@ import com.simibubi.create.api.registry.SimpleRegistry;
 
 import net.minecraft.world.item.Item;
 
-import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import java.util.List;
 
 @FunctionalInterface
 public interface TooltipModifier {
@@ -16,7 +23,7 @@ public interface TooltipModifier {
 
 	TooltipModifier EMPTY = new TooltipModifier() {
 		@Override
-		public void modify(ItemTooltipEvent context) {
+		public void modify(ItemStack stack, TooltipContext context, TooltipFlag flag, List<Component> tooltip) {
 		}
 
 		@Override
@@ -25,15 +32,15 @@ public interface TooltipModifier {
 		}
 	};
 
-	void modify(ItemTooltipEvent context);
+	void modify(ItemStack stack, TooltipContext context, TooltipFlag flag, List<Component> tooltip);
 
 	default TooltipModifier andThen(TooltipModifier after) {
 		if (after == EMPTY) {
 			return this;
 		}
-		return tooltip -> {
-			modify(tooltip);
-			after.modify(tooltip);
+		return (stack, context, flag, tooltip) -> {
+			modify(stack, context, flag, tooltip);
+			after.modify(stack, context, flag, tooltip);
 		};
 	}
 

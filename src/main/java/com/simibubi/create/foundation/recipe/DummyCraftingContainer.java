@@ -1,18 +1,24 @@
 package com.simibubi.create.foundation.recipe;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+
 import org.jetbrains.annotations.NotNull;
 
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.entity.player.StackedContents;
 import net.minecraft.world.inventory.TransientCraftingContainer;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.IItemHandler;
 
 public class DummyCraftingContainer extends TransientCraftingContainer {
 
 	private final NonNullList<ItemStack> inv;
 
-	public DummyCraftingContainer(IItemHandler itemHandler, int[] extractedItemsFromSlot) {
+	public DummyCraftingContainer(Storage<ItemVariant> itemHandler, long[] extractedItemsFromSlot) {
 		super(null, 0, 0);
 
 		this.inv = createInventory(itemHandler, extractedItemsFromSlot);
@@ -57,21 +63,24 @@ public class DummyCraftingContainer extends TransientCraftingContainer {
 	@Override
 	public void fillStackedContents(@NotNull StackedContents helper) {}
 
-	private static NonNullList<ItemStack> createInventory(IItemHandler itemHandler, int[] extractedItemsFromSlot) {
+	private static NonNullList<ItemStack> createInventory(Storage<ItemVariant> itemHandler, long[] extractedItemsFromSlot) {
 		NonNullList<ItemStack> inv = NonNullList.create();
 
-		for (int slot = 0; slot < itemHandler.getSlots(); slot++) {
-			ItemStack stack = itemHandler.getStackInSlot(slot);
+		int slot = 0;
+		for (StorageView<ItemVariant> view : itemHandler) {
+			ItemStack stack = CreateTransferUtil.getLimitedStack(view.getResource(), view.getAmount());
 
 			if (stack.isEmpty())
 				continue;
 
-			for (int i = 0; i < extractedItemsFromSlot[slot]; i++) {
+			for (long i = 0; i < extractedItemsFromSlot[slot]; i++) {
 				ItemStack stackCopy = stack.copy();
 				stackCopy.setCount(1);
 
 				inv.add(stackCopy);
 			}
+
+			slot++;
 		}
 
 		return inv;

@@ -33,8 +33,8 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class WhistleBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
 
@@ -126,10 +126,10 @@ public class WhistleBlockEntity extends SmartBlockEntity implements IHaveGoggleI
 			.orElse(WhistleSize.MEDIUM);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	protected WhistleSoundInstance soundInstance;
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	protected void tickAudio(WhistleSize size, boolean powered) {
 		if (!powered) {
 			if (soundInstance != null) {

@@ -49,13 +49,8 @@ public class PistonExtensionPoleBlock extends WrenchableDirectionalBlock impleme
 	private static final int placementHelperId = PlacementHelpers.register(PlacementHelper.get());
 
 	public PistonExtensionPoleBlock(Properties properties) {
-		super(properties);
+		super(properties.pushReaction(PushReaction.NORMAL));
 		registerDefaultState(defaultBlockState().setValue(FACING, Direction.UP).setValue(BlockStateProperties.WATERLOGGED, false));
-	}
-
-	@Override
-	public PushReaction getPistonPushReaction(BlockState state) {
-		return PushReaction.NORMAL;
 	}
 
 	@Override

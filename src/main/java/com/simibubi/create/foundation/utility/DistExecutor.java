@@ -3,10 +3,11 @@ package com.simibubi.create.foundation.utility;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
+import net.fabricmc.loader.api.FabricLoader;
+
 import org.jetbrains.annotations.ApiStatus;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.loading.FMLLoader;
+import net.fabricmc.api.EnvType;
 
 @ApiStatus.Internal
 @Deprecated(forRemoval = true, since = "1.21")
@@ -17,8 +18,8 @@ public class DistExecutor {
 	 */
 	@ApiStatus.Internal
 	@Deprecated(forRemoval = true, since = "1.21")
-	public static <T> T unsafeCallWhenOn(Dist dist, Supplier<Callable<T>> toRun) {
-		if (FMLLoader.getDist() == dist) {
+	public static <T> T unsafeCallWhenOn(EnvType dist, Supplier<Callable<T>> toRun) {
+		if (FabricLoader.getInstance().getEnvironmentType() == dist) {
 			try {
 				return toRun.get().call();
 			} catch (Exception e) {

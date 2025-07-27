@@ -1,0 +1,31 @@
+{
+  "type": "create:milling",
+  "ingredients": [
+    {
+      "fabric:type": "create:simple_datagen",
+      "ingredients": [
+        {
+          "item": "byg:white_anemone"
+        }
+      ]
+    }
+  ],
+  "porting_lib:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "byg"
+    }
+  ],
+  "processing_time": 50,
+  "results": [
+    {
+      "count": 2,
+      "id": "minecraft:white_dye"
+    },
+    {
+      "chance": 0.1,
+      "count": 2,
+      "id": "minecraft:light_gray_dye"
+    }
+  ]
+}

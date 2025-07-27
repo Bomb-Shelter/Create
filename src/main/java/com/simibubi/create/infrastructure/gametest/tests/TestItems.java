@@ -17,10 +17,14 @@ import com.simibubi.create.content.redstone.nixieTube.NixieTubeBlockEntity;
 import com.simibubi.create.content.trains.display.FlapDisplayBlockEntity;
 import com.simibubi.create.content.trains.display.FlapDisplayLayout;
 import com.simibubi.create.content.trains.display.FlapDisplaySection;
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 import com.simibubi.create.infrastructure.gametest.CreateGameTestHelper;
 import com.simibubi.create.infrastructure.gametest.GameTestGroup;
 
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
+import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -39,11 +43,8 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RedstoneLampBlock;
 
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-
 @GameTestGroup(path = "items")
-public class TestItems {
+public class TestItems implements FabricGameTest {
 	@GameTest(template = "andesite_tunnel_split")
 	public static void andesiteTunnelSplit(CreateGameTestHelper helper) {
 		BlockPos lever = new BlockPos(2, 6, 2);
@@ -364,9 +365,9 @@ public class TestItems {
 		BlockPos chest = new BlockPos(1, 2, 1);
 		BlockPos lamp = new BlockPos(2, 3, 1);
 		helper.assertBlockProperty(lamp, RedstoneLampBlock.LIT, false);
-		IItemHandler chestStorage = helper.itemStorageAt(chest);
+		Storage<ItemVariant> chestStorage = helper.itemStorageAt(chest);
 		for (int i = 0; i < 18; i++) { // insert 18 stacks
-			ItemHandlerHelper.insertItem(chestStorage, new ItemStack(Items.DIAMOND, 64), false);
+			CreateTransferUtil.insertItem(chestStorage, new ItemStack(Items.DIAMOND, 64), false);
 		}
 		helper.succeedWhen(() -> helper.assertBlockProperty(lamp, RedstoneLampBlock.LIT, true));
 	}

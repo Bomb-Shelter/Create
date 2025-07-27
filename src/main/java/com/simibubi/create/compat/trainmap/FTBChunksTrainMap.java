@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.foundation.gui.RemovedGuiUtils;
+import com.simibubi.create.foundation.mixin.accessor.ftb.LargeMapScreenAccessor;
+import com.simibubi.create.foundation.mixin.accessor.ftb.RegionMapPanelAccessor;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
@@ -12,17 +14,15 @@ import dev.ftb.mods.ftbchunks.client.gui.RegionMapPanel;
 import dev.ftb.mods.ftblibrary.ui.BaseScreen;
 import dev.ftb.mods.ftblibrary.ui.ScreenWrapper;
 import dev.ftb.mods.ftblibrary.ui.Widget;
+import io.github.fabricators_of_create.porting_lib.event.client.MouseInputEvents;
+import io.github.fabricators_of_create.porting_lib.event.client.PreRenderTooltipCallback;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.Mth;
-
-import net.neoforged.fml.util.ObfuscationReflectionHelper;
-import net.neoforged.neoforge.client.event.InputEvent;
-import net.neoforged.neoforge.client.event.RenderTooltipEvent;
-import net.neoforged.neoforge.client.event.ScreenEvent;
 
 public class FTBChunksTrainMap {
 
@@ -48,32 +48,32 @@ public class FTBChunksTrainMap {
 		TrainMapSyncClient.requestData();
 	}
 
-	public static void cancelTooltips(RenderTooltipEvent.Pre event) {
+	public static boolean cancelTooltips() {
 		if (getAsLargeMapScreen(Minecraft.getInstance().screen) == null)
-			return;
+			return false;
 		if (renderingTooltip || cancelTooltips == 0)
-			return;
-		event.setCanceled(true);
+			return false;
+		return true;
 	}
 
-	public static void mouseClick(InputEvent.MouseButton.Pre event) {
+	public static boolean mouseClick() {
 		LargeMapScreen screen = getAsLargeMapScreen(Minecraft.getInstance().screen);
 		if (screen == null)
-			return;
+			return false;
 		if (TrainMapManager.handleToggleWidgetClick(screen.getMouseX(), screen.getMouseY(), 20, 2))
-			event.setCanceled(true);
+			return true;
+		return false;
 	}
 
-	public static void renderGui(ScreenEvent.Render.Post event) {
-		LargeMapScreen largeMapScreen = getAsLargeMapScreen(event.getScreen());
+	public static void renderGui(Screen screen, GuiGraphics graphics, int oMouseX, int oMouseY) {
+		LargeMapScreen largeMapScreen = getAsLargeMapScreen(screen);
 		if (largeMapScreen == null)
 			return;
-		Object panel = ObfuscationReflectionHelper.getPrivateValue(LargeMapScreen.class, largeMapScreen, "regionPanel");
+		RegionMapPanel panel = ((LargeMapScreenAccessor) largeMapScreen).getRegionPanel();
 		if (!(panel instanceof RegionMapPanel regionMapPanel))
 			return;
-		GuiGraphics graphics = event.getGuiGraphics();
 		if (!AllConfigs.client().showTrainMapOverlay.get()) {
-			renderToggleWidgetAndTooltip(event, largeMapScreen, graphics);
+			renderToggleWidgetAndTooltip(oMouseX, oMouseY, largeMapScreen, graphics);
 			return;
 		}
 
@@ -82,11 +82,11 @@ public class FTBChunksTrainMap {
 		int minY = Mth.floor(regionMapPanel.getScrollY());
 		float regionTileSize = largeMapScreen.getRegionTileSize() / (float) blocksPerRegion;
 		int regionMinX =
-			ObfuscationReflectionHelper.getPrivateValue(RegionMapPanel.class, regionMapPanel, "regionMinX");
+			((RegionMapPanelAccessor) regionMapPanel).getRegionMinX();
 		int regionMinZ =
-			ObfuscationReflectionHelper.getPrivateValue(RegionMapPanel.class, regionMapPanel, "regionMinZ");
-		float mouseX = event.getMouseX();
-		float mouseY = event.getMouseY();
+			((RegionMapPanelAccessor) regionMapPanel).getRegionMinZ();
+		float mouseX = oMouseX;
+		float mouseY = oMouseY;
 
 		boolean linearFiltering = largeMapScreen.getRegionTileSize() * Minecraft.getInstance()
 			.getWindow()
@@ -115,9 +115,9 @@ public class FTBChunksTrainMap {
 
 		pose.popPose();
 
-		if (!renderToggleWidgetAndTooltip(event, largeMapScreen, graphics) && tooltip != null) {
+		if (!renderToggleWidgetAndTooltip(oMouseX, oMouseY, largeMapScreen, graphics) && tooltip != null) {
 			renderingTooltip = true;
-			RemovedGuiUtils.drawHoveringText(graphics, tooltip, event.getMouseX(), event.getMouseY(),
+			RemovedGuiUtils.drawHoveringText(graphics, tooltip, oMouseX, oMouseY,
 				largeMapScreen.width, largeMapScreen.height, 256, Minecraft.getInstance().font);
 			renderingTooltip = false;
 			cancelTooltips = 5;
@@ -136,15 +136,15 @@ public class FTBChunksTrainMap {
 		pose.popPose();
 	}
 
-	private static boolean renderToggleWidgetAndTooltip(ScreenEvent.Render.Post event, LargeMapScreen largeMapScreen,
+	private static boolean renderToggleWidgetAndTooltip(int mouseX, int mouseY, LargeMapScreen largeMapScreen,
 		GuiGraphics graphics) {
 		TrainMapManager.renderToggleWidget(graphics, 20, 2);
-		if (!TrainMapManager.isToggleWidgetHovered(event.getMouseX(), event.getMouseY(), 20, 2))
+		if (!TrainMapManager.isToggleWidgetHovered(mouseX, mouseY, 20, 2))
 			return false;
 
 		renderingTooltip = true;
 		RemovedGuiUtils.drawHoveringText(graphics, List.of(CreateLang.translate("train_map.toggle")
-			.component()), event.getMouseX(), event.getMouseY() + 20, largeMapScreen.width, largeMapScreen.height, 256,
+			.component()), mouseX, mouseY + 20, largeMapScreen.width, largeMapScreen.height, 256,
 			Minecraft.getInstance().font);
 		renderingTooltip = false;
 		cancelTooltips = 5;

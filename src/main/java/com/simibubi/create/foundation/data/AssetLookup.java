@@ -7,14 +7,14 @@ import com.tterrag.registrate.providers.RegistrateBlockstateProvider;
 import com.tterrag.registrate.providers.RegistrateItemModelProvider;
 import com.tterrag.registrate.util.nullness.NonNullBiConsumer;
 
+import io.github.fabricators_of_create.porting_lib.models.generators.ItemModelBuilder;
+import io.github.fabricators_of_create.porting_lib.models.generators.ModelFile;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
-import net.neoforged.neoforge.client.model.generators.ItemModelBuilder;
-import net.neoforged.neoforge.client.model.generators.ModelFile;
 
 public class AssetLookup {
 
@@ -25,7 +25,7 @@ public class AssetLookup {
 	 * Adding "powered", "vertical" will look for /block_powered_vertical.json
 	 */
 	public static ModelFile partialBaseModel(DataGenContext<?, ?> ctx, RegistrateBlockstateProvider prov,
-		String... suffix) {
+											 String... suffix) {
 		String string = "/block";
 		for (String suf : suffix)
 			if (!suf.isEmpty())
@@ -48,7 +48,7 @@ public class AssetLookup {
 	 * models/block/x/item.json
 	 */
 	public static <I extends BlockItem> ItemModelBuilder customItemModel(DataGenContext<Item, I> ctx,
-		RegistrateItemModelProvider prov) {
+																		 RegistrateItemModelProvider prov) {
 		return prov.blockItem(() -> ctx.getEntry()
 			.getBlock(), "/item");
 	}

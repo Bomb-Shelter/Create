@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.mojang.serialization.MapCodec;
@@ -37,7 +39,7 @@ public record ColorAttribute(DyeColor color) implements ItemAttribute {
 		.map(ColorAttribute::new, ColorAttribute::color);
 
 	private static Collection<DyeColor> findMatchingDyeColors(ItemStack stack) {
-		DyeColor color = DyeColor.getColor(stack);
+		DyeColor color = CreateFabricUtil.getColor(stack);
 		if (color != null)
 			return Collections.singletonList(color);
 

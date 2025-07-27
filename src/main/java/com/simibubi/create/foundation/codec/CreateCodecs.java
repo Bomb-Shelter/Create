@@ -6,7 +6,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.simibubi.create.foundation.item.ItemSlots;
 
-import net.neoforged.neoforge.items.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 
 public class CreateCodecs {
 	public static final Codec<Integer> INT_STR = Codec.STRING.comapFlatMap(

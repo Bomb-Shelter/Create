@@ -11,6 +11,9 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.HolderLookup;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -35,9 +38,6 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 
 public class PumpBlockEntity extends KineticBlockEntity {
 
@@ -288,7 +288,7 @@ public class PumpBlockEntity extends KineticBlockEntity {
 
 		// fluid handler endpoint
 		if (blockEntity != null) {
-			IFluidHandler capability = blockEntity.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, blockEntity.getBlockPos(), face.getOpposite());
+			Storage<FluidVariant> capability = TransferUtil.getFluidStorage(blockEntity.getLevel(), blockEntity.getBlockPos(), blockEntity, face.getOpposite());
 			if (capability != null)
 				return true;
 		}

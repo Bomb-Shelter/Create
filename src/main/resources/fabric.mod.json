@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "id": "create",
+  "version": "${mod_version}",
+  "name": "Create Fabric (unofficial)",
+  "description": "${mod_description}",
+  "authors": [
+    "simibubi",
+    "BluSpring"
+  ],
+  "contact": {
+    "sources": "https://github.com/BluSpring/Create",
+    "issues": "https://github.com/BluSpring/Create/issues"
+  },
+  "license": "${mod_license}",
+  "icon": "icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.simibubi.create.Create"
+    ],
+    "client": [
+      "com.simibubi.create.CreateClient"
+    ],
+    "modmenu": [
+      "com.simibubi.create.compat.modmenu.CreateModMenuCompat"
+    ],
+    "fabric-datagen": [
+      "com.simibubi.create.infrastructure.data.CreateDatagen"
+    ],
+    "fabric-gametest": [
+      "com.simibubi.create.infrastructure.gametest.CreateGameTests",
+      "com.simibubi.create.infrastructure.gametest.tests.TestContraptions",
+      "com.simibubi.create.infrastructure.gametest.tests.TestFluids",
+      "com.simibubi.create.infrastructure.gametest.tests.TestItems",
+      "com.simibubi.create.infrastructure.gametest.tests.TestMisc",
+      "com.simibubi.create.infrastructure.gametest.tests.TestProcessing"
+    ]
+  },
+  "mixins": [
+    "create.mixins.json"
+  ],
+  "accessWidener": "create.accesswidener",
+  "depends": {
+    "fabricloader": "${fabric_version_range}",
+    "minecraft": "${minecraft_version_range}",
+    "flywheel": "${flywheel_version_range}",
+    "ponder": ">=0.8"
+  }
+}

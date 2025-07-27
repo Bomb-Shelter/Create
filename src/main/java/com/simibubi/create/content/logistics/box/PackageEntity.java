@@ -11,6 +11,9 @@ import com.simibubi.create.AllEntityTypes;
 import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.content.logistics.chute.ChuteBlock;
 
+import io.github.fabricators_of_create.porting_lib.entity.IEntityWithComplexSpawn;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.AttackEntityEvent;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.platform.CatnipServices;
@@ -49,10 +52,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
-
-import net.neoforged.neoforge.common.CommonHooks;
-import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class PackageEntity extends LivingEntity implements IEntityWithComplexSpawn {
 
@@ -108,7 +107,7 @@ public class PackageEntity extends LivingEntity implements IEntityWithComplexSpa
 	}
 
 	@Override
-	public ItemStack getPickedResult(HitResult target) {
+	public ItemStack getPickResult() {
 		return box.copy();
 	}
 
@@ -299,8 +298,13 @@ public class PackageEntity extends LivingEntity implements IEntityWithComplexSpa
 
 	@Override
 	public boolean hurt(DamageSource source, float amount) {
-		if (source.getEntity() instanceof Player player && !CommonHooks.onPlayerAttackTarget(player, this))
-			return false;
+		if (source.getEntity() instanceof Player player) {
+			var event = (new AttackEntityEvent(player, this));
+			event.sendEvent();
+
+			if (event.isCanceled())
+				return false;
+		}
 
 		if (level().isClientSide || !this.isAlive())
 			return false;
@@ -310,7 +314,7 @@ public class PackageEntity extends LivingEntity implements IEntityWithComplexSpa
 			return false;
 		}
 
-		if (!box.getItem().canBeHurtBy(box, source))
+		if (!box.canBeHurtBy(source))
 			return false;
 
 		if (source.equals(damageSources().inWall()) && (isPassenger() || insertionDelay < 20))
@@ -370,7 +374,7 @@ public class PackageEntity extends LivingEntity implements IEntityWithComplexSpa
 	protected void dropAllDeathLoot(ServerLevel level, DamageSource pDamageSource) {
 		super.dropAllDeathLoot(level, pDamageSource);
 		ItemStackHandler contents = PackageItem.getContents(box);
-		for (int i = 0; i < contents.getSlots(); i++) {
+		for (int i = 0; i < contents.getSlotCount(); i++) {
 			ItemStack itemstack = contents.getStackInSlot(i);
 
 			if (itemstack.getItem() instanceof SpawnEggItem sei) {

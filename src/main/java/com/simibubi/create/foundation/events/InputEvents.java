@@ -16,20 +16,27 @@ import com.simibubi.create.content.trains.TrainHUD;
 import com.simibubi.create.content.trains.entity.TrainRelocator;
 import com.simibubi.create.content.trains.track.CurvedTrackInteraction;
 
+import io.github.fabricators_of_create.porting_lib.client_events.event.client.InputEvent;
+import io.github.fabricators_of_create.porting_lib.client_events.event.client.InputEvent.InteractionKeyMappingTriggered;
+import io.github.fabricators_of_create.porting_lib.client_events.event.client.InputEvent.Key;
+import io.github.fabricators_of_create.porting_lib.client_events.event.client.InputEvent.MouseButton;
+import io.github.fabricators_of_create.porting_lib.client_events.event.client.InputEvent.MouseButton.Pre;
+import io.github.fabricators_of_create.porting_lib.client_events.event.client.InputEvent.MouseScrollingEvent;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.InputEvent;
+import net.fabricmc.api.EnvType;
 
-@EventBusSubscriber(Dist.CLIENT)
 public class InputEvents {
+	public static void init() {
+		Key.EVENT.register(InputEvents::onKeyInput);
+		MouseScrollingEvent.EVENT.register(InputEvents::onMouseScrolled);
+		Pre.EVENT.register(InputEvents::onMouseInput);
+		InteractionKeyMappingTriggered.EVENT.register(InputEvents::onClickInput);
+	}
 
-	@SubscribeEvent
 	public static void onKeyInput(InputEvent.Key event) {
 		if (Minecraft.getInstance().screen != null)
 			return;
@@ -42,7 +49,6 @@ public class InputEvents {
 		RadialWrenchHandler.onKeyInput(key, pressed);
 	}
 
-	@SubscribeEvent
 	public static void onMouseScrolled(InputEvent.MouseScrollingEvent event) {
 		if (Minecraft.getInstance().screen != null)
 			return;
@@ -55,7 +61,6 @@ public class InputEvents {
 		event.setCanceled(cancelled);
 	}
 
-	@SubscribeEvent
 	public static void onMouseInput(InputEvent.MouseButton.Pre event) {
 		if (Minecraft.getInstance().screen != null)
 			return;
@@ -70,7 +75,6 @@ public class InputEvents {
 			event.setCanceled(true);
 	}
 
-	@SubscribeEvent
 	public static void onClickInput(InputEvent.InteractionKeyMappingTriggered event) {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.screen != null)
@@ -113,7 +117,7 @@ public class InputEvents {
 			event.setCanceled(true);
 			return;
 		}
-		
+
 		if (mc.player != null) {
 			ItemStack itemInHand = mc.player.getItemInHand(event.getHand());
 			if (AllItemTags.WRENCH.matches(itemInHand))

@@ -1,8 +1,10 @@
 package com.simibubi.create.content.equipment.armor;
 
+import com.simibubi.create.AllItems;
 import com.simibubi.create.Create;
 import com.simibubi.create.foundation.mixin.accessor.GuiAccessor;
 
+import io.github.fabricators_of_create.porting_lib.event.client.OverlayRenderCallback;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.minecraft.client.Minecraft;
@@ -10,15 +12,30 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+public class CardboardArmorStealthOverlay extends Gui {
+	private static final CardboardArmorStealthOverlay INSTANCE = new CardboardArmorStealthOverlay();
 
-public class CardboardArmorStealthOverlay extends Gui implements IClientItemExtensions {
+	public static void init() {}
 
 	public CardboardArmorStealthOverlay() {
 		super(Minecraft.getInstance());
+
+		OverlayRenderCallback.EVENT.register((guiGraphics, partialTicks, window, type) -> {
+			var player = Minecraft.getInstance().player;
+			if (player == null)
+				return false;
+
+			var headStack = player.getItemBySlot(EquipmentSlot.HEAD);
+			if (headStack.is(AllItems.CARDBOARD_HELMET.get())) {
+				renderHelmetOverlay(headStack, player, guiGraphics.guiWidth(), guiGraphics.guiHeight(), partialTicks);
+			}
+
+			return false;
+		});
 	}
 
 	private static final ResourceLocation PACKAGE_BLUR_LOCATION = Create.asResource("textures/misc/package_blur.png");
@@ -36,7 +53,7 @@ public class CardboardArmorStealthOverlay extends Gui implements IClientItemExte
 		opacity.updateChaseTarget(CardboardArmorHandler.testForStealth(player) ? 1 : 0);
 	}
 
-	@Override
+	//@Override
 	public void renderHelmetOverlay(ItemStack stack, Player player, int width, int height, float partialTick) {
 		Minecraft mc = Minecraft.getInstance();
 		float value = opacity.getValue(partialTick);

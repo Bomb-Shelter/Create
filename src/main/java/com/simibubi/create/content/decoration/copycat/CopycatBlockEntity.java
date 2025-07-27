@@ -13,6 +13,8 @@ import com.simibubi.create.content.schematics.requirement.ItemRequirement.ItemUs
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.OnLoadBlockEntity;
+import io.github.fabricators_of_create.porting_lib.models.data.ModelData;
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -21,17 +23,17 @@ import net.minecraft.core.component.DataComponentPatch;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
-import net.neoforged.neoforge.client.model.data.ModelData;
-import net.neoforged.neoforge.common.world.AuxiliaryLightManager;
+import org.jetbrains.annotations.Nullable;
 
 public class CopycatBlockEntity extends SmartBlockEntity
-	implements SpecialBlockEntityItemRequirement, TransformableBlockEntity, PartialSafeNBT {
+	implements SpecialBlockEntityItemRequirement, TransformableBlockEntity, PartialSafeNBT, OnLoadBlockEntity {
 
 	private BlockState material;
 	private ItemStack consumedItem;
@@ -110,8 +112,10 @@ public class CopycatBlockEntity extends SmartBlockEntity
 	}
 
 	private void redraw() {
+		/*
 		if (!isVirtual())
 			requestModelDataUpdate();
+		 */
 		if (level != null) {
 			level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 16);
 			updateLight();
@@ -120,15 +124,19 @@ public class CopycatBlockEntity extends SmartBlockEntity
 
 	private void updateLight() {
 		if (level != null) {
+			level.getLightEngine()
+				.checkBlock(getBlockPos());
+
+			/*
 			AuxiliaryLightManager lightManager = level.getAuxLightManager(getBlockPos());
 			if (lightManager != null)
 				lightManager.setLightAt(getBlockPos(), material.getLightEmission(level, getBlockPos()));
+			*/
 		}
 	}
 
 	@Override
 	public void onLoad() {
-		super.onLoad();
 		updateLight();
 	}
 
@@ -201,10 +209,15 @@ public class CopycatBlockEntity extends SmartBlockEntity
 	}
 
 	@Override
-	public ModelData getModelData() {
+	public Object getRenderData() {
+		return material;
+	}
+
+	/*
+	public ModelData getModelDataData() {
 		return ModelData.builder()
 			.with(CopycatModel.MATERIAL_PROPERTY, material)
 			.build();
 	}
-
+	 */
 }

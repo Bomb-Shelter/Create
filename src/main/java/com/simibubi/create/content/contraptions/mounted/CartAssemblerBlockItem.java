@@ -7,6 +7,9 @@ import com.simibubi.create.content.redstone.rail.ControllerRailBlock;
 import com.simibubi.create.foundation.advancement.AdvancementBehaviour;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
+import io.github.fabricators_of_create.porting_lib.blocks.util.MinecartAndRailUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.AxisDirection;
@@ -54,7 +57,7 @@ public class CartAssemblerBlockItem extends BlockItem {
 			return false;
 		}
 
-		RailShape shape = ((BaseRailBlock) block).getRailDirection(state, world, pos, null);
+		RailShape shape =  MinecartAndRailUtil.getDirectionOfRail(state, world, pos, null);
 		if (shape != RailShape.EAST_WEST && shape != RailShape.NORTH_SOUTH)
 			return false;
 

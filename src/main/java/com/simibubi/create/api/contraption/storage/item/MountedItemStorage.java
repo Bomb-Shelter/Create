@@ -5,6 +5,8 @@ import java.util.OptionalInt;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.Codec;
@@ -31,9 +33,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-
-public abstract class MountedItemStorage implements IItemHandlerModifiable {
+public abstract class MountedItemStorage implements SlottedStackStorage {
 	public static final Codec<MountedItemStorage> CODEC = MountedItemStorageType.CODEC.dispatch(
 		storage -> storage.type, type -> type.codec
 	);
@@ -71,7 +71,7 @@ public abstract class MountedItemStorage implements IItemHandlerModifiable {
 			return this.isMenuValid(player, contraption, currentPos);
 		};
 		Component menuName = this.getMenuName(info, contraption);
-		IItemHandlerModifiable handler = this.getHandlerForMenu(info, contraption);
+		SlottedStackStorage handler = this.getHandlerForMenu(info, contraption);
 		Consumer<Player> onClose = p -> {
 			Vec3 newPos = contraption.entity.toGlobalVector(localPosVec, 0);
 			this.playClosingSound(level, newPos);
@@ -91,7 +91,7 @@ public abstract class MountedItemStorage implements IItemHandlerModifiable {
 	 * Get the item handler that will be used by this storage's menu. This is useful for
 	 * handling multi-blocks, such as double chests.
 	 */
-	protected IItemHandlerModifiable getHandlerForMenu(StructureBlockInfo info, Contraption contraption) {
+	protected SlottedStackStorage getHandlerForMenu(StructureBlockInfo info, Contraption contraption) {
 		return this;
 	}
 
@@ -116,7 +116,7 @@ public abstract class MountedItemStorage implements IItemHandlerModifiable {
 	 * @return a MenuProvider that provides the menu players will see when opening this storage
 	 */
 	@Nullable
-	protected MenuProvider createMenuProvider(Component name, IItemHandlerModifiable handler,
+	protected MenuProvider createMenuProvider(Component name, SlottedStackStorage handler,
 											  Predicate<Player> stillValid, Consumer<Player> onClose) {
 		return MountedStorageMenus.createGeneric(name, handler, stillValid, onClose);
 	}

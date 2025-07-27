@@ -14,24 +14,25 @@ import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 import com.simibubi.create.content.processing.sequenced.IAssemblyRecipe;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import com.simibubi.create.infrastructure.fabric.CreateRecipeWrapper;
+
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 @ParametersAreNonnullByDefault
-public class CuttingRecipe extends StandardProcessingRecipe<RecipeWrapper> implements IAssemblyRecipe {
+public class CuttingRecipe extends StandardProcessingRecipe<CreateRecipeWrapper> implements IAssemblyRecipe {
 
 	public CuttingRecipe(ProcessingRecipeParams params) {
 		super(AllRecipeTypes.CUTTING, params);
 	}
 
 	@Override
-	public boolean matches(RecipeWrapper inv, Level worldIn) {
+	public boolean matches(CreateRecipeWrapper inv, Level worldIn) {
 		if (inv.isEmpty())
 			return false;
 		return ingredients.get(0)
@@ -57,7 +58,7 @@ public class CuttingRecipe extends StandardProcessingRecipe<RecipeWrapper> imple
 	public void addAssemblyIngredients(List<Ingredient> list) {}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public Component getDescriptionForAssembly() {
 		return CreateLang.translateDirect("recipe.assembly.cutting");
 	}

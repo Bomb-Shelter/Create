@@ -2,8 +2,8 @@ package com.simibubi.create.foundation.render;
 
 import static com.simibubi.create.Create.asResource;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 import org.lwjgl.system.MemoryUtil;
 
@@ -19,7 +19,7 @@ import dev.engine_room.flywheel.api.layout.LayoutBuilder;
 import dev.engine_room.flywheel.lib.instance.SimpleInstanceType;
 import dev.engine_room.flywheel.lib.util.ExtraMemoryOps;
 
-@OnlyIn(Dist.CLIENT)
+@Environment(EnvType.CLIENT)
 public class AllInstanceTypes {
 	public static final InstanceType<RotatingInstance> ROTATING = SimpleInstanceType.builder(RotatingInstance::new)
 			.cullShader(asResource("instance/cull/rotating.glsl"))

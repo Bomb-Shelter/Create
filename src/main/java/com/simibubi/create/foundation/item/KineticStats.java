@@ -6,6 +6,11 @@ import static net.minecraft.ChatFormatting.GRAY;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.item.Item.TooltipContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllBlocks;
@@ -29,8 +34,6 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 
-import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
-
 public class KineticStats implements TooltipModifier {
 	protected final Block block;
 
@@ -50,10 +53,9 @@ public class KineticStats implements TooltipModifier {
 	}
 
 	@Override
-	public void modify(ItemTooltipEvent context) {
-		List<Component> kineticStats = getKineticStats(block, context.getEntity());
+	public void modify(ItemStack stack, TooltipContext context, TooltipFlag flag, List<Component> tooltip) {
+		List<Component> kineticStats = getKineticStats(block, Minecraft.getInstance().player);
 		if (!kineticStats.isEmpty()) {
-			List<Component> tooltip = context.getToolTip();
 			tooltip.add(CommonComponents.EMPTY);
 			tooltip.addAll(kineticStats);
 		}

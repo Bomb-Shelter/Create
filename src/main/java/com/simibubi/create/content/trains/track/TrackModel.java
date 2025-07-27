@@ -2,7 +2,15 @@ package com.simibubi.create.content.trains.track;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+
+import com.simibubi.create.infrastructure.fabric.client.BakedModelWrapper;
+
+import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
+import net.fabricmc.fabric.api.rendering.data.v1.RenderAttachedBlockView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockAndTintGetter;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,9 +28,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.client.model.BakedModelWrapper;
-import net.neoforged.neoforge.client.model.data.ModelData;
-
 public class TrackModel extends BakedModelWrapper<BakedModel> {
 
 	public TrackModel(BakedModel originalModel) {
@@ -30,15 +35,19 @@ public class TrackModel extends BakedModelWrapper<BakedModel> {
 	}
 
 	@Override
-	public @NotNull List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side,
-											 @NotNull RandomSource rand, @NotNull ModelData extraData, @Nullable RenderType renderType) {
-		List<BakedQuad> templateQuads = super.getQuads(state, side, rand, extraData, renderType);
-		if (templateQuads.isEmpty())
-			return templateQuads;
-		if (!extraData.has(TrackBlockEntityTilt.ASCENDING_PROPERTY))
-			return templateQuads;
+	public boolean isVanillaAdapter() {
+		return false;
+	}
 
-		double angleIn = extraData.get(TrackBlockEntityTilt.ASCENDING_PROPERTY);
+	@Override
+	public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context) {
+		if (!(blockView instanceof RenderAttachedBlockView attachmentView
+			&& attachmentView.getBlockEntityRenderAttachment(pos) instanceof Double data)) {
+			super.emitBlockQuads(blockView, state, pos, randomSupplier, context);
+			return;
+		}
+
+		double angleIn = data;
 		double angle = Math.abs(angleIn);
 		boolean flip = angleIn < 0;
 
@@ -67,17 +76,14 @@ public class TrackModel extends BakedModelWrapper<BakedModel> {
 			return v;
 		};
 
-		int size = templateQuads.size();
-		List<BakedQuad> quads = new ArrayList<>();
-		for (BakedQuad templateQuad : templateQuads) {
-			BakedQuad quad = BakedQuadHelper.clone(templateQuad);
-			int[] vertexData = quad.getVertices();
-			for (int j = 0; j < 4; j++)
-				BakedQuadHelper.setXYZ(vertexData, j, transform.apply(BakedQuadHelper.getXYZ(vertexData, j)));
-			quads.add(quad);
-		}
-
-		return quads;
+		context.pushTransform(quad -> {
+			for (int vertex = 0; vertex < 4; vertex++) {
+				BakedQuadHelper.setXYZ(quad, vertex, transform.apply(BakedQuadHelper.getXYZ(quad, vertex)));
+			}
+			return true;
+		});
+		super.emitBlockQuads(blockView, state, pos, randomSupplier, context);
+		context.popTransform();
 	}
 
 }

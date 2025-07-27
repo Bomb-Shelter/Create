@@ -4,7 +4,8 @@ plugins {
     id "idea"
     id "eclipse"
     id "maven-publish"
-    id "net.neoforged.moddev" version "2.0.74"
+    id "java"
+    id "fabric-loom" version "1.10-SNAPSHOT"
     id "me.modmuss50.mod-publish-plugin" version "0.8.3"
     id "dev.ithundxr.silk" version "0.11.15"
     id "net.kyori.blossom" version "2.1.0" // https://github.com/KyoriPowered/blossom
@@ -28,7 +29,7 @@ boolean inMultiModWorkspace = rootProject.hasProperty('multiModWorkspace.enabled
 boolean ponderInWorkspace = rootProject.hasProperty('multiModWorkspace.ponder')
 
 if (ponderInWorkspace) {
-    evaluationDependsOn(":ponder:NeoForge")
+    evaluationDependsOn(":ponder:Fabric")
 }
 
 project.logger.lifecycle("MultiModWorkspace ${inMultiModWorkspace ? 'enabled' : 'disabled'} for project ${project.name}.")
@@ -43,15 +44,14 @@ idea {
     }
 }
 
-neoForge {
-    version = project.neo_version
-
-    accessTransformers = project.files('src/main/resources/META-INF/accesstransformer.cfg')
-
-    parchment {
-        minecraftVersion = project.parchment_minecraft_version
-        mappingsVersion = project.parchment_version
+fabricApi {
+    configureDataGeneration() {
+        it.client = true
     }
+}
+
+loom {
+    accessWidenerPath = project.file('src/main/resources/create.accesswidener')
 
     mods {
         "${mod_id}" {
@@ -61,7 +61,7 @@ neoForge {
         if (ponderInWorkspace) {
             ponder {
                 sourceSet(project(":ponder:Common").sourceSets.main)
-                sourceSet(project(":ponder:NeoForge").sourceSets.main)
+                sourceSet(project(":ponder:Fabric").sourceSets.main)
             }
         }
     }
@@ -69,34 +69,35 @@ neoForge {
 
     runs {
         configureEach {
-            systemProperty 'forge.logging.markers', 'REGISTRIES'
-            jvmArguments = ["-XX:+IgnoreUnrecognizedVMOptions", "-XX:+AllowEnhancedClassRedefinition"]
+            vmArgs "-XX:+IgnoreUnrecognizedVMOptions", "-XX:+AllowEnhancedClassRedefinition", "-Dmixin.debug.verbose=true -Dmixin.debug.export=true"
             //jvmArgs("-XX:-OmitStackTraceInFastThrow") // uncomment when you get exceptions with null messages etc
             //jvmArgs '-XX:+UnlockCommercialFeatures' // uncomment for profiling
 
-            systemProperty 'mixin.debug.verbose', 'true'
-            systemProperty 'mixin.debug.export', 'true'
+            //logLevel = org.slf4j.event.Level.DEBUG
+        }
 
-            logLevel = org.slf4j.event.Level.DEBUG
+        datagen {
+            client()
+            name("Data Generation")
+            vmArg("-Dfabric-api.datagen")
+            vmArg("-Dfabric-api.datagen.output-dir=${file("src/main/generated")}")
+            vmArg("-Dfabric-api.datagen.modid=create")
+            vmArg("-Dporting_lib.datagen.existing_resources=${file("src/main/resources")}")
         }
 
         client {
             client()
-
-            // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
         }
 
         server {
             server()
 
-            gameDirectory = project.file('run/server')
+            runDir = project.file('run/server')
 
-            programArgument '--nogui'
-            systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
+            programArg '--nogui'
         }
 
-        data {
+        /*data {
             data()
 
             programArguments.addAll('--mod', project.mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath())
@@ -105,7 +106,7 @@ neoForge {
         gameTestServer {
             type = "gameTestServer"
             systemProperty 'neoforge.enabledGameTestNamespaces', project.mod_id
-        }
+        }*/
     }
 }
 
@@ -114,8 +115,9 @@ configurations {
 }
 
 repositories {
+    mavenLocal()
     maven { url = "https://maven.createmod.net" } // Ponder, Flywheel
-    maven { url = "https://mvn.devos.one/snapshots" } // Registrate
+    maven { url = "https://mvn.devos.one/snapshots" } // Registrate, Porting Lib
     maven { url = "https://maven.blamejared.com" } // JEI, Vazkii's Mods
     maven { url = "https://harleyoconnor.com/maven" } // Dynamic Trees
     maven { url = "https://maven.theillusivec4.top/" } // Curios API
@@ -125,6 +127,9 @@ repositories {
     maven { url = "https://maven.ftb.dev/releases" } // FTB Mods
     maven { url = "https://maven.architectury.dev" } // Arch API
     maven { url = "https://raw.githubusercontent.com/Fuzss/modresources/main/maven" } // NeoForge config api port, needed by ponder
+    maven { url = "https://maven.terraformersmc.com/" } // ModMenu
+    maven { url = "https://maven.ladysnake.org/releases" } // Trinkets
+    maven { url = "https://maven.parchmentmc.org" } // Parchment
     maven {
         url = "https://jm.gserv.me/repository/maven-public" // JourneyMap
         content {
@@ -135,50 +140,70 @@ repositories {
 }
 
 dependencies {
-    jarJar(implementation("com.tterrag.registrate:Registrate:${registrate_version}"))
-    jarJar("net.createmod.ponder:Ponder-NeoForge-${minecraft_version}:${ponder_version}")
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings(loom.layered() {
+        officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-${parchment_minecraft_version}:${parchment_version}@zip")
+    })
 
-    compileOnly("dev.engine-room.flywheel:flywheel-neoforge-api-${flywheel_minecraft_version}:${flywheel_version}")
-    runtimeOnly(jarJar("dev.engine-room.flywheel:flywheel-neoforge-${flywheel_minecraft_version}:${flywheel_version}") {
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+
+    modImplementation "com.terraformersmc:modmenu:${modmenu_version}"
+
+    def portingLibModules = ["attributes", "base", "blocks", "brewing", "chunk_loading", "client_events", "common", "conditions", "config", "core", "data", "data_maps", "entity", "fluids", "gametest", "gui_utils", "item_abilities", "items", "level_events", "loot", "mixin_extensions", "model_data", "model_loader", "models", "obj_loader", "recipe_book_categories", "registry", "render_types", "tags", "transfer"]
+
+    for (def module in portingLibModules) {
+        include(modImplementation("io.github.fabricators_of_create.Porting-Lib:${module}:${porting_lib_version}"))
+    }
+
+    modCompileOnly("com.tterrag.registrate_fabric:Registrate:${registrate_version}") {
+        exclude(group: "io.github.fabricators_of_create")
+    }
+    include(modRuntimeOnly("com.tterrag.registrate_fabric:Registrate:${registrate_version}"))
+    include("net.createmod.ponder:Ponder-Fabric-${minecraft_version}:${ponder_version}")
+
+    modCompileOnly("dev.engine-room.flywheel:flywheel-fabric-api-${flywheel_minecraft_version}:${flywheel_version}")
+    modRuntimeOnly(include("dev.engine-room.flywheel:flywheel-fabric-${flywheel_minecraft_version}:${flywheel_version}") {
         version {
             strictly "[1.0,2.0)"
             prefer flywheel_version
         }
     })
-    runtimeOnly("dev.engine-room.vanillin:vanillin-neoforge-${flywheel_minecraft_version}:${vanillin_version}")
+    modRuntimeOnly("dev.engine-room.vanillin:vanillin-fabric-${flywheel_minecraft_version}:${vanillin_version}")
 
     if (ponderInWorkspace) {
-        implementation(project(":ponder:Common"))
-        implementation(project(":ponder:NeoForge"))
+        modImplementation(project(":ponder:Common"))
+        modImplementation(project(":ponder:Fabric"))
     } else {
-        implementation("net.createmod.ponder:Ponder-NeoForge-${minecraft_version}:${ponder_version}")
+        modImplementation("net.createmod.ponder:Ponder-Fabric-${minecraft_version}:${ponder_version}")
     }
 
-    //compileOnly("mezz.jei:jei-${jei_minecraft_version}-common-api:${jei_version}")
-    //compileOnly("mezz.jei:jei-${jei_minecraft_version}-neoforge-api:${jei_version}")
-    implementation("mezz.jei:jei-${jei_minecraft_version}-neoforge:${jei_version}")
+    //modCompileOnly("mezz.jei:jei-${jei_minecraft_version}-common-api:${jei_version}")
+    //modCompileOnly("mezz.jei:jei-${jei_minecraft_version}-fabric-api:${jei_version}")
+    modImplementation("mezz.jei:jei-${jei_minecraft_version}-fabric:${jei_version}")
 
-    compileOnly("top.theillusivec4.curios:curios-neoforge:${curios_version}+${curios_minecraft_version}:api")
-    runtimeOnly("top.theillusivec4.curios:curios-neoforge:${curios_version}+${curios_minecraft_version}")
+    modImplementation("dev.emi:trinkets:${trinkets_version}")
 
-    compileOnly("maven.modrinth:sodium:mc${minecraft_version}-${sodium_version}-neoforge")
+    modCompileOnly("maven.modrinth:sodium:mc${minecraft_version}-${sodium_version}-fabric")
 
     if (cc_tweaked_enable.toBoolean()) {
-        compileOnly("cc.tweaked:cc-tweaked-${cc_tweaked_minecraft_version}-core-api:${cc_tweaked_version}")
-        compileOnly("cc.tweaked:cc-tweaked-${cc_tweaked_minecraft_version}-forge-api:${cc_tweaked_version}")
+        modCompileOnly("cc.tweaked:cc-tweaked-${cc_tweaked_minecraft_version}-core-api:${cc_tweaked_version}")
+        modCompileOnly("cc.tweaked:cc-tweaked-${cc_tweaked_minecraft_version}-fabric-api:${cc_tweaked_version}")
         // TODO - Uncomment when cc tweaked supports the api refactors
-        //runtimeOnly("cc.tweaked:cc-tweaked-${cc_tweaked_minecraft_version}-forge:${cc_tweaked_version}")
+        //modRuntimeOnly("cc.tweaked:cc-tweaked-${cc_tweaked_minecraft_version}-forge:${cc_tweaked_version}")
     }
 
-    runtimeOnly("dev.architectury:architectury-neoforge:13.0.8")
-    implementation("dev.ftb.mods:ftb-chunks-neoforge:2101.1.1")
-    implementation("dev.ftb.mods:ftb-teams-neoforge:2101.1.0")
-    implementation("dev.ftb.mods:ftb-library-neoforge:2101.1.3")
+    modRuntimeOnly("dev.architectury:architectury-fabric:13.0.8")
+    modImplementation("dev.ftb.mods:ftb-chunks-fabric:2101.1.1")
+    modImplementation("dev.ftb.mods:ftb-teams-fabric:2101.1.0")
+    modImplementation("dev.ftb.mods:ftb-library-fabric:2101.1.3")
 
-    implementation("maven.modrinth:journeymap:1.21.1-6.0.0-beta.46+neoforge")
-    implementation("info.journeymap:journeymap-api-neoforge:2.0.0-1.21.1-SNAPSHOT") {
+    modImplementation("maven.modrinth:journeymap:1.21.1-6.0.0-beta.46+fabric")
+    modImplementation("info.journeymap:journeymap-api-fabric:2.0.0-1.21.1-SNAPSHOT") {
         exclude(group: "curse.maven") // Pulls in a old version of journey map which is for forge
     }
+    include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:${mixinextras_version}")))
 }
 
 sourceSets.main {
@@ -188,11 +213,6 @@ sourceSets.main {
         }
     }
 
-    resources {
-        srcDir 'src/generated/resources'
-        exclude '.cache/'
-    }
-
     blossom.javaSources {
         property("version", mod_version)
         property("gitCommit", gitHash.toString())
@@ -200,13 +220,25 @@ sourceSets.main {
 }
 
 processResources {
+    var replaceProperties = [
+        mod_version            : mod_version,
+        mod_id                 : mod_id,
+        mod_name               : mod_name,
+        mod_author             : mod_author,
+        mod_description        : mod_description,
+        mod_license            : mod_license,
+        minecraft_version_range: minecraft_version_range,
+        fabric_version_range   : fabric_version_range,
+        flywheel_version_range : flywheel_version_range,
+    ]
     def buildProps = project.properties.clone()
 
     // Replaces FML's magic file.jarVersion string with the correct version at build time.
     buildProps.put('file', [jarVersion: project.version])
 
-    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+    filesMatching(['fabric.mod.json']) {
         expand buildProps
+        expand replaceProperties
     }
 }
 
@@ -239,30 +271,6 @@ final slimJar = tasks.register("slimJar", Jar) {
         "Git-Hash"    : gitHash
     ])
 }
-
-var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
-    var replaceProperties = [
-        mod_version            : mod_version,
-        mod_id                 : mod_id,
-        mod_name               : mod_name,
-        mod_author             : mod_author,
-        mod_description        : mod_description,
-        mod_license            : mod_license,
-        minecraft_version_range: minecraft_version_range,
-        neo_version_range      : neo_version_range,
-        flywheel_version_range : flywheel_version_range,
-    ]
-    inputs.properties replaceProperties
-    expand replaceProperties
-    from "src/main/templates"
-    into "build/generated/sources/modMetadata"
-}
-
-// Include the output of "generateModMetadata" as an input directory for the build
-// this works with both building through Gradle and the IDE.
-sourceSets.main.resources.srcDir(generateModMetadata)
-// To avoid having to run "generateModMetadata" manually, make it run on every project reload
-neoForge.ideSyncTask(generateModMetadata)
 
 publishing {
     publications {
@@ -304,7 +312,7 @@ publishMods {
     type = STABLE
     version = "$minecraft_version-$mod_version"
     displayName = "$mod_name $mod_version for mc$minecraft_version"
-    modLoaders.add("neoforge")
+    modLoaders.add("fabric")
 
     curseforge {
         accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")

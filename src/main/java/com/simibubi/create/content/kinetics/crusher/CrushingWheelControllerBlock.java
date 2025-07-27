@@ -1,5 +1,7 @@
 package com.simibubi.create.content.kinetics.crusher;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomRunningEffectsBlock;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.mojang.serialization.MapCodec;
@@ -40,7 +42,7 @@ import net.minecraft.world.phys.shapes.EntityCollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class CrushingWheelControllerBlock extends DirectionalBlock implements IBE<CrushingWheelControllerBlockEntity> {
+public class CrushingWheelControllerBlock extends DirectionalBlock implements IBE<CrushingWheelControllerBlockEntity>, CustomRunningEffectsBlock {
 
 	public CrushingWheelControllerBlock(Properties p_i48440_1_) {
 		super(p_i48440_1_);
@@ -92,7 +94,7 @@ public class CrushingWheelControllerBlock extends DirectionalBlock implements IB
 			return;
 //		if (entityIn instanceof ItemEntity)
 //			((ItemEntity) entityIn).setPickUpDelay(10);
-		CompoundTag data = entityIn.getPersistentData();
+		CompoundTag data = entityIn.getCustomData();
 		if (data.contains("BypassCrushingWheel")) {
 			if (pos.equals(NBTHelper.readBlockPos(data, "BypassCrushingWheel")))
 				return;
@@ -176,7 +178,7 @@ public class CrushingWheelControllerBlock extends DirectionalBlock implements IB
 		if (entity == null)
 			return standardShape;
 
-		CompoundTag data = entity.getPersistentData();
+		CompoundTag data = entity.getCustomData();
 		if (pos.equals(NBTHelper.readBlockPos(data, "BypassCrushingWheel")))
 			if (state.getValue(FACING) != Direction.UP) // Allow output items to land on top of the block rather
 				return Shapes.empty();					// than falling back through.

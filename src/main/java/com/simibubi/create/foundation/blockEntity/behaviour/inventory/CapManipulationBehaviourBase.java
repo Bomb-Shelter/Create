@@ -10,13 +10,14 @@ import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringB
 import com.simibubi.create.foundation.item.ItemHelper.ExtractionCountMode;
 
 import net.createmod.catnip.math.BlockFace;
+import net.fabricmc.fabric.api.lookup.v1.block.BlockApiLookup;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.neoforged.neoforge.capabilities.BlockCapability;
 
 public abstract class CapManipulationBehaviourBase<T, S extends CapManipulationBehaviourBase<?, ?>>
 	extends BlockEntityBehaviour {
@@ -38,7 +39,7 @@ public abstract class CapManipulationBehaviourBase<T, S extends CapManipulationB
 		filter = Predicates.alwaysTrue();
 	}
 
-	protected abstract BlockCapability<T, Direction> capability();
+	protected abstract BlockApiLookup<T, Direction> capability();
 
 	@Override
 	public void initialize() {
@@ -89,7 +90,7 @@ public abstract class CapManipulationBehaviourBase<T, S extends CapManipulationB
 	public BlockFace getTarget() {
 		return this.target.getTarget(this.getWorld(), this.blockEntity.getBlockPos(), this.blockEntity.getBlockState());
 	}
-	
+
 	protected boolean onHandlerInvalidated() {
 		if (targetCapability == null)
 			return false;
@@ -143,8 +144,8 @@ public abstract class CapManipulationBehaviourBase<T, S extends CapManipulationB
 		BlockEntity invBE = world.getBlockEntity(pos);
 		if (!filter.test(invBE))
 			return;
-		BlockCapability<T, Direction> capability = capability();
-		targetCapability = world.getCapability(capability, pos, bypassSided ? null : targetBlockFace.getFace());
+		BlockApiLookup<T, Direction> capability = capability();
+		targetCapability = capability.find(world, pos, bypassSided ? null : targetBlockFace.getFace());
 	}
 
 	@FunctionalInterface

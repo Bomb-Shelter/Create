@@ -2,6 +2,15 @@ package com.simibubi.create.impl.unpacking;
 
 import java.util.List;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.api.packager.unpacking.UnpackingHandler;
@@ -13,9 +22,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 public enum DefaultUnpackingHandler implements UnpackingHandler {
 	INSTANCE;
@@ -26,7 +32,7 @@ public enum DefaultUnpackingHandler implements UnpackingHandler {
 		if (targetBE == null)
 			return false;
 
-		IItemHandler targetInv = level.getCapability(ItemHandler.BLOCK, pos, state, targetBE, null);
+		Storage<ItemVariant> targetInv = ItemStorage.SIDED.find(level, pos, state, targetBE, null);
 		if (targetInv == null)
 			return false;
 
@@ -37,12 +43,12 @@ public enum DefaultUnpackingHandler implements UnpackingHandler {
 			 * already have correctly identified there to be enough space for everything.
 			 */
 			for (ItemStack itemStack : items)
-				ItemHandlerHelper.insertItemStacked(targetInv, itemStack.copy(), false);
+				CreateTransferUtil.insertItemStacked(targetInv, itemStack.copy(), false);
 			return true;
 		}
 
-		for (int slot = 0; slot < targetInv.getSlots(); slot++) {
-			ItemStack itemInSlot = targetInv.getStackInSlot(slot);
+		for (StorageView<ItemVariant> view : targetInv) {
+			ItemStack itemInSlot = CreateTransferUtil.getLimitedStack(view.getResource(), view.getAmount());
 			int itemsAddedToSlot = 0;
 
 			for (int boxSlot = 0; boxSlot < items.size(); boxSlot++) {
@@ -50,12 +56,12 @@ public enum DefaultUnpackingHandler implements UnpackingHandler {
 				if (toInsert.isEmpty())
 					continue;
 
-				if (targetInv.insertItem(slot, toInsert, true)
+				if (CreateTransferUtil.insertItem(targetInv, toInsert, true) // Fabric TODO: this doesn't match behaviour, but we're missing insert on StorageView...
 					.getCount() == toInsert.getCount())
 					continue;
 
 				if (itemInSlot.isEmpty()) {
-					int maxStackSize = targetInv.getSlotLimit(slot);
+					int maxStackSize = (int) view.getCapacity();
 					if (maxStackSize < toInsert.getCount()) {
 						toInsert.shrink(maxStackSize);
 						toInsert = toInsert.copyWithCount(maxStackSize);
@@ -63,17 +69,17 @@ public enum DefaultUnpackingHandler implements UnpackingHandler {
 						items.set(boxSlot, ItemStack.EMPTY);
 
 					itemInSlot = toInsert;
-					targetInv.insertItem(slot, toInsert, simulate);
+					CreateTransferUtil.insertItem(targetInv, toInsert, simulate);
 					continue;
 				}
 
 				if (!ItemStack.isSameItemSameComponents(toInsert, itemInSlot))
 					continue;
 
-				int insertedAmount = toInsert.getCount() - targetInv.insertItem(slot, toInsert, simulate)
+				int insertedAmount = toInsert.getCount() - CreateTransferUtil.insertItem(targetInv, toInsert, simulate)
 					.getCount();
-				int slotLimit = (int) ((targetInv.getStackInSlot(slot)
-					.isEmpty() ? itemInSlot.getMaxStackSize() / 64f : 1) * targetInv.getSlotLimit(slot));
+				int slotLimit = (int) ((view.isResourceBlank() || view.getAmount() <= 0
+					 ? itemInSlot.getMaxStackSize() / 64f : 1) * view.getCapacity());
 				int insertableAmountWithPreviousItems =
 					Math.min(toInsert.getCount(), slotLimit - itemInSlot.getCount() - itemsAddedToSlot);
 

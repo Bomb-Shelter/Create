@@ -24,8 +24,12 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -38,11 +42,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.fluids.FluidStack;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
-public class SpoutBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
+import org.jetbrains.annotations.Nullable;
+
+public class SpoutBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity {
 
 	public static final int FILLING_TIME = 20;
 	protected BeltProcessingBehaviour beltProcessing;
@@ -60,16 +64,15 @@ public class SpoutBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		processingTicks = -1;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.FluidHandler.BLOCK,
-				AllBlockEntityTypes.SPOUT.get(),
-				(be, context) -> {
-					if (context != Direction.DOWN)
-						return be.tank.getCapability();
-					return null;
-				}
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<FluidVariant> getFluidStorage(@Nullable Direction side) {
+		if (side != Direction.DOWN)
+			return this.tank.getCapability();
+
+		return null;
 	}
 
 	@Override
@@ -111,7 +114,7 @@ public class SpoutBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		if (tank.isEmpty())
 			return HOLD;
 		FluidStack fluid = getCurrentFluidInTank();
-		int requiredAmountForItem = FillingBySpout.getRequiredAmountForItem(level, transported.stack, fluid.copy());
+		long requiredAmountForItem = FillingBySpout.getRequiredAmountForItem(level, transported.stack, fluid.copy());
 		if (requiredAmountForItem == -1)
 			return PASS;
 		if (requiredAmountForItem > fluid.getAmount())
@@ -216,12 +219,12 @@ public class SpoutBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		if (processingTicks >= 0) {
 			processingTicks--;
 			if (processingTicks == 5 && customProcess != null) {
-				int fillBlock = customProcess.fillBlock(level, worldPosition.below(2), this, currentFluidInTank.copy(), false);
+				long fillBlock = customProcess.fillBlock(level, worldPosition.below(2), this, currentFluidInTank.copy(), false);
 				customProcess = null;
 				if (fillBlock > 0) {
 					tank.getPrimaryHandler()
 						.setFluid(FluidHelper.copyStackWithAmount(currentFluidInTank,
-							currentFluidInTank.getAmount() - fillBlock));
+							(int) (currentFluidInTank.getAmount() - fillBlock)));
 					sendSplash = true;
 					notifyUpdate();
 				}
@@ -261,6 +264,6 @@ public class SpoutBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 	@Override
 	public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
 		return containedFluidTooltip(tooltip, isPlayerSneaking,
-			level.getCapability(Capabilities.FluidHandler.BLOCK, worldPosition, null));
+			TransferUtil.getFluidStorage(this.level, worldPosition, null));
 	}
 }

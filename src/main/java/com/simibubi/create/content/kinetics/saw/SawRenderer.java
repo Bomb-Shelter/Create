@@ -123,7 +123,7 @@ public class SawRenderer extends SafeBlockEntityRenderer<SawBlockEntity> {
 			offset = 1 - offset;
 
 		int outputs = 0;
-		for (int i = 1; i < be.inventory.getSlots(); i++)
+		for (int i = 1; i < be.inventory.getSlotCount(); i++)
 			if (!be.inventory.getStackInSlot(i)
 				.isEmpty())
 				outputs++;
@@ -135,7 +135,7 @@ public class SawRenderer extends SafeBlockEntityRenderer<SawBlockEntity> {
 		ms.translate(alongZ ? -1 : 0, 0, 0);
 
 		int renderedI = 0;
-		for (int i = 0; i < be.inventory.getSlots(); i++) {
+		for (int i = 0; i < be.inventory.getSlotCount(); i++) {
 			ItemStack stack = be.inventory.getStackInSlot(i);
 			if (stack.isEmpty())
 				continue;
@@ -179,7 +179,7 @@ public class SawRenderer extends SafeBlockEntityRenderer<SawBlockEntity> {
 			.getAxis()
 			.isHorizontal())
 			return CachedBuffers.partialFacing(AllPartialModels.SHAFT_HALF,
-				state.rotate(be.getLevel(), be.getBlockPos(), Rotation.CLOCKWISE_180));
+				state.rotate(Rotation.CLOCKWISE_180));
 		return CachedBuffers.block(KineticBlockEntityRenderer.KINETIC_BLOCK, getRenderedBlockState(be));
 	}
 

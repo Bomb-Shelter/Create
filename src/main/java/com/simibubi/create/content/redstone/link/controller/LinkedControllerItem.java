@@ -10,8 +10,12 @@ import com.simibubi.create.content.redstone.link.RedstoneLinkNetworkHandler.Freq
 import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 
+import io.github.fabricators_of_create.porting_lib.item.extensions.UseFirstBehaviorItem;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.platform.CatnipServices;
+import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -31,15 +35,14 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.LecternBlock;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public class LinkedControllerItem extends Item implements MenuProvider {
+public class LinkedControllerItem extends Item implements ExtendedScreenHandlerFactory<ItemStack>, UseFirstBehaviorItem {
 
 	public LinkedControllerItem(Properties properties) {
 		super(properties);
+		CatnipServices.PLATFORM.executeOnClientOnly(() -> this::initializeClient);
 	}
 
 	@Override
@@ -90,9 +93,7 @@ public class LinkedControllerItem extends Item implements MenuProvider {
 
 		if (player.isShiftKeyDown() && hand == InteractionHand.MAIN_HAND) {
 			if (!world.isClientSide && player instanceof ServerPlayer && player.mayBuild())
-				player.openMenu(this, buf -> {
-					ItemStack.STREAM_CODEC.encode(buf, heldItem);
-				});
+				player.openMenu(this);
 			return InteractionResultHolder.success(heldItem);
 		}
 
@@ -106,12 +107,17 @@ public class LinkedControllerItem extends Item implements MenuProvider {
 		return InteractionResultHolder.pass(heldItem);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Override
+	public ItemStack getScreenOpeningData(ServerPlayer player) {
+		return player.getMainHandItem();
+	}
+
+	@Environment(EnvType.CLIENT)
 	private void toggleBindMode(BlockPos pos) {
 		LinkedControllerClientHandler.toggleBindMode(pos);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private void toggleActive() {
 		LinkedControllerClientHandler.toggle();
 	}
@@ -143,9 +149,8 @@ public class LinkedControllerItem extends Item implements MenuProvider {
 		return getDescription();
 	}
 
-	@Override
-	@OnlyIn(Dist.CLIENT)
-	public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-		consumer.accept(SimpleCustomRenderer.create(this, new LinkedControllerItemRenderer()));
+	@Environment(EnvType.CLIENT)
+	public void initializeClient() {
+		BuiltinItemRendererRegistry.INSTANCE.register(this, SimpleCustomRenderer.create(this, new LinkedControllerItemRenderer()));
 	}
 }

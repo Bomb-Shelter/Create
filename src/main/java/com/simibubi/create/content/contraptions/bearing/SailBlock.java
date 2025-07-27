@@ -13,6 +13,8 @@ import com.simibubi.create.AllShapes;
 import com.simibubi.create.foundation.block.WrenchableDirectionalBlock;
 import com.simibubi.create.foundation.utility.BlockHelper;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.placement.IPlacementHelper;
 import net.createmod.catnip.placement.PlacementHelpers;
@@ -95,7 +97,7 @@ public class SailBlock extends WrenchableDirectionalBlock {
 		if (frame)
 			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 
-		DyeColor color = DyeColor.getColor(stack);
+		DyeColor color = CreateFabricUtil.getColor(stack);
 		if (color != null) {
 			if (!level.isClientSide)
 				level.playSound(null, pos, SoundEvents.DYE_USE, SoundSource.BLOCKS, 1.0f, 1.1f - level.random.nextFloat() * .2f);
@@ -182,12 +184,11 @@ public class SailBlock extends WrenchableDirectionalBlock {
 	}
 
 	@Override
-	public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos,
-									   Player player) {
-		ItemStack pickBlock = super.getCloneItemStack(state, target, level, pos, player);
+	public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
+		ItemStack pickBlock = super.getCloneItemStack(level, pos, state);
 		if (pickBlock.isEmpty())
 			return AllBlocks.SAIL.get()
-				.getCloneItemStack(state, target, level, pos, player);
+				.getCloneItemStack(level, pos, state);
 		return pickBlock;
 	}
 

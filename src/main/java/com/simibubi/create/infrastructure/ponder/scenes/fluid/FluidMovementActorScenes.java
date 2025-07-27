@@ -7,6 +7,8 @@ import com.simibubi.create.content.fluids.tank.FluidTankBlockEntity;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.element.ElementLink;
@@ -14,13 +16,13 @@ import net.createmod.ponder.api.element.WorldSectionElement;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class FluidMovementActorScenes {
 
@@ -51,9 +53,9 @@ public class FluidMovementActorScenes {
 		scene.world().modifyBlock(pumpPos, s -> s.setValue(PumpBlock.FACING, Direction.NORTH), false);
 
 		scene.world().modifyBlockEntity(st, type, be -> {
-			IFluidHandler ifh = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+			Storage<FluidVariant> ifh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 			if (ifh != null)
-				ifh.fill(FluidHelper.copyStackWithAmount(chocolate, 10000), FluidAction.EXECUTE);
+				CreateTransferUtil.insertFluid(ifh, FluidHelper.copyStackWithAmount(chocolate, 10000), false);
 		});
 
 		BlockPos bearing = util.grid().at(5, 1, 2);
@@ -148,27 +150,27 @@ public class FluidMovementActorScenes {
 						.withItem(bucket);
 
 			scene.world().modifyBlockEntity(st, type, be -> {
-				IFluidHandler ifh = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+				Storage<FluidVariant> ifh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 				if (ifh != null)
-					ifh.drain(1000, FluidAction.EXECUTE);
+					CreateTransferUtil.extractFluid(ifh, 1000, false);
 			});
 			scene.world().modifyBlockEntity(ct1, type, be -> {
-				IFluidHandler ifh = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+				Storage<FluidVariant> ifh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 				if (ifh != null)
-					ifh.fill(chocolate, FluidAction.EXECUTE);
+					CreateTransferUtil.insertFluid(ifh, chocolate, false);
 			});
 			scene.idle(2);
 		}
 		for (int i = 0; i < 8; i++) {
 			scene.world().modifyBlockEntity(st, type, be -> {
-				IFluidHandler ifh = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+				Storage<FluidVariant> ifh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 				if (ifh != null)
-					ifh.drain(1000, FluidAction.EXECUTE);
+					CreateTransferUtil.extractFluid(ifh, 1000, false);
 			});
 			scene.world().modifyBlockEntity(ct2, type, be -> {
-				IFluidHandler ifh = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+				Storage<FluidVariant> ifh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 				if (ifh != null)
-					ifh.fill(chocolate, FluidAction.EXECUTE);
+					CreateTransferUtil.insertFluid(ifh, chocolate, false);
 			});
 			scene.idle(2);
 		}
@@ -185,35 +187,35 @@ public class FluidMovementActorScenes {
 
 		for (int i = 0; i < 8; i++) {
 			scene.world().modifyBlockEntity(ct2, type, be -> {
-				IFluidHandler ifh = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+				Storage<FluidVariant> ifh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 				if (ifh != null)
-					ifh.drain(1000, FluidAction.EXECUTE);
+					CreateTransferUtil.extractFluid(ifh, 1000, false);
 			});
 			scene.world().modifyBlockEntity(st, type, be -> {
-				IFluidHandler ifh = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+				Storage<FluidVariant> ifh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 				if (ifh != null)
-					ifh.fill(chocolate, FluidAction.EXECUTE);
+					CreateTransferUtil.insertFluid(ifh, chocolate, false);
 			});
 			scene.idle(2);
 		}
 		for (int i = 0; i < 16; i++) {
 			scene.world().modifyBlockEntity(ct1, type, be -> {
-				IFluidHandler ifh = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+				Storage<FluidVariant> ifh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 				if (ifh != null)
-					ifh.drain(1000, FluidAction.EXECUTE);
+					CreateTransferUtil.extractFluid(ifh, 1000, false);
 			});
 			scene.world().modifyBlockEntity(st, type, be -> {
-				IFluidHandler ifh = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+				Storage<FluidVariant> ifh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 				if (ifh != null)
-					ifh.fill(chocolate, FluidAction.EXECUTE);
+					CreateTransferUtil.insertFluid(ifh, chocolate, false);
 			});
 			scene.idle(2);
 		}
 
 		scene.world().modifyBlockEntity(util.grid().at(2, 2, 3), type, be -> {
-			IFluidHandler ifh = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+			Storage<FluidVariant> ifh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 			if (ifh != null)
-				ifh.drain(8000, FluidAction.EXECUTE);
+				CreateTransferUtil.extractFluid(ifh, 8000, false);
 		});
 		scene.idle(50);
 

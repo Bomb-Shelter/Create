@@ -58,16 +58,13 @@ import com.simibubi.create.Create;
 import com.simibubi.create.foundation.data.recipe.CompatMetals;
 
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
+import net.fabricmc.fabric.api.event.registry.RegistryIdRemapCallback;
 import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Blocks;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.common.NeoForgeMod;
-import net.neoforged.neoforge.registries.RegisterEvent;
 
-@EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 public class RemapHelper {
 	private static final Map<String, ResourceLocation> reMap = new HashMap<>();
 
@@ -233,22 +230,24 @@ public class RemapHelper {
 		}
 	}
 
-	@SubscribeEvent
-	public static void remap(RegisterEvent event) {
-		Registry<?> registry = event.getRegistry();
+	public static void init() {
+	}
 
-		if (registry == Registries.BLOCK || registry == Registries.ITEM) {
-			reMap.forEach((string, resourceLocation) -> registry.addAlias(asResource(string), resourceLocation));
+	public static void remap() {
+		{
+			reMap.forEach((string, resourceLocation) -> BuiltInRegistries.BLOCK.addAlias(asResource(string), resourceLocation));
+			reMap.forEach((string, resourceLocation) -> BuiltInRegistries.ITEM.addAlias(asResource(string), resourceLocation));
 		}
 
-		if (registry == Registries.FLUID) {
-			registry.addAlias(asResource("milk"), NeoForgeMod.MILK.getId());
-			registry.addAlias(asResource("flowing_milk"), NeoForgeMod.FLOWING_MILK.getId());
+		{
+			var registry = BuiltInRegistries.FLUID;
+			//registry.addAlias(asResource("milk"), NeoForgeMod.MILK.getId());
+			//registry.addAlias(asResource("flowing_milk"), NeoForgeMod.FLOWING_MILK.getId());
 		}
 
-		if (registry == Registries.BLOCK_ENTITY_TYPE) {
-			registry.addAlias(asResource("copper_backtank"), AllBlockEntityTypes.BACKTANK.getId());
-			registry.addAlias(asResource("adjustable_pulley"), AllBlockEntityTypes.ADJUSTABLE_CHAIN_GEARSHIFT.getId());
+		{
+			BuiltInRegistries.BLOCK_ENTITY_TYPE.addAlias(asResource("copper_backtank"), AllBlockEntityTypes.BACKTANK.getId());
+			BuiltInRegistries.BLOCK_ENTITY_TYPE.addAlias(asResource("adjustable_pulley"), AllBlockEntityTypes.ADJUSTABLE_CHAIN_GEARSHIFT.getId());
 		}
 	}
 }

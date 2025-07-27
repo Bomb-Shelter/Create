@@ -4,11 +4,10 @@ import com.simibubi.create.foundation.data.AssetLookup;
 import com.tterrag.registrate.providers.DataGenContext;
 import com.tterrag.registrate.providers.RegistrateBlockstateProvider;
 
+import io.github.fabricators_of_create.porting_lib.models.generators.MultiPartBlockStateBuilder;
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.world.level.block.Block;
-
-import net.neoforged.neoforge.client.model.generators.MultiPartBlockStateBuilder;
 
 public class GirderBlockStateGenerator {
 

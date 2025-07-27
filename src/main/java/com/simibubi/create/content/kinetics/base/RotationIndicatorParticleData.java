@@ -15,8 +15,8 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 
 import net.minecraft.network.codec.StreamCodec;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class RotationIndicatorParticleData
 	implements ParticleOptions, ICustomParticleDataWithSprite<RotationIndicatorParticleData> {
@@ -87,7 +87,7 @@ public class RotationIndicatorParticleData
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public SpriteParticleRegistration<RotationIndicatorParticleData> getMetaFactory() {
 		return RotationIndicatorParticle.Factory::new;
 	}

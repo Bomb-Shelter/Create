@@ -16,8 +16,13 @@ import java.util.stream.Collectors;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.kinetics.crafter.MechanicalCrafterBlockEntity.Inventory;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CombinedInventoryStorage;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -28,10 +33,6 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 
 public class ConnectedInputHandler {
 
@@ -174,9 +175,9 @@ public class ConnectedInputHandler {
 			data.add(controllerPos.subtract(myPos));
 		}
 
-		public IItemHandler getItemHandler(Level world, BlockPos pos) {
+		public SlottedStackStorage getItemHandler(Level world, BlockPos pos) {
 			List<Inventory> inventories = this.getInventories(world, pos);
-			return new CombinedInvWrapper(inventories.toArray(IItemHandlerModifiable[]::new));
+			return new CombinedInventoryStorage(inventories.toArray(SlottedStackStorage[]::new));
 		}
 
 		public List<Inventory> getInventories(Level world, BlockPos pos) {

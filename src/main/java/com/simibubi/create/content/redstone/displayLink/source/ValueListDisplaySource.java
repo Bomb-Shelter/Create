@@ -7,6 +7,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
+import net.createmod.catnip.data.LongAttached;
+
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import com.simibubi.create.api.behaviour.display.DisplaySource;
@@ -24,12 +26,12 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.block.entity.LecternBlockEntity;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public abstract class ValueListDisplaySource extends DisplaySource {
 
-	protected abstract Stream<IntAttached<MutableComponent>> provideEntries(DisplayLinkContext context, int maxRows);
+	protected abstract Stream<LongAttached<MutableComponent>> provideEntries(DisplayLinkContext context, int maxRows);
 
 	protected abstract boolean valueFirst();
 
@@ -90,8 +92,8 @@ public abstract class ValueListDisplaySource extends DisplaySource {
 	}
 
 	protected List<MutableComponent> createComponentsFromEntry(DisplayLinkContext context,
-		IntAttached<MutableComponent> entry) {
-		int number = entry.getFirst();
+		LongAttached<MutableComponent> entry) {
+		long number = entry.getFirst();
 		MutableComponent name = entry.getSecond()
 			.append(WHITESPACE);
 
@@ -137,7 +139,7 @@ public abstract class ValueListDisplaySource extends DisplaySource {
 		layout.configure(layoutKey, valueFirst ? Arrays.asList(value, name) : Arrays.asList(name, value));
 	}
 
-	private Couple<MutableComponent> shorten(int number) {
+	private Couple<MutableComponent> shorten(long number) {
 		if (number >= 1000000) {
             return Couple.create(Component.literal(String.valueOf(number / 1000000)),
                 CreateLang.translateDirect("display_source.value_list.million")
@@ -157,13 +159,13 @@ public abstract class ValueListDisplaySource extends DisplaySource {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void initConfigurationWidgets(DisplayLinkContext context, ModularGuiLineBuilder builder, boolean isFirstLine) {
 		if (isFirstLine)
 			addFullNumberConfig(builder);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	protected void addFullNumberConfig(ModularGuiLineBuilder builder) {
 		builder.addSelectionScrollInput(0, 75,
 			(si, l) -> si.forOptions(CreateLang.translatedOptions("display_source.value_list", "shortened", "full_number"))

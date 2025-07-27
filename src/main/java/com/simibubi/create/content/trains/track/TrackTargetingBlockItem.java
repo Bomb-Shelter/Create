@@ -45,8 +45,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class TrackTargetingBlockItem extends BlockItem {
 
@@ -144,7 +144,7 @@ public class TrackTargetingBlockItem extends BlockItem {
 		blockEntityData.put("TargetTrack", NbtUtils.writeBlockPos(selectedPos.subtract(placedPos)));
 		blockEntityData.putString("id", BuiltInRegistries.ITEM.getKey(stack.getItem()).toString());
 		BlockEntity.addEntityType(blockEntityData, ((IBE<?>) this.getBlock()).getBlockEntityType());
-		
+
 		stack.set(DataComponents.BLOCK_ENTITY_DATA, CustomData.of(blockEntityData));
 		stack.remove(AllDataComponents.TRACK_TARGETING_ITEM_SELECTED_POS);
 		stack.remove(AllDataComponents.TRACK_TARGETING_ITEM_SELECTED_DIRECTION);
@@ -152,7 +152,7 @@ public class TrackTargetingBlockItem extends BlockItem {
 
 		InteractionResult useOn = super.useOn(pContext);
 		stack.remove(DataComponents.BLOCK_ENTITY_DATA);
-		
+
 		if (level.isClientSide || useOn == InteractionResult.FAIL)
 			return useOn;
 
@@ -175,7 +175,7 @@ public class TrackTargetingBlockItem extends BlockItem {
 		return type;
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public boolean useOnCurve(BezierPointSelection selection, ItemStack stack) {
 		Minecraft mc = Minecraft.getInstance();
 		LocalPlayer player = mc.player;

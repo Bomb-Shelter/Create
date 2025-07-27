@@ -1,6 +1,7 @@
 package com.simibubi.create.content.processing.burner;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -20,6 +21,7 @@ import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.VecHelper;
+import net.fabricmc.fabric.api.registry.FuelRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
@@ -37,9 +39,8 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.common.CommonHooks;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class BlazeBurnerBlockEntity extends SmartBlockEntity {
 
@@ -135,13 +136,13 @@ public class BlazeBurnerBlockEntity extends SmartBlockEntity {
 		return null;
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private boolean shouldTickAnimation() {
 		// Offload the animation tick to the visual when flywheel in enabled
 		return !VisualizationManager.supportsVisualization(level);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	void tickAnimation() {
 		boolean active = getHeatLevelFromBlock().isAtLeast(HeatLevel.FADING) && isValidBlockAbove();
 
@@ -240,7 +241,7 @@ public class BlazeBurnerBlockEntity extends SmartBlockEntity {
 			newBurnTime = 3200;
 			newFuel = FuelType.SPECIAL;
 		} else {
-			newBurnTime = itemStack.getBurnTime(null);
+			newBurnTime = Objects.requireNonNullElse(FuelRegistry.INSTANCE.get(itemStack.getItem()), 0);
 			if (newBurnTime > 0) {
 				newFuel = FuelType.NORMAL;
 			} else if (AllItemTags.BLAZE_BURNER_FUEL_REGULAR.matches(itemStack)) {

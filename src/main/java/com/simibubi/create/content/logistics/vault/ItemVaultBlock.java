@@ -9,6 +9,7 @@ import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.item.ItemHelper;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomSoundTypeBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -32,9 +33,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.Property;
 
-import net.neoforged.neoforge.common.util.DeferredSoundType;
-
-public class ItemVaultBlock extends Block implements IWrenchable, IBE<ItemVaultBlockEntity> {
+public class ItemVaultBlock extends Block implements IWrenchable, IBE<ItemVaultBlockEntity>, CustomSoundTypeBlock {
 
 	public static final Property<Axis> HORIZONTAL_AXIS = BlockStateProperties.HORIZONTAL_AXIS;
 	public static final BooleanProperty LARGE = BooleanProperty.create("large");
@@ -137,14 +136,14 @@ public class ItemVaultBlock extends Block implements IWrenchable, IBE<ItemVaultB
 
 	// Vaults are less noisy when placed in batch
 	public static final SoundType SILENCED_METAL =
-		new DeferredSoundType(0.1F, 1.5F, () -> SoundEvents.NETHERITE_BLOCK_BREAK, () -> SoundEvents.NETHERITE_BLOCK_STEP,
-			() -> SoundEvents.NETHERITE_BLOCK_PLACE, () -> SoundEvents.NETHERITE_BLOCK_HIT,
-			() -> SoundEvents.NETHERITE_BLOCK_FALL);
+		new SoundType(0.1F, 1.5F, SoundEvents.NETHERITE_BLOCK_BREAK, SoundEvents.NETHERITE_BLOCK_STEP,
+			SoundEvents.NETHERITE_BLOCK_PLACE, SoundEvents.NETHERITE_BLOCK_HIT,
+			SoundEvents.NETHERITE_BLOCK_FALL);
 
 	@Override
 	public SoundType getSoundType(BlockState state, LevelReader world, BlockPos pos, Entity entity) {
-		SoundType soundType = super.getSoundType(state, world, pos, entity);
-		if (entity != null && entity.getPersistentData()
+		SoundType soundType = super.getSoundType(state);
+		if (entity != null && entity.getCustomData()
 			.contains("SilenceVaultSound"))
 			return SILENCED_METAL;
 		return soundType;

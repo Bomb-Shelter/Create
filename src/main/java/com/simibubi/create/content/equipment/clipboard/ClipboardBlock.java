@@ -40,9 +40,9 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.common.util.FakePlayer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.entity.FakePlayer;
 
 public class ClipboardBlock extends FaceAttachedHorizontalDirectionalBlock
 	implements IBE<ClipboardBlockEntity>, IWrenchable, ProperWaterloggedBlock {
@@ -70,7 +70,7 @@ public class ClipboardBlock extends FaceAttachedHorizontalDirectionalBlock
 		if (stateForPlacement.getValue(FACE) != AttachFace.WALL)
 			stateForPlacement = stateForPlacement.setValue(FACING, stateForPlacement.getValue(FACING)
 				.getOpposite());
-		return withWater(stateForPlacement, pContext).setValue(WRITTEN, !pContext.getItemInHand().isComponentsPatchEmpty());
+		return withWater(stateForPlacement, pContext).setValue(WRITTEN, !pContext.getItemInHand().getComponentsPatch().isEmpty());
 	}
 
 	@Override
@@ -101,7 +101,7 @@ public class ClipboardBlock extends FaceAttachedHorizontalDirectionalBlock
 		});
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private void openScreen(Player player, ItemStack stack, BlockPos pos) {
 		if (Minecraft.getInstance().player == player)
 			ScreenOpener.open(new ClipboardScreen(player.getInventory().selected, stack, pos));
@@ -123,7 +123,7 @@ public class ClipboardBlock extends FaceAttachedHorizontalDirectionalBlock
 			pPlayer.getInventory()
 				.placeItemBackInInventory(cloneItemStack);
 	}
-	
+
 	@Override
 	public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
 		if (level.getBlockEntity(pos) instanceof ClipboardBlockEntity cbe)

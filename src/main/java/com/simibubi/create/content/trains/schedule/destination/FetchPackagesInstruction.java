@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.regex.PatternSyntaxException;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.collect.ImmutableList;
@@ -33,9 +35,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class FetchPackagesInstruction extends TextScheduleInstruction {
 
@@ -82,7 +83,7 @@ public class FetchPackagesInstruction extends TextScheduleInstruction {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	protected void modifyEditBox(EditBox box) {
 		box.setFilter(s -> StringUtils.countMatches(s, '*') <= 3);
 	}
@@ -102,7 +103,7 @@ public class FetchPackagesInstruction extends TextScheduleInstruction {
 		MinecraftServer server = level.getServer();
 		if (server == null)
 			return null;
-		
+
 		String regex = getFilterForRegex();
 		boolean anyMatch = false;
 		ArrayList<GlobalStation> validStations = new ArrayList<>();
@@ -118,16 +119,16 @@ public class FetchPackagesInstruction extends TextScheduleInstruction {
 			ServerLevel dimLevel = server.getLevel(globalStation.blockEntityDimension);
 			if (dimLevel == null)
 				continue;
-			
+
 			for (Entry<BlockPos, GlobalPackagePort> entry : globalStation.connectedPorts.entrySet()) {
 				GlobalPackagePort port = entry.getValue();
 				BlockPos pos = entry.getKey();
 
-				IItemHandlerModifiable postboxInventory = port.offlineBuffer;
+				SlottedStackStorage postboxInventory = port.offlineBuffer;
 				if (dimLevel.isLoaded(pos) && dimLevel.getBlockEntity(pos) instanceof PostboxBlockEntity ppbe)
 					postboxInventory = ppbe.inventory;
 
-				for (int slot = 0; slot < postboxInventory.getSlots(); slot++) {
+				for (int slot = 0; slot < postboxInventory.getSlotCount(); slot++) {
 					ItemStack stack = postboxInventory.getStackInSlot(slot);
 					if (!PackageItem.isPackage(stack))
 						continue;

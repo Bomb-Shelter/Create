@@ -87,7 +87,7 @@ public class MechanicalPressBlockEntity extends BasinOperatingBlockEntity implem
 		if (basin.isPresent()) {
 			SmartInventory inputs = basin.get()
 				.getInputInventory();
-			for (int slot = 0; slot < inputs.getSlots(); slot++) {
+			for (int slot = 0; slot < inputs.getSlotCount(); slot++) {
 				ItemStack stackInSlot = inputs.getItem(slot);
 				if (stackInSlot.isEmpty())
 					continue;

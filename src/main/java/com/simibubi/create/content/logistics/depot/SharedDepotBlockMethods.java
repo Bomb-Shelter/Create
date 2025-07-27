@@ -9,6 +9,9 @@ import com.simibubi.create.content.logistics.box.PackageEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.item.ItemHelper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -27,7 +30,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class SharedDepotBlockMethods {
 
@@ -60,9 +62,9 @@ public class SharedDepotBlockMethods {
 				1f + level.getRandom().nextFloat());
 		}
 		ItemStackHandler outputs = behaviour.processingOutputBuffer;
-		for (int i = 0; i < outputs.getSlots(); i++)
+		for (int i = 0; i < outputs.getSlotCount(); i++)
 			player.getInventory()
-				.placeItemBackInInventory(outputs.extractItem(i, 64, false));
+				.placeItemBackInInventory(CreateTransferUtil.extractItem(outputs.getSlot(i), 64, false));
 
 		if (!wasEmptyHanded && !shouldntPlaceItem) {
 			TransportedItemStack transported = new TransportedItemStack(stack);

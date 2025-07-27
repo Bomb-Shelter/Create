@@ -6,13 +6,12 @@ import java.util.Map;
 import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import net.minecraft.core.Direction;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
-
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class BasinMovementBehaviour implements MovementBehaviour {
 	public Map<String, ItemStackHandler> getOrReadInventory(MovementContext context) {
@@ -36,7 +35,7 @@ public class BasinMovementBehaviour implements MovementBehaviour {
 
 	private void dump(MovementContext context, Vec3 facingVec) {
 		getOrReadInventory(context).forEach((key, itemStackHandler) -> {
-			for (int i = 0; i < itemStackHandler.getSlots(); i++) {
+			for (int i = 0; i < itemStackHandler.getSlotCount(); i++) {
 				if (itemStackHandler.getStackInSlot(i)
 					.isEmpty())
 					continue;

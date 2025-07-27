@@ -15,7 +15,7 @@ import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.fluids.FluidStack;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class FillingBySpout {
 
@@ -33,7 +33,7 @@ public class FillingBySpout {
 		return GenericItemFilling.canItemBeFilled(world, stack);
 	}
 
-	public static int getRequiredAmountForItem(Level world, ItemStack stack, FluidStack availableFluid) {
+	public static long getRequiredAmountForItem(Level world, ItemStack stack, FluidStack availableFluid) {
 		SingleRecipeInput input = new SingleRecipeInput(stack);
 
 		Optional<RecipeHolder<FillingRecipe>> assemblyRecipe = SequencedAssemblyRecipe.getRecipe(world, input,
@@ -55,7 +55,7 @@ public class FillingBySpout {
 		return GenericItemFilling.getRequiredAmountForItem(world, stack, availableFluid);
 	}
 
-	public static ItemStack fillItem(Level world, int requiredAmount, ItemStack stack, FluidStack availableFluid) {
+	public static ItemStack fillItem(Level world, long requiredAmount, ItemStack stack, FluidStack availableFluid) {
 		FluidStack toFill = availableFluid.copy();
 		toFill.setAmount(requiredAmount);
 

@@ -4,6 +4,9 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.ConnectableRedstoneBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.WeakPowerCheckingBlock;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.mojang.serialization.MapCodec;
@@ -48,11 +51,11 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class ElevatorContactBlock extends WrenchableDirectionalBlock
-	implements IBE<ElevatorContactBlockEntity>, SpecialBlockItemRequirement {
+	implements IBE<ElevatorContactBlockEntity>, SpecialBlockItemRequirement, WeakPowerCheckingBlock, ConnectableRedstoneBlock {
 
 	public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
 	public static final BooleanProperty CALLING = BooleanProperty.create("calling");
@@ -198,7 +201,7 @@ public class ElevatorContactBlock extends WrenchableDirectionalBlock
 	}
 
 	@Override
-	public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
+	public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
 		return AllBlocks.REDSTONE_CONTACT.asStack();
 	}
 
@@ -242,7 +245,7 @@ public class ElevatorContactBlock extends WrenchableDirectionalBlock
 		return ItemInteractionResult.SUCCESS;
 	}
 
-	@OnlyIn(value = Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	protected void displayScreen(ElevatorContactBlockEntity be, Player player) {
 		if (player instanceof LocalPlayer)
 			ScreenOpener

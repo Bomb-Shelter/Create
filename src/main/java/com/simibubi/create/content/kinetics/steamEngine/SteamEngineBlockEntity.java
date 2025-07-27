@@ -34,8 +34,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class SteamEngineBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
 
@@ -143,7 +143,7 @@ public class SteamEngineBlockEntity extends SmartBlockEntity implements IHaveGog
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	protected AABB createRenderBoundingBox() {
 		return super.createRenderBoundingBox().inflate(2);
 	}
@@ -186,7 +186,7 @@ public class SteamEngineBlockEntity extends SmartBlockEntity implements IHaveGog
 		return level.getBlockState(getBlockPos().relative(dir)).is(AllBlocks.FLUID_TANK.get());
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private void spawnParticles() {
 		Float targetAngle = getTargetAngle();
 		PoweredShaftBlockEntity ste = target.get();
@@ -239,7 +239,7 @@ public class SteamEngineBlockEntity extends SmartBlockEntity implements IHaveGog
 	}
 
 	@Nullable
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public Float getTargetAngle() {
 		float angle = 0;
 		BlockState blockState = getBlockState();

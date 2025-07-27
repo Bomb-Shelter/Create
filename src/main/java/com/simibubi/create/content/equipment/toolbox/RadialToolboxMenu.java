@@ -14,6 +14,8 @@ import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllKeys;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.simibubi.create.foundation.gui.AllIcons;
+
+import io.github.fabricators_of_create.porting_lib.util.KeyBindingHelper;
 import net.createmod.catnip.platform.CatnipServices;
 import com.simibubi.create.foundation.utility.CreateLang;
 
@@ -25,6 +27,7 @@ import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.theme.Color;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
@@ -62,7 +65,7 @@ public class RadialToolboxMenu extends AbstractSimiScreen {
 		float fade = Mth.clamp((ticksOpen + AnimationTickHolder.getPartialTicks()) / 10f, 1 / 512f, 1);
 
 		hoveredSlot = -1;
-		Window window = getMinecraft().getWindow();
+		Window window = Minecraft.getInstance().getWindow();
 		float hoveredX = mouseX - window.getGuiScaledWidth() / 2;
 		float hoveredY = mouseY - window.getGuiScaledHeight() / 2;
 
@@ -272,7 +275,7 @@ public class RadialToolboxMenu extends AbstractSimiScreen {
 
 	@Override
 	public boolean mouseScrolled(double pMouseX, double pMouseY, double pScrollX, double pScrollY) {
-		Window window = getMinecraft().getWindow();
+		Window window = Minecraft.getInstance().getWindow();
 		double hoveredX = pMouseY - window.getGuiScaledWidth() / 2;
 		double hoveredY = pMouseY - window.getGuiScaledHeight() / 2;
 		double distance = hoveredX * hoveredX + hoveredY * hoveredY;
@@ -385,8 +388,8 @@ public class RadialToolboxMenu extends AbstractSimiScreen {
 	@Override
 	public boolean keyReleased(int code, int scanCode, int modifiers) {
 		InputConstants.Key mouseKey = InputConstants.getKey(code, scanCode);
-		if (AllKeys.TOOLBELT.getKeybind()
-			.isActiveAndMatches(mouseKey)) {
+		if (KeyBindingHelper
+			.isActiveAndMatches(AllKeys.TOOLBELT.getKeybind(), mouseKey)) {
 			onClose();
 			return true;
 		}

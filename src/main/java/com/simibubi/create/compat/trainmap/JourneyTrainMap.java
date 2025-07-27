@@ -9,6 +9,7 @@ import com.simibubi.create.foundation.gui.RemovedGuiUtils;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
+import io.github.fabricators_of_create.porting_lib.event.client.MouseInputEvents;
 import journeymap.api.v2.client.IClientAPI;
 import journeymap.api.v2.client.IClientPlugin;
 import journeymap.api.v2.client.JourneyMapPlugin;
@@ -24,8 +25,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.util.Mth;
-
-import net.neoforged.neoforge.client.event.InputEvent.MouseButton.Pre;
 
 @JourneyMapPlugin(apiVersion = "2.0.0")
 public class JourneyTrainMap implements IClientPlugin {
@@ -57,17 +56,18 @@ public class JourneyTrainMap implements IClientPlugin {
 		TrainMapSyncClient.requestData();
 	}
 
-	public static void mouseClick(Pre event) {
+	public static boolean mouseClick() {
 		Minecraft mc = Minecraft.getInstance();
 		if (!(mc.screen instanceof Fullscreen screen))
-			return;
+			return false;
 
 		Window window = mc.getWindow();
 		double mX = mc.mouseHandler.xpos() * window.getGuiScaledWidth() / window.getScreenWidth();
 		double mY = mc.mouseHandler.ypos() * window.getGuiScaledHeight() / window.getScreenHeight();
 
 		if (TrainMapManager.handleToggleWidgetClick(Mth.floor(mX), Mth.floor(mY), 3, 30))
-			event.setCanceled(true);
+			return true;
+		return false;
 	}
 
 	// GuiGraphics graphics, Fullscreen screen, double x, double z, int mX, int mY, float pt

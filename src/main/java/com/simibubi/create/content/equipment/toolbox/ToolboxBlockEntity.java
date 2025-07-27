@@ -15,6 +15,7 @@ import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllDataComponents;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
+import com.simibubi.create.foundation.blockEntity.SmartBlockEntity.SmartBlockData;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.animatedContainer.AnimatedContainerBehaviour;
 import com.simibubi.create.foundation.utility.ResetableLazy;
@@ -22,7 +23,13 @@ import com.simibubi.create.foundation.utility.ResetableLazy;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.math.VecHelper;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap.Builder;
 import net.minecraft.core.component.DataComponents;
@@ -42,10 +49,9 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import org.jetbrains.annotations.Nullable;
 
-public class ToolboxBlockEntity extends SmartBlockEntity implements MenuProvider, Nameable {
+public class ToolboxBlockEntity extends SmartBlockEntity implements ExtendedScreenHandlerFactory<SmartBlockData>, Nameable, SidedStorageBlockEntity {
 
 	public LerpedFloat lid = LerpedFloat.linear()
 		.startWithValue(0);
@@ -61,7 +67,7 @@ public class ToolboxBlockEntity extends SmartBlockEntity implements MenuProvider
 
 	private Component customName;
 
-	private AnimatedContainerBehaviour<ToolboxMenu> openTracker;
+	private AnimatedContainerBehaviour<SmartBlockData, ToolboxMenu> openTracker;
 
 	public ToolboxBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
@@ -76,12 +82,12 @@ public class ToolboxBlockEntity extends SmartBlockEntity implements MenuProvider
 		setLazyTickRate(10);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.TOOLBOX.get(),
-				(be, context) -> be.inventory
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		return inventory;
 	}
 
 	public DyeColor getColor() {
@@ -148,7 +154,7 @@ public class ToolboxBlockEntity extends SmartBlockEntity implements MenuProvider
 
 				if (clear || !playerStack.isEmpty()
 					&& !ToolboxInventory.canItemsShareCompartment(playerStack, referenceItem)) {
-					player.getPersistentData()
+					player.getCustomData()
 						.getCompound("CreateToolboxData")
 						.remove(String.valueOf(hotbarSlot));
 					playerEntries.remove();
@@ -332,7 +338,7 @@ public class ToolboxBlockEntity extends SmartBlockEntity implements MenuProvider
 	public void readInventory(ToolboxInventory inv) {
 		if (inv != null) {
 			this.inventory.filters = new ArrayList<>(inv.filters);
-			for (int i = 0; i < inv.getSlots(); i++)
+			for (int i = 0; i < inv.getSlotCount(); i++)
 				this.inventory.setStackInSlot(i, inv.getStackInSlot(i));
 		}
 	}
@@ -382,6 +388,11 @@ public class ToolboxBlockEntity extends SmartBlockEntity implements MenuProvider
 	public void setBlockState(BlockState state) {
 		super.setBlockState(state);
 		colorProvider.reset();
+	}
+
+	@Override
+	public SmartBlockData getScreenOpeningData(ServerPlayer player) {
+		return new SmartBlockData(this.getBlockPos(), this.getUpdateTag(player.registryAccess()));
 	}
 
 	@Override

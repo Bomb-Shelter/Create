@@ -7,6 +7,13 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nonnull;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+import com.simibubi.create.infrastructure.fabric.transfer.wrapper.IItemHandlerModifiable;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.mojang.serialization.Codec;
@@ -27,9 +34,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 
-import net.neoforged.neoforge.items.ItemStackHandler;
-
-public class ToolboxInventory extends ItemStackHandler {
+public class ToolboxInventory extends ItemStackHandler implements IItemHandlerModifiable {
 	public static final Codec<ToolboxInventory> CODEC = RecordCodecBuilder.create(instance -> instance.group(
 		ItemSlots.maxSizeCodec(32).fieldOf("items").forGetter(ItemSlots::fromHandler),
 		ItemStack.OPTIONAL_CODEC.listOf().fieldOf("filters").forGetter(toolbox -> toolbox.filters)
@@ -126,14 +131,14 @@ public class ToolboxInventory extends ItemStackHandler {
 		if (!stack.getItem().canFitInsideContainerItems())
 			return false;
 
-		if (slot < 0 || slot >= getSlots())
+		if (slot < 0 || slot >= getSlotCount())
 			return false;
 		int compartment = slot / STACKS_PER_COMPARTMENT;
 		ItemStack filter = filters.get(compartment);
 		if (limitedMode && filter.isEmpty())
 			return false;
 		if (filter.isEmpty() || ToolboxInventory.canItemsShareCompartment(filter, stack))
-			return super.isItemValid(slot, stack);
+			return super.isItemValid(slot, ItemVariant.of(stack), stack.getCount());
 		return false;
 	}
 
@@ -150,7 +155,7 @@ public class ToolboxInventory extends ItemStackHandler {
 
 	@Override
 	public @NotNull ItemStack insertItem(int slot, @NotNull ItemStack stack, boolean simulate) {
-		ItemStack insertItem = super.insertItem(slot, stack, simulate);
+		ItemStack insertItem = CreateTransferUtil.insertItem(this.getSlot(slot), stack, simulate);
 		if (insertItem.getCount() != stack.getCount()) {
 			int compartment = slot / STACKS_PER_COMPARTMENT;
 			if (!stack.isEmpty() && filters.get(compartment)
@@ -160,6 +165,11 @@ public class ToolboxInventory extends ItemStackHandler {
 			}
 		}
 		return insertItem;
+	}
+
+	@Override
+	public ItemStack extractItem(int slot, int amount, boolean simulate) {
+		return CreateTransferUtil.extractItem(this.getSlot(slot), amount, simulate);
 	}
 
 	@Override

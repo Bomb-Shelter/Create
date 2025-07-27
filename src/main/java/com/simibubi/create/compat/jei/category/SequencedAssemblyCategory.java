@@ -7,6 +7,8 @@ import java.util.Map;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import mezz.jei.api.fabric.constants.FabricTypes;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -20,7 +22,6 @@ import com.simibubi.create.foundation.utility.CreateLang;
 
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
-import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
@@ -87,7 +88,7 @@ public class SequencedAssemblyCategory extends CreateRecipeCategory<SequencedAss
 				for (FluidIngredient fluidIngredient : sequencedRecipe.getRecipe()
 					.getFluidIngredients())
 					builder.addInvisibleIngredients(RecipeIngredientRole.INPUT)
-						.addIngredients(NeoForgeTypes.FLUID_STACK, fluidIngredient.getMatchingFluidStacks());
+						.addIngredients(FabricTypes.FLUID_STACK, CreateRecipeCategory.jeiFromFabric(fluidIngredient.getMatchingFluidStacks()));
 			}
 		}
 	}

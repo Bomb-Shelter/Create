@@ -6,6 +6,8 @@ import java.util.Set;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.foundation.utility.BlockHelper;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickBlock;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.core.BlockPos;
@@ -18,11 +20,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
-@EventBusSubscriber
 public class ItemUseOverrides {
 
 	private static final Set<ResourceLocation> OVERRIDES = new HashSet<>();
@@ -31,7 +29,10 @@ public class ItemUseOverrides {
 		OVERRIDES.add(RegisteredObjectsHelper.getKeyOrThrow(block));
 	}
 
-	@SubscribeEvent
+	static {
+		RightClickBlock.EVENT.register(ItemUseOverrides::onBlockActivated);
+	}
+
 	public static void onBlockActivated(PlayerInteractEvent.RightClickBlock event) {
 		if (AllItems.WRENCH.isIn(event.getItemStack()))
 			return;

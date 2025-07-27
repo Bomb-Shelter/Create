@@ -30,8 +30,6 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.common.NeoForgeMod;
-
 public class SuperGlueSelectionHandler {
 
 	private static final int PASSIVE = 0x4D9162;

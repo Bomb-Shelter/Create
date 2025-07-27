@@ -1,5 +1,7 @@
 package com.simibubi.create.content.logistics.crate;
 
+import com.simibubi.create.infrastructure.fabric.transfer.wrapper.IItemHandlerModifiable;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,7 +16,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class CreativeCrateMountedStorage extends MountedItemStorage {
+public class CreativeCrateMountedStorage extends MountedItemStorage implements IItemHandlerModifiable {
 	public static final MapCodec<CreativeCrateMountedStorage> CODEC = ItemStack.OPTIONAL_CODEC.xmap(
 		CreativeCrateMountedStorage::new, storage -> storage.suppliedStack
 	).fieldOf("value");
@@ -38,7 +40,7 @@ public class CreativeCrateMountedStorage extends MountedItemStorage {
 	}
 
 	@Override
-	public int getSlots() {
+	public int getSlotCount() {
 		return 2; // 0 holds the supplied stack endlessly, 1 is always empty to accept
 	}
 

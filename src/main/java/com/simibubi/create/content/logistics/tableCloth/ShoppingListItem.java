@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import net.minecraft.client.Minecraft;
+
 import org.jetbrains.annotations.Unmodifiable;
 
 import com.mojang.serialization.Codec;
@@ -133,7 +135,7 @@ public class ShoppingListItem extends Item {
 		ShoppingList list = getList(stack);
 
 		if (list != null) {
-			Couple<InventorySummary> lists = list.bakeEntries(context.level(), null);
+			Couple<InventorySummary> lists = list.bakeEntries(Minecraft.getInstance().level, null);
 
 			if (lists != null) {
 				for (InventorySummary items : lists) {

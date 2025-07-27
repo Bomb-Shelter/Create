@@ -4,6 +4,12 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
+
+import net.minecraft.client.gui.components.Renderable;
+
+import net.minecraft.client.gui.narration.NarratableEntry;
+
 import org.apache.commons.lang3.mutable.MutableObject;
 
 import com.simibubi.create.AllItems;
@@ -24,10 +30,7 @@ import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ScreenEvent;
+import net.fabricmc.api.EnvType;
 
 public class OpenCreateMenuButton extends Button {
 
@@ -43,7 +46,7 @@ public class OpenCreateMenuButton extends Button {
 			.getModel(icon, Minecraft.getInstance().level, Minecraft.getInstance().player, 0);
 		if (bakedmodel == null)
 			return;
-		
+
 		graphics.renderItem(icon, getX() + 2, getY() + 2);
 	}
 
@@ -81,13 +84,12 @@ public class OpenCreateMenuButton extends Button {
 		}
 	}
 
-	@EventBusSubscriber(value = Dist.CLIENT)
 	public static class OpenConfigButtonHandler {
+		public static void init() {
+			ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> onGuiInit(screen));
+		}
 
-		@SubscribeEvent
-		public static void onGuiInit(ScreenEvent.Init.Post event) {
-			Screen screen = event.getScreen();
-
+		public static void onGuiInit(Screen screen) {
 			MenuRows menu;
 			int rowIdx;
 			int offsetX;
@@ -112,7 +114,7 @@ public class OpenCreateMenuButton extends Button {
 
 			int offsetX_ = offsetX;
 			MutableObject<GuiEventListener> toAdd = new MutableObject<>(null);
-			event.getListenersList()
+			screen.children()
 				.stream()
 				.filter(w -> w instanceof AbstractWidget)
 				.map(w -> (AbstractWidget) w)
@@ -122,8 +124,17 @@ public class OpenCreateMenuButton extends Button {
 				.findFirst()
 				.ifPresent(w -> toAdd
 					.setValue(new OpenCreateMenuButton(w.getX() + offsetX_ + (onLeft ? -20 : w.getWidth()), w.getY())));
-			if (toAdd.getValue() != null)
-				event.addListener(toAdd.getValue());
+			if (toAdd.getValue() != null) {
+				GuiEventListener value = toAdd.getValue();
+
+				if (value instanceof Renderable r)
+					screen.renderables.add(r);
+
+				if (value instanceof NarratableEntry ne)
+					screen.narratables.add(ne);
+
+				((List<GuiEventListener>) screen.children()).add(value);
+			}
 		}
 
 	}

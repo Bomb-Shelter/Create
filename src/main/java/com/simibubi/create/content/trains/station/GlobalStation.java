@@ -17,6 +17,10 @@ import com.simibubi.create.content.trains.graph.DimensionPalette;
 import com.simibubi.create.content.trains.graph.TrackNode;
 import com.simibubi.create.content.trains.signal.SingleBlockEntityEdgePoint;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -30,11 +34,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class GlobalStation extends SingleBlockEntityEdgePoint {
 
@@ -184,7 +183,7 @@ public class GlobalStation extends SingleBlockEntityEdgePoint {
 						.getLevel(getBlockEntityDimension());
 			}
 
-			IItemHandlerModifiable carriageInventory = carriage.storage.getAllItems();
+			SlottedStackStorage carriageInventory = carriage.storage.getAllItems();
 			if (carriageInventory == null)
 				continue;
 
@@ -194,21 +193,21 @@ public class GlobalStation extends SingleBlockEntityEdgePoint {
 				BlockPos pos = entry.getKey();
 				PostboxBlockEntity box = null;
 
-				IItemHandlerModifiable postboxInventory = port.offlineBuffer;
+				SlottedStackStorage postboxInventory = port.offlineBuffer;
 				if (level != null && level.isLoaded(pos)
 					&& level.getBlockEntity(pos) instanceof PostboxBlockEntity ppbe) {
 					postboxInventory = ppbe.inventory;
 					box = ppbe;
 				}
 
-				for (int slot = 0; slot < postboxInventory.getSlots(); slot++) {
+				for (int slot = 0; slot < postboxInventory.getSlotCount(); slot++) {
 					ItemStack stack = postboxInventory.getStackInSlot(slot);
 					if (!PackageItem.isPackage(stack))
 						continue;
 					if (PackageItem.matchAddress(stack, port.address))
 						continue;
 
-					ItemStack result = ItemHandlerHelper.insertItemStacked(carriageInventory, stack, false);
+					ItemStack result = CreateTransferUtil.insertItemStacked(carriageInventory, stack, false);
 					if (!result.isEmpty())
 						continue;
 
@@ -220,7 +219,7 @@ public class GlobalStation extends SingleBlockEntityEdgePoint {
 			}
 
 			// Export to station
-			for (int slot = 0; slot < carriageInventory.getSlots(); slot++) {
+			for (int slot = 0; slot < carriageInventory.getSlotCount(); slot++) {
 				ItemStack stack = carriageInventory.getStackInSlot(slot);
 				if (!PackageItem.isPackage(stack))
 					continue;
@@ -233,14 +232,14 @@ public class GlobalStation extends SingleBlockEntityEdgePoint {
 					if (!PackageItem.matchAddress(stack, port.address))
 						continue;
 
-					IItemHandler postboxInventory = port.offlineBuffer;
+					SlottedStackStorage postboxInventory = port.offlineBuffer;
 					if (level != null && level.isLoaded(pos)
 						&& level.getBlockEntity(pos) instanceof PostboxBlockEntity ppbe) {
 						postboxInventory = ppbe.inventory;
 						box = ppbe;
 					}
 
-					ItemStack result = ItemHandlerHelper.insertItemStacked(postboxInventory, stack, false);
+					ItemStack result = CreateTransferUtil.insertItemStacked(postboxInventory, stack, false);
 					if (!result.isEmpty())
 						continue;
 

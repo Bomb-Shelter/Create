@@ -10,13 +10,16 @@ import com.simibubi.create.content.redstone.smartObserver.SmartObserverBlockEnti
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.InvManipulationBehaviour;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
-import net.neoforged.neoforge.items.IItemHandler;
 
 public class PackageAddressDisplaySource extends SingleLineDisplaySource {
 
@@ -28,7 +31,7 @@ public class PackageAddressDisplaySource extends SingleLineDisplaySource {
 
 		InvManipulationBehaviour invManipulationBehaviour = cobe.getBehaviour(InvManipulationBehaviour.TYPE);
 		FilteringBehaviour filteringBehaviour = cobe.getBehaviour(FilteringBehaviour.TYPE);
-		IItemHandler handler = invManipulationBehaviour.getInventory();
+		Storage<ItemVariant> handler = invManipulationBehaviour.getInventory();
 
 		if (handler == null) {
 			BlockPos targetPos = cobe.getBlockPos().relative(SmartObserverBlock.getTargetDirection(cobe.getBlockState()));
@@ -41,8 +44,8 @@ public class PackageAddressDisplaySource extends SingleLineDisplaySource {
 			return EMPTY_LINE;
 		}
 
-		for (int i = 0; i < handler.getSlots(); i++) {
-			ItemStack stack = handler.getStackInSlot(i);
+		for (StorageView<ItemVariant> view : handler) {
+			ItemStack stack = CreateTransferUtil.getLimitedStack(view.getResource(), view.getAmount());
 			if (PackageItem.isPackage(stack) && filteringBehaviour.test(stack))
 				return Component.literal(PackageItem.getAddress(stack));
 		}

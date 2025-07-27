@@ -2,6 +2,12 @@ package com.simibubi.create.foundation.blockEntity.behaviour.fluid;
 
 import java.util.function.Consumer;
 
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
@@ -17,8 +23,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class SmartFluidTankBehaviour extends BlockEntityBehaviour {
 
@@ -31,7 +36,7 @@ public class SmartFluidTankBehaviour extends BlockEntityBehaviour {
 	protected int syncCooldown;
 	protected boolean queuedSync;
 	protected TankSegment[] tanks;
-	protected IFluidHandler capability;
+	protected SlottedStorage<FluidVariant> capability;
 	protected boolean extractionAllowed;
 	protected boolean insertionAllowed;
 	protected Runnable fluidUpdateCallback;
@@ -49,7 +54,7 @@ public class SmartFluidTankBehaviour extends BlockEntityBehaviour {
 		extractionAllowed = true;
 		behaviourType = type;
 		this.tanks = new TankSegment[tanks];
-		IFluidHandler[] handlers = new IFluidHandler[tanks];
+		SlottedStorage<FluidVariant>[] handlers = new SlottedStorage[tanks];
 		for (int i = 0; i < tanks; i++) {
 			TankSegment tankSegment = new TankSegment(tankCapacity);
 			this.tanks[i] = tankSegment;
@@ -138,7 +143,7 @@ public class SmartFluidTankBehaviour extends BlockEntityBehaviour {
 	@Override
 	public void unload() {
 		super.unload();
-		blockEntity.getLevel().invalidateCapabilities(getPos());
+		//blockEntity.getLevel().invalidateCapabilities(getPos());
 	}
 
 	public SmartFluidTank getPrimaryHandler() {
@@ -165,7 +170,7 @@ public class SmartFluidTankBehaviour extends BlockEntityBehaviour {
 			action.accept(tankSegment);
 	}
 
-	public IFluidHandler getCapability() {
+	public SlottedStorage<FluidVariant> getCapability() {
 		return capability;
 	}
 
@@ -191,35 +196,29 @@ public class SmartFluidTankBehaviour extends BlockEntityBehaviour {
 
 	public class InternalFluidHandler extends CombinedTankWrapper {
 
-		public InternalFluidHandler(IFluidHandler[] handlers, boolean enforceVariety) {
+		public InternalFluidHandler(SlottedStorage<FluidVariant>[] handlers, boolean enforceVariety) {
 			super(handlers);
 			if (enforceVariety)
 				enforceVariety();
 		}
 
 		@Override
-		public int fill(FluidStack resource, FluidAction action) {
+		public long insert(FluidVariant resource, long maxAmount, TransactionContext transaction) {
 			if (!insertionAllowed)
 				return 0;
-			return super.fill(resource, action);
+
+			return super.insert(resource, maxAmount, transaction);
 		}
 
-		public int forceFill(FluidStack resource, FluidAction action) {
-			return super.fill(resource, action);
-		}
-
-		@Override
-		public FluidStack drain(FluidStack resource, FluidAction action) {
-			if (!extractionAllowed)
-				return FluidStack.EMPTY;
-			return super.drain(resource, action);
+		public long forceFill(FluidVariant resource, long maxAmount, TransactionContext transaction) {
+			return super.insert(resource, maxAmount, transaction);
 		}
 
 		@Override
-		public FluidStack drain(int maxDrain, FluidAction action) {
+		public long extract(FluidVariant resource, long maxAmount, TransactionContext transaction) {
 			if (!extractionAllowed)
-				return FluidStack.EMPTY;
-			return super.drain(maxDrain, action);
+				return 0;
+			return super.extract(resource, maxAmount, transaction);
 		}
 
 	}

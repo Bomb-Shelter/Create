@@ -13,8 +13,8 @@ import net.minecraft.data.PackOutput;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.crafting.Ingredient;
 
-import net.neoforged.neoforge.common.Tags;
-import net.neoforged.neoforge.common.Tags.Items;
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
+import io.github.fabricators_of_create.porting_lib.tags.Tags.Items;
 
 /**
  * Create's own Data Generation for Mechanical Crafting recipes

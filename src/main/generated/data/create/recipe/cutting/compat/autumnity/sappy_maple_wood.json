@@ -1,0 +1,26 @@
+{
+  "type": "create:cutting",
+  "ingredients": [
+    {
+      "fabric:type": "create:simple_datagen",
+      "ingredients": [
+        {
+          "item": "autumnity:sappy_maple_wood"
+        }
+      ]
+    }
+  ],
+  "porting_lib:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "autumnity"
+    }
+  ],
+  "processing_time": 50,
+  "results": [
+    {
+      "count": 6,
+      "id": "autumnity:maple_planks"
+    }
+  ]
+}

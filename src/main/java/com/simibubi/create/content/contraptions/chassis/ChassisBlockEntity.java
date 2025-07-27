@@ -40,8 +40,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.BlockHitResult;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class ChassisBlockEntity extends SmartBlockEntity {
 
@@ -268,7 +268,7 @@ public class ChassisBlockEntity extends SmartBlockEntity {
 		}
 
 		@Override
-		@OnlyIn(Dist.CLIENT)
+		@Environment(EnvType.CLIENT)
 		public void newSettingHovered(ValueSettings valueSetting) {
 			if (!level.isClientSide)
 				return;

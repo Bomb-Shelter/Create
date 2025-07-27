@@ -2,7 +2,10 @@ package com.simibubi.create.content.contraptions.glue;
 
 import com.simibubi.create.content.contraptions.chassis.AbstractChassisBlock;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickBlock;
 import net.createmod.catnip.math.VecHelper;
+import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ItemParticleOption;
@@ -16,17 +19,15 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.common.util.TriState;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-@EventBusSubscriber
 public class SuperGlueItem extends Item {
 
-	@SubscribeEvent
+	static {
+		RightClickBlock.EVENT.register(SuperGlueItem::glueItemAlwaysPlacesWhenUsed);
+	}
+
 	public static void glueItemAlwaysPlacesWhenUsed(PlayerInteractEvent.RightClickBlock event) {
 		if (event.getHitVec() != null) {
 			BlockState blockState = event.getLevel()
@@ -53,7 +54,7 @@ public class SuperGlueItem extends Item {
 
 	public static void onBroken(Player player) {}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public static void spawnParticles(Level world, BlockPos pos, Direction direction, boolean fullBlock) {
 		Vec3 vec = Vec3.atLowerCornerOf(direction.getNormal());
 		Vec3 plane = VecHelper.axisAlingedPlaneOf(vec);

@@ -32,18 +32,13 @@ public class SchematicTableBlock extends HorizontalDirectionalBlock implements I
 	public static final MapCodec<SchematicTableBlock> CODEC = simpleCodec(SchematicTableBlock::new);
 
 	public SchematicTableBlock(Properties properties) {
-		super(properties);
+		super(properties.pushReaction(PushReaction.BLOCK));
 	}
 
 	@Override
 	protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {
 		builder.add(FACING);
 		super.createBlockStateDefinition(builder);
-	}
-
-	@Override
-	public PushReaction getPistonPushReaction(BlockState state) {
-		return PushReaction.BLOCK;
 	}
 
 	@Override
@@ -67,7 +62,7 @@ public class SchematicTableBlock extends HorizontalDirectionalBlock implements I
 		if (level.isClientSide)
 			return InteractionResult.SUCCESS;
 		withBlockEntityDo(level, pos,
-				be -> player.openMenu(be, be::sendToMenu));
+				be -> player.openMenu(be));
 		return InteractionResult.SUCCESS;
 	}
 

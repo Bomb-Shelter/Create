@@ -21,7 +21,7 @@ public record GhostItemSubmitPacket(ItemStack item, int slot) implements Serverb
 
 	@Override
 	public void handle(ServerPlayer player) {
-		if (player.containerMenu instanceof GhostItemMenu<?> menu) {
+		if (player.containerMenu instanceof GhostItemMenu<?, ?> menu) {
 			menu.ghostInventory.setStackInSlot(slot, item);
 			menu.getSlot(36 + slot)
 					.setChanged();

@@ -13,15 +13,17 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 /**
  * Behaviour for BlockEntities to which belts can transfer items directly in a
@@ -70,10 +72,10 @@ public class DirectBeltInputBehaviour extends BlockEntityBehaviour {
 	}
 
 	private ItemStack defaultInsertionCallback(TransportedItemStack inserted, Direction side, boolean simulate) {
-		IItemHandler lazy = blockEntity.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, blockEntity.getBlockPos(), side);
+		Storage<ItemVariant> lazy = TransferUtil.getItemStorage(blockEntity.getLevel(), blockEntity.getBlockPos(), blockEntity, side);
 		if (lazy == null)
 			return inserted.stack;
-		return ItemHandlerHelper.insertItemStacked(lazy, inserted.stack.copy(), simulate);
+		return CreateTransferUtil.insertItemStacked(lazy, inserted.stack.copy(), simulate);
 	}
 
 	// TODO: verify that this side is consistent across all calls

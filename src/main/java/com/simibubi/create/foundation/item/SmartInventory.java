@@ -7,17 +7,22 @@ import javax.annotation.Nonnull;
 import com.simibubi.create.foundation.blockEntity.LegacyRecipeWrapper;
 import com.simibubi.create.foundation.blockEntity.SyncedBlockEntity;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.core.util.INBTSerializable;
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.neoforge.common.util.INBTSerializable;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemStackHandler;
-
 public class SmartInventory extends LegacyRecipeWrapper
-	implements IItemHandlerModifiable, INBTSerializable<CompoundTag> {
+	implements SlottedStackStorage, INBTSerializable<CompoundTag> {
 
 	protected boolean extractionAllowed;
 	protected boolean insertionAllowed;
@@ -70,27 +75,31 @@ public class SmartInventory extends LegacyRecipeWrapper
 	}
 
 	@Override
-	public int getSlots() {
-		return inv.getSlots();
+	public int getSlotCount() {
+		return inv.getSlotCount();
 	}
 
 	@Override
-	public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-		if (!insertionAllowed)
-			return stack;
-		return inv.insertItem(slot, stack, simulate);
+	public SingleSlotStorage<ItemVariant> getSlot(int slot) {
+		return new SmartInventorySingleSlot(inv.getSlot(slot));
 	}
 
 	@Override
-	public ItemStack extractItem(int slot, int amount, boolean simulate) {
+	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+		return inv.insert(resource, maxAmount, transaction);
+	}
+
+	@Override
+	public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
 		if (!extractionAllowed)
-			return ItemStack.EMPTY;
+			return 0;
 		if (stackNonStackables) {
-			ItemStack extractItem = inv.extractItem(slot, amount, true);
-			if (!extractItem.isEmpty() && extractItem.getOrDefault(DataComponents.MAX_STACK_SIZE, 64) < extractItem.getCount())
-				amount = extractItem.getOrDefault(DataComponents.MAX_STACK_SIZE, 64);
+			ItemStack extractItem = CreateTransferUtil.getLimitedStack(resource, maxAmount);
+			long extracted = CreateTransferUtil.simulateExtract(inv, resource, maxAmount);
+			if (extracted > 0 && extractItem.getOrDefault(DataComponents.MAX_STACK_SIZE, 64) < extractItem.getCount())
+				maxAmount = extractItem.getOrDefault(DataComponents.MAX_STACK_SIZE, 64);
 		}
-		return inv.extractItem(slot, amount, simulate);
+		return inv.extract(resource, maxAmount, transaction);
 	}
 
 	@Override
@@ -99,8 +108,8 @@ public class SmartInventory extends LegacyRecipeWrapper
 	}
 
 	@Override
-	public boolean isItemValid(int slot, ItemStack stack) {
-		return inv.isItemValid(slot, stack);
+	public boolean isItemValid(int slot, ItemVariant resource, int count) {
+		return inv.isItemValid(slot, resource, count);
 	}
 
 	@Override
@@ -129,6 +138,52 @@ public class SmartInventory extends LegacyRecipeWrapper
 
 	private SyncedStackHandler getInv() {
 		return (SyncedStackHandler) inv;
+	}
+
+	private class SmartInventorySingleSlot implements SingleSlotStorage<ItemVariant> {
+		private final SingleSlotStorage<ItemVariant> wrapped;
+
+		public SmartInventorySingleSlot(SingleSlotStorage<ItemVariant> wrapped) {
+			this.wrapped = wrapped;
+		}
+
+		@Override
+		public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+			return wrapped.insert(resource, maxAmount, transaction);
+		}
+
+		@Override
+		public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+			if (!extractionAllowed)
+				return 0;
+			if (stackNonStackables) {
+				ItemStack extractItem = CreateTransferUtil.getLimitedStack(resource, maxAmount);
+				long extracted = CreateTransferUtil.simulateExtract(wrapped, resource, maxAmount);
+				if (extracted > 0 && extractItem.getOrDefault(DataComponents.MAX_STACK_SIZE, 64) < extractItem.getCount())
+					maxAmount = extractItem.getOrDefault(DataComponents.MAX_STACK_SIZE, 64);
+			}
+			return wrapped.extract(resource, maxAmount, transaction);
+		}
+
+		@Override
+		public boolean isResourceBlank() {
+			return wrapped.isResourceBlank();
+		}
+
+		@Override
+		public ItemVariant getResource() {
+			return wrapped.getResource();
+		}
+
+		@Override
+		public long getAmount() {
+			return wrapped.getAmount();
+		}
+
+		@Override
+		public long getCapacity() {
+			return wrapped.getCapacity();
+		}
 	}
 
 	private static class SyncedStackHandler extends ItemStackHandler {

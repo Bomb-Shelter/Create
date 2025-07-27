@@ -13,16 +13,14 @@ import com.simibubi.create.content.trains.CubeParticleData;
 import com.simibubi.create.foundation.particle.AirParticleData;
 import com.simibubi.create.foundation.particle.ICustomParticleData;
 
+import io.github.fabricators_of_create.porting_lib.registry.DeferredHolder;
+import io.github.fabricators_of_create.porting_lib.registry.DeferredRegister;
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.registries.Registries;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.client.event.RegisterParticleProvidersEvent;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredRegister;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 import org.jetbrains.annotations.ApiStatus.Internal;
 
@@ -49,14 +47,14 @@ public enum AllParticleTypes {
 	}
 
 	@Internal
-	public static void register(IEventBus modEventBus) {
-		ParticleEntry.REGISTER.register(modEventBus);
+	public static void register() {
+		ParticleEntry.REGISTER.register();
 	}
 
-	@OnlyIn(Dist.CLIENT)
-	public static void registerFactories(RegisterParticleProvidersEvent event) {
+	@Environment(EnvType.CLIENT)
+	public static void registerFactories() {
 		for (AllParticleTypes particle : values())
-			particle.entry.registerFactory(event);
+			particle.entry.registerFactory();
 	}
 
 	public ParticleType<?> get() {
@@ -81,10 +79,10 @@ public enum AllParticleTypes {
 			object = REGISTER.register(name, () -> this.typeFactory.get().createType());
 		}
 
-		@OnlyIn(Dist.CLIENT)
-		public void registerFactory(RegisterParticleProvidersEvent event) {
+		@Environment(EnvType.CLIENT)
+		public void registerFactory() {
 			typeFactory.get()
-				.register(object.get(), event);
+				.register(object.get());
 		}
 
 	}

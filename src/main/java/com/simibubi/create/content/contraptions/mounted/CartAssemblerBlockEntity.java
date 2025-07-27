@@ -21,6 +21,9 @@ import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollOp
 import com.simibubi.create.foundation.gui.AllIcons;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import com.simibubi.create.infrastructure.fabric.MinecartUtil;
+
+import io.github.fabricators_of_create.porting_lib.blocks.util.MinecartAndRailUtil;
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.lang.Lang;
@@ -93,7 +96,7 @@ public class CartAssemblerBlockEntity extends SmartBlockEntity implements IDispl
 						.isRedstoneConductor(level, worldPosition.relative(d)))
 						facing = d.getOpposite();
 
-				float speed = block.getRailMaxSpeed(state, level, worldPosition, cart);
+				double speed = MinecartAndRailUtil.getMaximumSpeed(cart);
 				cart.setDeltaMovement(facing.getStepX() * speed, facing.getStepY() * speed, facing.getStepZ() * speed);
 			}
 		}
@@ -102,7 +105,7 @@ public class CartAssemblerBlockEntity extends SmartBlockEntity implements IDispl
 				ControllerRailBlock.getAccelerationVector(AllBlocks.CONTROLLER_RAIL.getDefaultState()
 					.setValue(ControllerRailBlock.SHAPE, state.getValue(CartAssemblerBlock.RAIL_SHAPE))
 					.setValue(ControllerRailBlock.BACKWARDS, state.getValue(CartAssemblerBlock.BACKWARDS)));
-			float speed = block.getRailMaxSpeed(state, level, worldPosition, cart);
+			double speed = MinecartAndRailUtil.getMaximumSpeed(cart);
 			cart.setDeltaMovement(Vec3.atLowerCornerOf(accelerationVector)
 				.scale(speed));
 		}
@@ -117,7 +120,7 @@ public class CartAssemblerBlockEntity extends SmartBlockEntity implements IDispl
 		if (!cart.getPassengers().isEmpty())
 			return;
 
-		MinecartController controller = cart.getData(AllAttachmentTypes.MINECART_CONTROLLER);
+		MinecartController controller = cart.getAttachedOrCreate(AllAttachmentTypes.MINECART_CONTROLLER);
 		if (controller != MinecartController.EMPTY && controller.isCoupledThroughContraption())
 			return;
 

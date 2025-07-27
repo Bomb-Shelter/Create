@@ -10,8 +10,13 @@ import com.simibubi.create.foundation.item.CustomUseEffectsItem;
 import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 import com.simibubi.create.foundation.mixin.accessor.LivingEntityAccessor;
 
+import io.github.fabricators_of_create.porting_lib.tool.ItemAbilities;
+import io.github.fabricators_of_create.porting_lib.tool.ItemAbility;
+import io.github.fabricators_of_create.porting_lib.tool.extensions.VanillaItemAbilityItem;
 import net.createmod.catnip.data.TriState;
 import net.createmod.catnip.math.VecHelper;
+import net.createmod.catnip.platform.CatnipServices;
+import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ItemParticleOption;
@@ -35,19 +40,18 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
-import net.neoforged.neoforge.common.ItemAbilities;
-import net.neoforged.neoforge.common.ItemAbility;
-import net.neoforged.neoforge.common.util.FakePlayer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.entity.FakePlayer;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class SandPaperItem extends Item implements CustomUseEffectsItem {
+public class SandPaperItem extends Item implements CustomUseEffectsItem, VanillaItemAbilityItem {
 
 	public SandPaperItem(Properties properties) {
 		super(properties.durability(8));
+
+		CatnipServices.PLATFORM.executeOnClientOnly(() -> this::initializeClient);
 	}
 
 	@Override
@@ -196,7 +200,7 @@ public class SandPaperItem extends Item implements CustomUseEffectsItem {
 	}
 
 	@Override
-	public boolean canPerformAction(ItemStack stack, ItemAbility itemAbility) {
+	public boolean port_lib$canPerformAction(ItemStack stack, ItemAbility itemAbility) {
 		return itemAbility == ItemAbilities.AXE_SCRAPE || itemAbility == ItemAbilities.AXE_WAX_OFF;
 	}
 
@@ -242,9 +246,9 @@ public class SandPaperItem extends Item implements CustomUseEffectsItem {
 		return 1;
 	}
 
-	@Override
-	@OnlyIn(Dist.CLIENT)
-	public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-		consumer.accept(SimpleCustomRenderer.create(this, new SandPaperItemRenderer()));
+	//@Override
+	@Environment(EnvType.CLIENT)
+	public void initializeClient() {
+		BuiltinItemRendererRegistry.INSTANCE.register(this, SimpleCustomRenderer.create(this, new SandPaperItemRenderer()));
 	}
 }

@@ -7,6 +7,8 @@ import com.simibubi.create.content.kinetics.mechanicalArm.ArmBlockEntity.Phase;
 import com.simibubi.create.content.logistics.funnel.FunnelBlockEntity;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.element.ElementLink;
@@ -350,8 +352,8 @@ public class ArmScenes {
 			BlockPos funnelPos = util.grid().at(5 - index % 3, 1 + index / 3, 2);
 			scene.world().flapFunnel(funnelPos, false);
 			scene.world().instructArm(armPos, Phase.SEARCH_INPUTS, i == 3 ? ItemStack.EMPTY : sand, -1);
-			scene.world().modifyBlockEntity(funnelPos.north(), MechanicalCrafterBlockEntity.class, mct -> mct.getInventory()
-				.insertItem(0, sand.copy(), false));
+			scene.world().modifyBlockEntity(funnelPos.north(), MechanicalCrafterBlockEntity.class, mct -> CreateTransferUtil
+				.insertItem(mct.getInventory().getSlot(0), sand.copy(), false));
 			scene.idle(10);
 		}
 
@@ -370,8 +372,8 @@ public class ArmScenes {
 			BlockPos funnelPos = util.grid().at(3 + index % 3, 1 + index / 3, 2);
 			scene.world().flapFunnel(funnelPos, false);
 			scene.world().instructArm(armPos, Phase.SEARCH_INPUTS, i == 4 ? ItemStack.EMPTY : sulphur, -1);
-			scene.world().modifyBlockEntity(funnelPos.north(), MechanicalCrafterBlockEntity.class, mct -> mct.getInventory()
-				.insertItem(0, sulphur.copy(), false));
+			scene.world().modifyBlockEntity(funnelPos.north(), MechanicalCrafterBlockEntity.class, mct -> CreateTransferUtil
+				.insertItem(mct.getInventory().getSlot(0), sulphur.copy(), false));
 			scene.idle(10);
 		}
 

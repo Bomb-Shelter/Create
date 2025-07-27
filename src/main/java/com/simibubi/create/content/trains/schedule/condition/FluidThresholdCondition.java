@@ -11,6 +11,9 @@ import com.simibubi.create.foundation.gui.ModularGuiLineBuilder;
 import com.simibubi.create.foundation.utility.CreateLang;
 
 import net.createmod.catnip.lang.Lang;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.HolderLookup;
@@ -20,10 +23,9 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class FluidThresholdCondition extends CargoThresholdCondition {
 
@@ -46,9 +48,9 @@ public class FluidThresholdCondition extends CargoThresholdCondition {
 
 		int foundFluid = 0;
 		for (Carriage carriage : train.carriages) {
-			IFluidHandler fluids = carriage.storage.getFluids();
-			for (int i = 0; i < fluids.getTanks(); i++) {
-				FluidStack fluidInTank = fluids.getFluidInTank(i);
+			Storage<FluidVariant> fluids = carriage.storage.getFluids();
+			for (StorageView<FluidVariant> view : fluids) {
+				FluidStack fluidInTank = new FluidStack(view);
 				if (!compareStack.test(level, fluidInTank))
 					continue;
 				foundFluid += fluidInTank.getAmount();
@@ -77,7 +79,7 @@ public class FluidThresholdCondition extends CargoThresholdCondition {
 		return super.tickCompletion(level, train, context);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private FluidStack loadFluid() {
 		return compareStack.fluid(Minecraft.getInstance().level);
 	}
@@ -112,7 +114,7 @@ public class FluidThresholdCondition extends CargoThresholdCondition {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void initConfigurationWidgets(ModularGuiLineBuilder builder) {
 		super.initConfigurationWidgets(builder);
 		builder.addSelectionScrollInput(71, 50, (i, l) -> {

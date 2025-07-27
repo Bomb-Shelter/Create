@@ -10,6 +10,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.simibubi.create.content.kinetics.crafter.MechanicalCraftingRecipe;
 
+import io.github.fabricators_of_create.porting_lib.conditions.ICondition;
+import io.github.fabricators_of_create.porting_lib.conditions.ModLoadedCondition;
+import io.github.fabricators_of_create.porting_lib.conditions.NotCondition;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.ResourceLocation;
@@ -20,10 +23,6 @@ import net.minecraft.world.item.crafting.CraftingBookCategory;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.ShapedRecipePattern;
 import net.minecraft.world.level.ItemLike;
-
-import net.neoforged.neoforge.common.conditions.ICondition;
-import net.neoforged.neoforge.common.conditions.ModLoadedCondition;
-import net.neoforged.neoforge.common.conditions.NotCondition;
 
 /**
  * The builder for building Mechanical Crafting recipes.

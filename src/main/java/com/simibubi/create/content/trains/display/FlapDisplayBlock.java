@@ -15,6 +15,8 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.simpleRelays.ICogWheel;
 import com.simibubi.create.foundation.block.IBE;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.placement.IPlacementHelper;
 import net.createmod.catnip.placement.PlacementHelpers;
@@ -157,7 +159,7 @@ public class FlapDisplayBlock extends HorizontalKineticBlock
 
 		boolean display =
 			stack.getItem() == Items.NAME_TAG && stack.has(DataComponents.CUSTOM_NAME) || AllBlocks.CLIPBOARD.isIn(stack);
-		DyeColor dye = DyeColor.getColor(stack);
+		DyeColor dye = CreateFabricUtil.getColor(stack);
 
 		if (!display && dye == null)
 			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;

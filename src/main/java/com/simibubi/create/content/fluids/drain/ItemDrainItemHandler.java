@@ -4,12 +4,15 @@ import com.simibubi.create.content.fluids.transfer.GenericItemEmptying;
 import com.simibubi.create.content.kinetics.belt.transport.TransportedItemStack;
 import com.simibubi.create.foundation.item.ItemHelper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.wrapper.IItemHandlerModifiable;
+
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
 
-public class ItemDrainItemHandler implements IItemHandler {
+public class ItemDrainItemHandler implements IItemHandlerModifiable {
 
 	private ItemDrainBlockEntity blockEntity;
 	private Direction side;
@@ -20,13 +23,17 @@ public class ItemDrainItemHandler implements IItemHandler {
 	}
 
 	@Override
-	public int getSlots() {
+	public int getSlotCount() {
 		return 1;
 	}
 
 	@Override
 	public ItemStack getStackInSlot(int slot) {
 		return blockEntity.getHeldItemStack();
+	}
+
+	@Override
+	public void setStackInSlot(int slot, ItemStack stack) {
 	}
 
 	@Override

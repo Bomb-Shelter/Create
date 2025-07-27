@@ -34,7 +34,7 @@ import net.minecraft.world.level.material.Fluid;
 
 import net.minecraft.world.level.material.Fluids;
 
-import net.neoforged.neoforge.fluids.FluidStack;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 // If anymore fluid ingredient "types" are added then you must update FluidIngredient.Type
 // TODO - See if we can use neoforge's classes for this
@@ -64,9 +64,9 @@ public abstract sealed class FluidIngredient implements Predicate<FluidStack> {
 		return ingredient;
 	}
 
-	protected int amountRequired;
+	protected long amountRequired;
 
-	public int getRequiredAmount() {
+	public long getRequiredAmount() {
 		return amountRequired;
 	}
 
@@ -95,7 +95,7 @@ public abstract sealed class FluidIngredient implements Predicate<FluidStack> {
 
 	public static void write(RegistryFriendlyByteBuf buffer, FluidIngredient ingredient) {
 		buffer.writeBoolean(ingredient instanceof FluidTagIngredient);
-		buffer.writeVarInt(ingredient.amountRequired);
+		buffer.writeVarLong(ingredient.amountRequired);
 		ingredient.writeInternal(buffer);
 	}
 
@@ -115,14 +115,14 @@ public abstract sealed class FluidIngredient implements Predicate<FluidStack> {
 		public static final MapCodec<FluidStackIngredient> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
 				FLUID_NON_AIR_CODEC.fieldOf("fluid").forGetter(fsi -> fsi.fluid),
 				DataComponentPatch.CODEC.optionalFieldOf("components", DataComponentPatch.EMPTY).forGetter(fsi -> fsi.components),
-				Codec.INT.fieldOf("amount").forGetter(fti -> fti.amountRequired)
+				Codec.LONG.fieldOf("amount").forGetter(fti -> fti.amountRequired)
 			).apply(i, FluidStackIngredient::new)
 		);
 
 		public static final StreamCodec<RegistryFriendlyByteBuf, FluidStackIngredient> STREAM_CODEC = StreamCodec.composite(
 			CatnipStreamCodecs.FLUID, i -> i.fluid,
 			DataComponentPatch.STREAM_CODEC, i -> i.components,
-			ByteBufCodecs.VAR_INT, i -> i.amountRequired,
+			ByteBufCodecs.VAR_LONG, i -> i.amountRequired,
 			FluidStackIngredient::new
 		);
 
@@ -133,13 +133,13 @@ public abstract sealed class FluidIngredient implements Predicate<FluidStack> {
 			components = DataComponentPatch.EMPTY;
 		}
 
-		public FluidStackIngredient(Fluid fluid, DataComponentPatch tagToMatch, int amountRequired) {
+		public FluidStackIngredient(Fluid fluid, DataComponentPatch tagToMatch, long amountRequired) {
 			this.fluid = fluid;
 			this.components = tagToMatch;
 			this.amountRequired = amountRequired;
 		}
 
-		public FluidStackIngredient(Fluid fluid, int amountRequired) {
+		public FluidStackIngredient(Fluid fluid, long amountRequired) {
 			this.fluid = fluid;
 			this.components = DataComponentPatch.EMPTY;
 			this.amountRequired = amountRequired;
@@ -190,13 +190,13 @@ public abstract sealed class FluidIngredient implements Predicate<FluidStack> {
 	public static final class FluidTagIngredient extends FluidIngredient {
 		public static final MapCodec<FluidTagIngredient> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
 			TagKey.codec(Registries.FLUID).fieldOf("fluid_tag").forGetter(fti -> fti.tag),
-				Codec.INT.fieldOf("amount").forGetter(fti -> fti.amountRequired)
+				Codec.LONG.fieldOf("amount").forGetter(fti -> fti.amountRequired)
 			).apply(i, FluidTagIngredient::new)
 		);
 
 		public static final StreamCodec<RegistryFriendlyByteBuf, FluidTagIngredient> STREAM_CODEC = StreamCodec.composite(
 			ResourceLocation.STREAM_CODEC, i -> i.tag.location(),
-			ByteBufCodecs.VAR_INT, i -> i.amountRequired,
+			ByteBufCodecs.VAR_LONG, i -> i.amountRequired,
 			(tag, amount) -> new FluidTagIngredient(TagKey.create(Registries.FLUID, tag), amount)
 		);
 
@@ -204,7 +204,7 @@ public abstract sealed class FluidIngredient implements Predicate<FluidStack> {
 
 		public FluidTagIngredient() {}
 
-		public FluidTagIngredient(TagKey<Fluid> tag, int amountRequired) {
+		public FluidTagIngredient(TagKey<Fluid> tag, long amountRequired) {
 			this.tag = tag;
 			this.amountRequired = amountRequired;
 		}

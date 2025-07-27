@@ -15,6 +15,7 @@ import com.simibubi.create.content.contraptions.minecart.capability.MinecartCont
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityMountEvent;
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.world.InteractionHand;
@@ -24,18 +25,15 @@ import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.EntityMountEvent;
-
-@EventBusSubscriber
 public class CouplingHandler {
+	public static void init() {
+		EntityMountEvent.EVENT.register(CouplingHandler::preventEntitiesFromMoutingOccupiedCart);
+	}
 
-	@SubscribeEvent
 	public static void preventEntitiesFromMoutingOccupiedCart(EntityMountEvent event) {
 		Entity e = event.getEntityBeingMounted();
 
-		MinecartController controller = e.getData(AllAttachmentTypes.MINECART_CONTROLLER);
+		MinecartController controller = e.getAttachedOrCreate(AllAttachmentTypes.MINECART_CONTROLLER);
 		if (controller != MinecartController.EMPTY) {
 			if (event.getEntityMounting() instanceof AbstractContraptionEntity)
 				return;

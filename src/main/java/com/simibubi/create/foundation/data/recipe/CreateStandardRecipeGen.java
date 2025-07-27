@@ -20,6 +20,11 @@ import java.util.function.UnaryOperator;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import io.github.fabricators_of_create.porting_lib.conditions.ICondition;
+
+import io.github.fabricators_of_create.porting_lib.conditions.ModLoadedCondition;
+import io.github.fabricators_of_create.porting_lib.conditions.NotCondition;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.base.Supplier;
@@ -85,10 +90,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
-import net.neoforged.neoforge.common.Tags;
-import net.neoforged.neoforge.common.conditions.ICondition;
-import net.neoforged.neoforge.common.conditions.ModLoadedCondition;
-import net.neoforged.neoforge.common.conditions.NotCondition;
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
 
 /**
  * Create's own Data Generation for all vanilla recipe types.
@@ -1834,6 +1836,11 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 		@Override
 		public Advancement.Builder advancement() {
 			return wrapped.advancement();
+		}
+
+		@Override
+		public void accept(ResourceLocation id, Recipe<?> recipe, @Nullable AdvancementHolder advancement) {
+			wrapped.accept(id, new ModdedCookingRecipeOutputShim(recipe, outputOverride), advancement);
 		}
 
 		@Override

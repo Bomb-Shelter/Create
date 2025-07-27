@@ -10,8 +10,8 @@ import net.minecraft.commands.Commands;
 
 import net.minecraft.network.chat.Component;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class ClearBufferCacheCommand {
 
@@ -26,7 +26,7 @@ public class ClearBufferCacheCommand {
 			});
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private static void execute() {
 		PonderClient.invalidateRenderers();
 		CreateClient.invalidateRenderers();

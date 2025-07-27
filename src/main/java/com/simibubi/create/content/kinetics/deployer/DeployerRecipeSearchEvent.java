@@ -5,21 +5,30 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
+import com.simibubi.create.infrastructure.fabric.CreateRecipeWrapper;
+
+import io.github.fabricators_of_create.porting_lib.core.event.BaseEvent;
+import io.github.fabricators_of_create.porting_lib.core.event.CancellableEvent;
+import net.fabricmc.fabric.api.event.Event;
+import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeInput;
-import net.neoforged.bus.api.Event;
-import net.neoforged.bus.api.ICancellableEvent;
-import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
 
-public class DeployerRecipeSearchEvent extends Event implements ICancellableEvent {
+public class DeployerRecipeSearchEvent extends BaseEvent implements CancellableEvent {
+	public static final Event<DeployerRecipeSearchCallback> EVENT = EventFactory.createArrayBacked(DeployerRecipeSearchCallback.class, events -> event -> {
+		for (DeployerRecipeSearchCallback callback : events) {
+			callback.onDeployerRecipeSearch(event);
+		}
+	});
+
 	private final DeployerBlockEntity blockEntity;
-	private final RecipeWrapper inventory;
+	private final CreateRecipeWrapper inventory;
 	@Nullable
 	RecipeHolder<? extends Recipe<? extends RecipeInput>> recipe = null;
 	private int maxPriority = 0;
 
-	public DeployerRecipeSearchEvent(DeployerBlockEntity blockEntity, RecipeWrapper inventory) {
+	public DeployerRecipeSearchEvent(DeployerBlockEntity blockEntity, CreateRecipeWrapper inventory) {
 		this.blockEntity = blockEntity;
 		this.inventory = inventory;
 	}
@@ -28,7 +37,7 @@ public class DeployerRecipeSearchEvent extends Event implements ICancellableEven
 		return blockEntity;
 	}
 
-	public RecipeWrapper getInventory() {
+	public CreateRecipeWrapper getInventory() {
 		return inventory;
 	}
 
@@ -51,5 +60,15 @@ public class DeployerRecipeSearchEvent extends Event implements ICancellableEven
 			this.recipe = newRecipe;
 			maxPriority = priority;
 		});
+	}
+
+	@Override
+	public void sendEvent() {
+		EVENT.invoker().onDeployerRecipeSearch(this);
+	}
+
+	@FunctionalInterface
+	public interface DeployerRecipeSearchCallback {
+		void onDeployerRecipeSearch(DeployerRecipeSearchEvent event);
 	}
 }

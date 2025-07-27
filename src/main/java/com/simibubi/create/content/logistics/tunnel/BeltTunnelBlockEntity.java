@@ -20,6 +20,10 @@ import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -35,16 +39,15 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.IItemHandler;
 
-public class BeltTunnelBlockEntity extends SmartBlockEntity {
+import org.jetbrains.annotations.Nullable;
+
+public class BeltTunnelBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity {
 
 	public Map<Direction, LerpedFloat> flaps;
 	public Set<Direction> sides;
 
-	protected IItemHandler cap = null;
+	protected Storage<ItemVariant> cap = null;
 	protected List<Pair<Direction, Boolean>> flapsToSend;
 
 	public BeltTunnelBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -54,31 +57,29 @@ public class BeltTunnelBlockEntity extends SmartBlockEntity {
 		flapsToSend = new LinkedList<>();
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.ANDESITE_TUNNEL.get(),
-				(be, context) ->  {
-					if (be.cap == null) {
-						if (AllBlocks.BELT.has(be.level.getBlockState(be.worldPosition.below()))) {
-							BlockEntity beBelow = be.level.getBlockEntity(be.worldPosition.below());
-							if (beBelow != null) {
-								IItemHandler capBelow = be.level.getCapability(Capabilities.ItemHandler.BLOCK, be.worldPosition.below(), Direction.UP);
-								if (capBelow != null) {
-									be.cap = capBelow;
-								}
-							}
-						}
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		if (this.cap == null) {
+			if (AllBlocks.BELT.has(this.level.getBlockState(this.worldPosition.below()))) {
+				BlockEntity beBelow = this.level.getBlockEntity(this.worldPosition.below());
+				if (beBelow != null) {
+					Storage<ItemVariant> capBelow = ItemStorage.SIDED.find(beBelow.getLevel(), beBelow.getBlockPos().below(), beBelow.getBlockState(), beBelow, Direction.UP);
+					if (capBelow != null) {
+						this.cap = capBelow;
 					}
-					return be.cap;
 				}
-		);
+			}
+		}
+		return this.cap;
 	}
 
 	@Override
 	public void invalidate() {
 		super.invalidate();
-		invalidateCapabilities();
+		//invalidateCapabilities();
 	}
 
 	protected void writeFlapsAndSides(CompoundTag compound) {

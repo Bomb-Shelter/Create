@@ -3,6 +3,10 @@ package com.simibubi.create.content.equipment.armor;
 import java.util.Locale;
 import java.util.function.Supplier;
 
+import io.github.fabricators_of_create.porting_lib.enchant.CustomEnchantingBehaviorItem;
+
+import io.github.fabricators_of_create.porting_lib.item.extensions.CustomSupportsEnchantItem;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllDataComponents;
@@ -25,7 +29,7 @@ import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.block.Block;
 
-public class BacktankItem extends BaseArmorItem {
+public class BacktankItem extends BaseArmorItem implements CustomSupportsEnchantItem {
 	public static final EquipmentSlot SLOT = EquipmentSlot.CHEST;
 	public static final ArmorItem.Type TYPE = ArmorItem.Type.CHESTPLATE;
 	public static final int BAR_COLOR = 0xEFEFEF;
@@ -63,7 +67,7 @@ public class BacktankItem extends BaseArmorItem {
 	public boolean supportsEnchantment(ItemStack stack, Holder<Enchantment> enchantment) {
 		if (enchantment.is(Enchantments.MENDING) || enchantment.is(Enchantments.UNBREAKING))
 			return false;
-		return super.supportsEnchantment(stack, enchantment);
+		return CustomSupportsEnchantItem.super.supportsEnchantment(stack, enchantment);
 	}
 
 	@Override

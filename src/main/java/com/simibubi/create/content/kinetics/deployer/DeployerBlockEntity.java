@@ -26,10 +26,19 @@ import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringB
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import com.simibubi.create.infrastructure.fabric.CreateRecipeWrapper;
+
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -61,16 +70,9 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
+import net.fabricmc.api.EnvType;
 
-public class DeployerBlockEntity extends KineticBlockEntity {
+public class DeployerBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity {
 
 	protected State state;
 	protected Mode mode;
@@ -83,7 +85,7 @@ public class DeployerBlockEntity extends KineticBlockEntity {
 	protected FilteringBehaviour filtering;
 	protected boolean redstoneLocked;
 	protected UUID owner;
-	private IItemHandlerModifiable invHandler;
+	private SlottedStackStorage invHandler;
 	private ListTag deferredInventoryList;
 
 	private LerpedFloat animatedOffset;
@@ -108,16 +110,14 @@ public class DeployerBlockEntity extends KineticBlockEntity {
 			.startWithValue(0);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.DEPLOYER.get(),
-				(be, context) ->  {
-					if (be.invHandler == null)
-						be.initHandler();
-					return be.invHandler;
-				}
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @org.jetbrains.annotations.Nullable Storage<ItemVariant> getItemStorage(@org.jetbrains.annotations.Nullable Direction side) {
+		if (invHandler == null)
+			initHandler();
+		return invHandler;
 	}
 
 	@Override
@@ -438,7 +438,7 @@ public class DeployerBlockEntity extends KineticBlockEntity {
 		super.writeSafe(tag, registries);
 	}
 
-	private IItemHandlerModifiable createHandler() {
+	private SlottedStackStorage createHandler() {
 		return new DeployerItemHandler(this);
 	}
 
@@ -452,7 +452,7 @@ public class DeployerBlockEntity extends KineticBlockEntity {
 		sendData();
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public PartialModel getHandPose() {
 		return mode == Mode.PUNCH ? AllPartialModels.DEPLOYER_HAND_PUNCHING
 			: heldItem.isEmpty() ? AllPartialModels.DEPLOYER_HAND_POINTING : AllPartialModels.DEPLOYER_HAND_HOLDING;
@@ -476,8 +476,8 @@ public class DeployerBlockEntity extends KineticBlockEntity {
 	@Override
 	public void invalidate() {
 		super.invalidate();
-		if (invHandler != null)
-			invalidateCapabilities();
+		//if (invHandler != null)
+			//invalidateCapabilities();
 	}
 
 	public void changeMode() {
@@ -522,7 +522,7 @@ public class DeployerBlockEntity extends KineticBlockEntity {
 		return true;
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public float getHandOffset(float partialTicks) {
 		if (isVirtual())
 			return animatedOffset.getValue(partialTicks);
@@ -567,14 +567,14 @@ public class DeployerBlockEntity extends KineticBlockEntity {
 		recipeInv.setStackInSlot(0, stack);
 		recipeInv.setStackInSlot(1, heldItemMainhand);
 
-		DeployerRecipeSearchEvent event = new DeployerRecipeSearchEvent(this, new RecipeWrapper(recipeInv));
+		DeployerRecipeSearchEvent event = new DeployerRecipeSearchEvent(this, new CreateRecipeWrapper(recipeInv));
 
 		event.addRecipe(() -> SequencedAssemblyRecipe.getRecipe(level, event.getInventory(),
 			AllRecipeTypes.DEPLOYING.getType(), DeployerApplicationRecipe.class), 100);
 		event.addRecipe(() -> checkRecipe(AllRecipeTypes.DEPLOYING, event.getInventory(), level), 50);
 		event.addRecipe(() -> checkRecipe(AllRecipeTypes.ITEM_APPLICATION, event.getInventory(), level), 50);
 
-		NeoForge.EVENT_BUS.post(event);
+		event.sendEvent();
 		return event.getRecipe();
 	}
 

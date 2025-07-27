@@ -3,6 +3,7 @@ package com.simibubi.create.content.trains.track;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -17,6 +18,7 @@ import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.data.WorldAttached;
 import net.createmod.catnip.math.AngleHelper;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -34,18 +36,18 @@ import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderHighlightEvent;
+import net.fabricmc.api.EnvType;
 
-@EventBusSubscriber(Dist.CLIENT)
 public class TrackBlockOutline {
 
 	public static WorldAttached<Map<BlockPos, TrackBlockEntity>> TRACKS_WITH_TURNS =
 		new WorldAttached<>(w -> new HashMap<>());
 
 	public static BezierPointSelection result;
+
+	public static void init() {
+
+	}
 
 	public static void pickCurves() {
 		Minecraft mc = Minecraft.getInstance();
@@ -165,40 +167,45 @@ public class TrackBlockOutline {
 		ms.popPose();
 	}
 
-	@SubscribeEvent
-	public static void drawCustomBlockSelection(RenderHighlightEvent.Block event) {
-		Minecraft mc = Minecraft.getInstance();
-		BlockHitResult target = event.getTarget();
-		BlockPos pos = target.getBlockPos();
-		BlockState blockstate = mc.level.getBlockState(pos);
+	static {
+		WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register((context, hitResult) -> {
+			Minecraft mc = Minecraft.getInstance();
+			if (!(hitResult instanceof BlockHitResult target))
+				return true;
+			BlockPos pos = target.getBlockPos();
+			BlockState blockstate = mc.level.getBlockState(pos);
 
-		if (!(blockstate.getBlock() instanceof TrackBlock))
-			return;
-		if (!mc.level.getWorldBorder()
-			.isWithinBounds(pos))
-			return;
+			if (!(blockstate.getBlock() instanceof TrackBlock))
+				return true;
+			if (!mc.level.getWorldBorder()
+				.isWithinBounds(pos))
+				return true;
 
-		VertexConsumer vb = event.getMultiBufferSource()
-			.getBuffer(RenderType.lines());
-		Vec3 camPos = event.getCamera()
-			.getPosition();
+			VertexConsumer vb = context.consumers()
+				.getBuffer(RenderType.lines());
+			Vec3 camPos = context.camera()
+				.getPosition();
 
-		PoseStack ms = event.getPoseStack();
+			PoseStack ms = context.matrixStack();
 
-		ms.pushPose();
-		ms.translate(pos.getX() - camPos.x, pos.getY() - camPos.y, pos.getZ() - camPos.z);
+			ms.pushPose();
+			ms.translate(pos.getX() - camPos.x, pos.getY() - camPos.y, pos.getZ() - camPos.z);
 
-		boolean holdingTrack = AllTags.AllBlockTags.TRACKS.matches(Minecraft.getInstance().player.getMainHandItem());
-		TrackShape shape = blockstate.getValue(TrackBlock.SHAPE);
-		boolean canConnectFrom = !shape.isJunction()
-			&& !(mc.level.getBlockEntity(pos)instanceof TrackBlockEntity tbe && tbe.isTilted());
+			boolean holdingTrack = AllTags.AllBlockTags.TRACKS.matches(Minecraft.getInstance().player.getMainHandItem());
+			TrackShape shape = blockstate.getValue(TrackBlock.SHAPE);
+			boolean canConnectFrom = !shape.isJunction()
+				&& !(mc.level.getBlockEntity(pos) instanceof TrackBlockEntity tbe && tbe.isTilted());
 
-		walkShapes(shape, TransformStack.of(ms), s -> {
-			renderShape(s, ms, vb, holdingTrack ? canConnectFrom : null);
-			event.setCanceled(true);
+			AtomicBoolean canceled = new AtomicBoolean(false);
+			walkShapes(shape, TransformStack.of(ms), s -> {
+				renderShape(s, ms, vb, holdingTrack ? canConnectFrom : null);
+				canceled.set(true);
+			});
+
+			ms.popPose();
+
+			return !canceled.get();
 		});
-
-		ms.popPose();
 	}
 
 	public static void renderShape(VoxelShape s, PoseStack ms, VertexConsumer vb, Boolean valid) {

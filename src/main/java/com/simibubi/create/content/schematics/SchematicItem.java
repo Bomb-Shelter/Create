@@ -43,8 +43,8 @@ import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class SchematicItem extends Item {
 
@@ -69,7 +69,7 @@ public class SchematicItem extends Item {
 	}
 
 	@Override
-	@OnlyIn(value = Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flagIn) {
 		if (stack.has(AllDataComponents.SCHEMATIC_FILE)) {
 			tooltip.add(Component.literal(ChatFormatting.GOLD + stack.get(AllDataComponents.SCHEMATIC_FILE)));
@@ -158,7 +158,7 @@ public class SchematicItem extends Item {
 		return true;
 	}
 
-	@OnlyIn(value = Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	protected void displayBlueprintScreen() {
 		ScreenOpener.open(new SchematicEditScreen());
 	}

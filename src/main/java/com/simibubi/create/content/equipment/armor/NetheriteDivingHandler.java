@@ -2,30 +2,32 @@ package com.simibubi.create.content.equipment.armor;
 
 import com.simibubi.create.AllTags.AllItemTags;
 
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.living.LivingEquipmentChangeEvent;
 
-@EventBusSubscriber
 public final class NetheriteDivingHandler {
 	public static final String NETHERITE_DIVING_BITS_KEY = "CreateNetheriteDivingBits";
 	public static final String FIRE_IMMUNE_KEY = "CreateFireImmune";
 
-	@SubscribeEvent
-	public static void onLivingEquipmentChange(LivingEquipmentChangeEvent event) {
-		EquipmentSlot slot = event.getSlot();
+	static {
+		ServerEntityEvents.EQUIPMENT_CHANGE.register((livingEntity, equipmentSlot, previousStack, currentStack) -> {
+			onLivingEquipmentChange(equipmentSlot, livingEntity, currentStack);
+		});
+	}
+
+	public static void onLivingEquipmentChange(EquipmentSlot slot, LivingEntity entity, ItemStack to) {
+		//EquipmentSlot slot = event.getSlot();
 		if (slot.getType() != EquipmentSlot.Type.HUMANOID_ARMOR) {
 			return;
 		}
 
-		LivingEntity entity = event.getEntity();
-		ItemStack to = event.getTo();
+		//LivingEntity entity = event.getEntity();
+		//ItemStack to = event.getTo();
 
 		if (slot == EquipmentSlot.HEAD) {
 			if (isNetheriteDivingHelmet(to)) {
@@ -61,7 +63,7 @@ public final class NetheriteDivingHandler {
 	}
 
 	public static void setBit(LivingEntity entity, EquipmentSlot slot) {
-		CompoundTag nbt = entity.getPersistentData();
+		CompoundTag nbt = entity.getCustomData();
 		byte bits = nbt.getByte(NETHERITE_DIVING_BITS_KEY);
 		if ((bits & 0b1111) == 0b1111) {
 			return;
@@ -76,7 +78,7 @@ public final class NetheriteDivingHandler {
 	}
 
 	public static void clearBit(LivingEntity entity, EquipmentSlot slot) {
-		CompoundTag nbt = entity.getPersistentData();
+		CompoundTag nbt = entity.getCustomData();
 		if (!nbt.contains(NETHERITE_DIVING_BITS_KEY)) {
 			return;
 		}
@@ -95,6 +97,6 @@ public final class NetheriteDivingHandler {
 	// The feature works without syncing because health and burning are calculated server-side and synced through vanilla code.
 	// This method will not be called when the entity is wearing a full diving set on creation because the NBT values are persistent.
 	public static void setFireImmune(LivingEntity entity, boolean fireImmune) {
-		entity.getPersistentData().putBoolean(FIRE_IMMUNE_KEY, fireImmune);
+		entity.getCustomData().putBoolean(FIRE_IMMUNE_KEY, fireImmune);
 	}
 }

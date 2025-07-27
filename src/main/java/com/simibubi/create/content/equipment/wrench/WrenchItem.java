@@ -10,6 +10,9 @@ import com.simibubi.create.AllTags;
 import com.simibubi.create.Create;
 import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.player.AttackEntityEvent;
+import net.createmod.catnip.platform.CatnipServices;
+import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionResult;
@@ -23,21 +26,19 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
-import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class WrenchItem extends Item {
 
 	public WrenchItem(Properties properties) {
 		super(properties);
+		CatnipServices.PLATFORM.executeOnClientOnly(() -> this::initializeClient);
 	}
 
-	@Override
-	@OnlyIn(Dist.CLIENT)
-	public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-		consumer.accept(SimpleCustomRenderer.create(this, new WrenchItemRenderer()));
+	@Environment(EnvType.CLIENT)
+	public void initializeClient() {
+		BuiltinItemRendererRegistry.INSTANCE.register(this, SimpleCustomRenderer.create(this, new WrenchItemRenderer()));
 	}
 
 	@Nonnull

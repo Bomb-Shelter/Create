@@ -11,6 +11,7 @@ import com.simibubi.create.api.equipment.potatoCannon.PotatoProjectileEntityHitA
 import com.simibubi.create.api.registry.CreateBuiltInRegistries;
 import com.simibubi.create.foundation.codec.CreateCodecs;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityTeleportEvent;
 import net.createmod.catnip.data.WorldAttached;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -41,12 +42,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.event.EventHooks;
-import net.neoforged.neoforge.event.entity.EntityTeleportEvent;
+import net.fabricmc.fabric.api.entity.FakePlayer;
 
 public class AllPotatoProjectileEntityHitActions {
-	
+
 	static {
 		register("set_on_fire", SetOnFire.CODEC);
 		register("potion_effect", PotionEffect.CODEC);
@@ -55,7 +54,7 @@ public class AllPotatoProjectileEntityHitActions {
 		register("cure_zombie_villager", CureZombieVillager.CODEC);
 		register("suspicious_stew", SuspiciousStew.CODEC);
 	}
-	
+
 	public static void init() {
 	}
 
@@ -165,7 +164,8 @@ public class AllPotatoProjectileEntityHitActions {
 					.nextDouble() - 0.5D) * teleportDiameter;
 
 				EntityTeleportEvent.ChorusFruit event =
-					EventHooks.onChorusFruitTeleport(livingEntity, teleportX, teleportY, teleportZ);
+					new EntityTeleportEvent.ChorusFruit(livingEntity, teleportX, teleportY, teleportZ);
+				event.sendEvent();
 				if (event.isCanceled())
 					return false;
 				if (livingEntity.randomTeleport(event.getTargetX(), event.getTargetY(), event.getTargetZ(), true)) {
@@ -197,7 +197,7 @@ public class AllPotatoProjectileEntityHitActions {
 		private static final GameProfile ZOMBIE_CONVERTER_NAME =
 			new GameProfile(UUID.fromString("be12d3dc-27d3-4992-8c97-66be53fd49c5"), "Converter");
 		private static final WorldAttached<FakePlayer> ZOMBIE_CONVERTERS =
-			new WorldAttached<>(w -> new FakePlayer((ServerLevel) w, ZOMBIE_CONVERTER_NAME));
+			new WorldAttached<>(w -> FakePlayer.get((ServerLevel) w, ZOMBIE_CONVERTER_NAME));
 
 		public static final MapCodec<CureZombieVillager> CODEC = MapCodec.unit(INSTANCE);
 

@@ -2,16 +2,16 @@ package com.simibubi.create.foundation.utility;
 
 import com.simibubi.create.Create;
 
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.fml.util.thread.EffectiveSide;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 /** Deprecated so simi doensn't forget to remove debug calls **/
-@OnlyIn(value = Dist.CLIENT)
+@Environment(EnvType.CLIENT)
 public class Debug {
 
 	@Deprecated
@@ -43,8 +43,7 @@ public class Debug {
 
 	@Deprecated
 	public static String getLogicalSide() {
-		return EffectiveSide.get()
-			.isClient() ? "CL" : "SV";
+		return FabricLoader.getInstance().getEnvironmentType() == EnvType.CLIENT ? "CL" : "SV";
 	}
 
 	@Deprecated

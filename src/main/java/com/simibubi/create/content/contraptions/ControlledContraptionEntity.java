@@ -23,8 +23,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 /**
  * Ex: Pistons, bearings <br>
@@ -147,7 +147,7 @@ public class ControlledContraptionEntity extends AbstractContraptionEntity {
 
 	// Always noop this. Controlled Contraptions are given their position on the client from the BE
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void lerpTo(double pX, double pY, double pZ, float pYRot, float pXRot, int pSteps) {
 	}
 
@@ -241,7 +241,7 @@ public class ControlledContraptionEntity extends AbstractContraptionEntity {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void applyLocalTransforms(PoseStack matrixStack, float partialTicks) {
 		float angle = getAngle(partialTicks);
 		Axis axis = getRotationAxis();

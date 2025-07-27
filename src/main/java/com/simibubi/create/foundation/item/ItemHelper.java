@@ -9,6 +9,19 @@ import javax.annotation.Nullable;
 
 import com.simibubi.create.foundation.mixin.accessor.ItemStackHandlerAccessor;
 
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageUtil;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
+
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import com.simibubi.create.content.logistics.box.PackageEntity;
@@ -28,11 +41,6 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemStackHandler;
-
 public class ItemHelper {
 
 	public static boolean sameItem(ItemStack stack, ItemStack otherStack) {
@@ -43,9 +51,16 @@ public class ItemHelper {
 		return s -> sameItem(stack, s);
 	}
 
-	public static void dropContents(Level world, BlockPos pos, IItemHandler inv) {
-		for (int slot = 0; slot < inv.getSlots(); slot++)
-			Containers.dropItemStack(world, pos.getX(), pos.getY(), pos.getZ(), inv.getStackInSlot(slot));
+	public static void dropContents(Level world, BlockPos pos, Storage<ItemVariant> inv) {
+		for (StorageView<ItemVariant> view : inv) {
+			int maxStackSize = view.getResource().getComponentMap().getOrDefault(DataComponents.MAX_STACK_SIZE, view.getResource().getItem().getDefaultMaxStackSize());
+			long total = view.getAmount();
+
+			while (total > 0) {
+				Containers.dropItemStack(world, pos.getX(), pos.getY(), pos.getZ(), view.getResource().toStack((int) Math.min(maxStackSize, total)));
+				total -= maxStackSize;
+			}
+		}
 	}
 
 	public static List<ItemStack> multipliedOutput(ItemStack in, ItemStack out) {
@@ -73,13 +88,14 @@ public class ItemHelper {
 			stacks.add(stack);
 	}
 
-	public static boolean isSameInventory(IItemHandler h1, IItemHandler h2) {
+	public static <T> boolean isSameInventory(SlottedStorage<T> h1, SlottedStorage<T> h2) {
 		if (h1 == null || h2 == null)
 			return false;
-		if (h1.getSlots() != h2.getSlots())
+
+		if (h1.getSlotCount() != h2.getSlotCount())
 			return false;
-		for (int slot = 0; slot < h1.getSlots(); slot++) {
-			if (h1.getStackInSlot(slot) != h2.getStackInSlot(slot))
+		for (int slot = 0; slot < h1.getSlotCount(); slot++) {
+			if (h1.getSlot(slot) != h2.getSlot(slot))
 				return false;
 		}
 		return true;
@@ -87,27 +103,25 @@ public class ItemHelper {
 
 	public static <T extends IBE<? extends BlockEntity>> int calcRedstoneFromBlockEntity(T ibe, Level level, BlockPos pos) {
 		return ibe.getBlockEntityOptional(level, pos)
-			.map(be -> level.getCapability(ItemHandler.BLOCK, pos, null))
+			.map(be -> TransferUtil.getItemStorage(level, pos, be, null))
 			.map(ItemHelper::calcRedstoneFromInventory)
 			.orElse(0);
 	}
 
-	public static int calcRedstoneFromInventory(@Nullable IItemHandler inv) {
+	public static int calcRedstoneFromInventory(@Nullable Storage<ItemVariant> inv) {
 		if (inv == null)
 			return 0;
 		int i = 0;
 		float f = 0.0F;
-		int totalSlots = inv.getSlots();
-
-		for (int j = 0; j < inv.getSlots(); ++j) {
-			int slotLimit = inv.getSlotLimit(j);
+		int totalSlots = 0;
+		for (StorageView<ItemVariant> view : inv) {
+			long slotLimit = view.getCapacity();
 			if (slotLimit == 0) {
-				totalSlots--;
 				continue;
 			}
-			ItemStack itemstack = inv.getStackInSlot(j);
-			if (!itemstack.isEmpty()) {
-				f += (float) itemstack.getCount() / (float) Math.min(slotLimit, itemstack.getOrDefault(DataComponents.MAX_STACK_SIZE, 64));
+			totalSlots++;
+			if (!view.isResourceBlank() && view.getAmount() > 0) {
+				f += (float) view.getAmount() / (float) Math.min(slotLimit, view.getResource().getComponentMap().getOrDefault(DataComponents.MAX_STACK_SIZE, 64));
 				++i;
 			}
 		}
@@ -174,15 +188,15 @@ public class ItemHelper {
 		EXACTLY, UPTO
 	}
 
-	public static ItemStack extract(IItemHandler inv, Predicate<ItemStack> test, boolean simulate) {
+	public static ItemStack extract(Storage<ItemVariant> inv, Predicate<ItemStack> test, boolean simulate) {
 		return extract(inv, test, ExtractionCountMode.UPTO, 64, simulate);
 	}
 
-	public static ItemStack extract(IItemHandler inv, Predicate<ItemStack> test, int exactAmount, boolean simulate) {
+	public static ItemStack extract(Storage<ItemVariant> inv, Predicate<ItemStack> test, int exactAmount, boolean simulate) {
 		return extract(inv, test, ExtractionCountMode.EXACTLY, exactAmount, simulate);
 	}
 
-	public static ItemStack extract(IItemHandler inv, Predicate<ItemStack> test, ExtractionCountMode mode, int amount,
+	public static ItemStack extract(Storage<ItemVariant> inv, Predicate<ItemStack> test, ExtractionCountMode mode, int amount,
 									boolean simulate) {
 		ItemStack extracting = ItemStack.EMPTY;
 		boolean amountRequired = mode == ExtractionCountMode.EXACTLY;
@@ -195,14 +209,15 @@ public class ItemHelper {
 		do {
 			extracting = ItemStack.EMPTY;
 
-			for (int slot = 0; slot < inv.getSlots(); slot++) {
+			for (StorageView<ItemVariant> view : inv) {
 				int amountToExtractFromThisSlot =
-					Math.min(maxExtractionCount - extracting.getCount(), inv.getStackInSlot(slot)
+					Math.min(maxExtractionCount - extracting.getCount(), view.getResource().getComponentMap()
 						.getOrDefault(DataComponents.MAX_STACK_SIZE, 64));
-				ItemStack stack = inv.extractItem(slot, amountToExtractFromThisSlot, true);
+				long extracted = StorageUtil.simulateExtract(view, view.getResource(), amountToExtractFromThisSlot, null);
 
-				if (stack.isEmpty())
+				if (extracted <= 0)
 					continue;
+				ItemStack stack = view.getResource().toStack((int) Math.min(extracted, 64));
 				if (!test.test(stack))
 					continue;
 				if (!extracting.isEmpty() && !canItemStackAmountsStack(stack, extracting)) {
@@ -216,7 +231,10 @@ public class ItemHelper {
 					extracting.grow(stack.getCount());
 
 				if (!simulate && hasEnoughItems)
-					inv.extractItem(slot, stack.getCount(), false);
+					try (Transaction trans = TransferUtil.getTransaction()) {
+						view.extract(view.getResource(), extracted, trans);
+						trans.commit();
+					}
 
 				if (extracting.getCount() >= maxExtractionCount) {
 					if (checkHasEnoughItems) {
@@ -248,14 +266,14 @@ public class ItemHelper {
 		return extracting;
 	}
 
-	public static ItemStack extract(IItemHandler inv, Predicate<ItemStack> test,
+	public static ItemStack extract(Storage<ItemVariant> inv, Predicate<ItemStack> test,
 									Function<ItemStack, Integer> amountFunction, boolean simulate) {
 		ItemStack extracting = ItemStack.EMPTY;
 		int maxExtractionCount = 64;
 
-		for (int slot = 0; slot < inv.getSlots(); slot++) {
+		for (StorageView<ItemVariant> view : inv) {
 			if (extracting.isEmpty()) {
-				ItemStack stackInSlot = inv.getStackInSlot(slot);
+				ItemStack stackInSlot = view.getResource().toStack((int) Math.min(view.getAmount(), 64));
 				if (stackInSlot.isEmpty() || !test.test(stackInSlot))
 					continue;
 				int maxExtractionCountForItem = amountFunction.apply(stackInSlot);
@@ -264,7 +282,8 @@ public class ItemHelper {
 				maxExtractionCount = Math.min(maxExtractionCount, maxExtractionCountForItem);
 			}
 
-			ItemStack stack = inv.extractItem(slot, maxExtractionCount - extracting.getCount(), true);
+			long extracted = StorageUtil.simulateExtract(view, view.getResource(), maxExtractionCount - extracting.getCount(), null);
+			ItemStack stack = view.getResource().toStack((int) Math.min(extracted, 64));
 
 			if (!test.test(stack))
 				continue;
@@ -277,7 +296,10 @@ public class ItemHelper {
 				extracting.grow(stack.getCount());
 
 			if (!simulate)
-				inv.extractItem(slot, stack.getCount(), false);
+				try (Transaction trans = TransferUtil.getTransaction()) {
+					view.extract(view.getResource(), extracted, trans);
+					trans.commit();
+				}
 			if (extracting.getCount() >= maxExtractionCount)
 				break;
 		}
@@ -289,7 +311,7 @@ public class ItemHelper {
 		return ItemStack.isSameItemSameComponents(a, b) && a.getCount() + b.getCount() <= a.getOrDefault(DataComponents.MAX_STACK_SIZE, 64);
 	}
 
-	public static ItemStack findFirstMatch(IItemHandler inv, Predicate<ItemStack> test) {
+	public static ItemStack findFirstMatch(SlottedStackStorage inv, Predicate<ItemStack> test) {
 		int slot = findFirstMatchingSlotIndex(inv, test);
 		if (slot == -1)
 			return ItemStack.EMPTY;
@@ -297,8 +319,8 @@ public class ItemHelper {
 			return inv.getStackInSlot(slot);
 	}
 
-	public static int findFirstMatchingSlotIndex(IItemHandler inv, Predicate<ItemStack> test) {
-		for (int slot = 0; slot < inv.getSlots(); slot++) {
+	public static int findFirstMatchingSlotIndex(SlottedStackStorage inv, Predicate<ItemStack> test) {
+		for (int slot = 0; slot < inv.getSlotCount(); slot++) {
 			ItemStack toTest = inv.getStackInSlot(slot);
 			if (test.test(toTest))
 				return slot;
@@ -324,7 +346,7 @@ public class ItemHelper {
 	}
 
 	public static ItemContainerContents containerContentsFromHandler(ItemStackHandler handler) {
-		return ItemContainerContents.fromItems(((ItemStackHandlerAccessor) handler).create$getStacks());
+		return ItemContainerContents.fromItems(handler.getSlots().stream().map(e -> e.getResource().toStack((int) Math.min(e.getAmount(), 64))).toList());
 	}
 
 	public static ItemStack limitCountToMaxStackSize(ItemStack stack, boolean simulate) {
@@ -338,19 +360,19 @@ public class ItemHelper {
 		return remainder;
 	}
 
-	public static void copyContents(IItemHandler from, IItemHandlerModifiable to) {
+	public static void copyContents(SlottedStackStorage from, SlottedStackStorage to) {
 		if (from.getSlots() != to.getSlots()) {
 			throw new IllegalArgumentException("Slot count mismatch");
 		}
 
-		for (int i = 0; i < from.getSlots(); i++) {
+		for (int i = 0; i < from.getSlotCount(); i++) {
 			to.setStackInSlot(i, from.getStackInSlot(i).copy());
 		}
 	}
 
 	public static List<ItemStack> getNonEmptyStacks(ItemStackHandler handler) {
 		List<ItemStack> stacks = new ArrayList<>();
-		for (int i = 0; i < handler.getSlots(); i++) {
+		for (int i = 0; i < handler.getSlotCount(); i++) {
 			ItemStack stack = handler.getStackInSlot(i);
 			if (!stack.isEmpty()) {
 				stacks.add(stack);

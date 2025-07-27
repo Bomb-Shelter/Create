@@ -3,6 +3,8 @@ package com.simibubi.create.content.equipment.toolbox;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllRecipeTypes;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceLocation;
@@ -15,7 +17,7 @@ import net.minecraft.world.item.crafting.CustomRecipe;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.neoforged.neoforge.common.Tags;
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
 
 public class ToolboxDyeingRecipe extends CustomRecipe {
 
@@ -59,7 +61,7 @@ public class ToolboxDyeingRecipe extends CustomRecipe {
 				if (Block.byItem(stack.getItem()) instanceof ToolboxBlock) {
 					toolbox = stack;
 				} else {
-					DyeColor color1 = DyeColor.getColor(stack);
+					DyeColor color1 = CreateFabricUtil.getColor(stack);
 					if (color1 != null) {
 						color = color1;
 					}
@@ -69,7 +71,7 @@ public class ToolboxDyeingRecipe extends CustomRecipe {
 
 		ItemStack dyedToolbox = AllBlocks.TOOLBOXES.get(color)
 			.asStack();
-		if (!toolbox.isComponentsPatchEmpty()) {
+		if (!toolbox.getComponentsPatch().isEmpty()) {
 			dyedToolbox.applyComponents(toolbox.getComponentsPatch());
 		}
 

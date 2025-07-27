@@ -1,5 +1,7 @@
 package com.simibubi.create.content.logistics.packagePort;
 
+import io.github.fabricators_of_create.porting_lib.registry.DeferredRegister;
+
 import org.jetbrains.annotations.ApiStatus.Internal;
 
 import com.simibubi.create.Create;
@@ -9,9 +11,6 @@ import com.simibubi.create.content.logistics.packagePort.PackagePortTarget.Train
 
 import net.minecraft.core.Holder;
 
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.registries.DeferredRegister;
-
 public class AllPackagePortTargetTypes {
 	private static final DeferredRegister<PackagePortTargetType> REGISTER = DeferredRegister.create(CreateRegistries.PACKAGE_PORT_TARGET_TYPE, Create.ID);
 
@@ -19,7 +18,7 @@ public class AllPackagePortTargetTypes {
 	public static final Holder<PackagePortTargetType> TRAIN_STATION = REGISTER.register("train_station", TrainStationFrogportTarget.Type::new);
 
 	@Internal
-	public static void register(IEventBus eventBus) {
-		REGISTER.register(eventBus);
+	public static void register() {
+		REGISTER.register();
 	}
 }

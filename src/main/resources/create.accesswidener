@@ -1,0 +1,77 @@
+accessWidener v2 named
+accessible method net/minecraft/client/gui/Font getFontSet (Lnet/minecraft/resources/ResourceLocation;)Lnet/minecraft/client/gui/font/FontSet;
+accessible field net/minecraft/client/multiplayer/ClientPacketListener serverChunkRadius I
+accessible field net/minecraft/client/particle/Particle stoppedByCollision Z
+accessible field net/minecraft/client/renderer/ItemInHandRenderer mainHandItem Lnet/minecraft/world/item/ItemStack;
+accessible field net/minecraft/client/renderer/ItemInHandRenderer offHandItem Lnet/minecraft/world/item/ItemStack;
+accessible field net/minecraft/client/renderer/entity/ItemRenderer textureManager Lnet/minecraft/client/renderer/texture/TextureManager;
+
+accessible field net/minecraft/network/protocol/game/ClientboundPlayerAbilitiesPacket flyingSpeed F
+mutable field net/minecraft/network/protocol/game/ClientboundPlayerAbilitiesPacket flyingSpeed F
+
+accessible field net/minecraft/server/MinecraftServer storageSource Lnet/minecraft/world/level/storage/LevelStorageSource$LevelStorageAccess;
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl aboveGroundTickCount I
+accessible field net/minecraft/server/network/ServerGamePacketListenerImpl aboveGroundVehicleTickCount I
+
+accessible field net/minecraft/world/entity/Entity removalReason Lnet/minecraft/world/entity/Entity$RemovalReason;
+accessible field net/minecraft/world/entity/LivingEntity jumping Z
+
+accessible field net/minecraft/world/item/HoneycombItem WAXABLES Ljava/util/function/Supplier;
+mutable field net/minecraft/world/item/HoneycombItem WAXABLES Ljava/util/function/Supplier;
+#accessible field net/minecraft/world/item/alchemy/PotionBrewing POTION_MIXES
+#accessible field net/minecraft/world/item/alchemy/PotionBrewing CONTAINER_MIXES
+#accessible field net/minecraft/world/item/alchemy/PotionBrewing ALLOWED_CONTAINER
+accessible field net/minecraft/world/item/crafting/Ingredient values [Lnet/minecraft/world/item/crafting/Ingredient$Value;
+#accessible field net/minecraft/world/item/crafting/RecipeManager recipes
+
+accessible field net/minecraft/world/level/BaseSpawner spawnPotentials Lnet/minecraft/util/random/SimpleWeightedRandomList;
+accessible field net/minecraft/world/level/BaseSpawner nextSpawnData Lnet/minecraft/world/level/SpawnData;
+accessible field net/minecraft/world/level/biome/BiomeManager biomeZoomSeed J
+accessible field net/minecraft/world/level/block/entity/BeaconBlockEntity beamSections Ljava/util/List;
+accessible field net/minecraft/world/level/chunk/HashMapPalette values Lnet/minecraft/util/CrudeIncrementalIntIdentityHashBiMap;
+accessible class net/minecraft/world/level/chunk/PaletteResize
+
+accessible field net/minecraft/client/model/geom/ModelPart cubes Ljava/util/List;
+accessible field net/minecraft/client/model/geom/ModelPart children Ljava/util/Map;
+accessible field net/minecraft/client/model/AgeableListModel scaleHead Z
+accessible field net/minecraft/client/model/AgeableListModel babyYHeadOffset F
+accessible field net/minecraft/client/model/AgeableListModel babyZHeadOffset F
+accessible field net/minecraft/client/model/AgeableListModel babyHeadScale F
+
+accessible field net/minecraft/client/gui/components/CommandSuggestions suggestions Lnet/minecraft/client/gui/components/CommandSuggestions$SuggestionsList;
+accessible method net/minecraft/client/gui/components/CommandSuggestions$SuggestionsList <init> (Lnet/minecraft/client/gui/components/CommandSuggestions;IIILjava/util/List;Z)V
+
+accessible method net/minecraft/data/recipes/RecipeProvider getName ()Ljava/lang/String;
+extendable method net/minecraft/data/recipes/RecipeProvider getName ()Ljava/lang/String;
+
+accessible method net/minecraft/world/level/block/TransparentBlock <init> (Lnet/minecraft/world/level/block/state/BlockBehaviour$Properties;)V
+
+accessible method net/minecraft/client/gui/components/AbstractWidget render (Lnet/minecraft/client/gui/GuiGraphics;IIF)V
+extendable method net/minecraft/client/gui/components/AbstractWidget render (Lnet/minecraft/client/gui/GuiGraphics;IIF)V
+
+accessible class net/minecraft/util/datafix/fixes/ItemStackComponentizationFix$ItemStackData
+
+accessible method net/minecraft/world/item/crafting/CraftingInput <init> (IILjava/util/List;)V
+
+accessible method net/minecraft/world/entity/decoration/HangingEntity recalculateBoundingBox ()V
+extendable method net/minecraft/world/entity/decoration/HangingEntity recalculateBoundingBox ()V
+
+accessible class net/minecraft/world/item/alchemy/PotionBrewing$Mix
+
+accessible class net/minecraft/data/models/ItemModelGenerators$TrimModelData
+
+accessible field net/minecraft/world/level/block/LiquidBlock fluid Lnet/minecraft/world/level/material/FlowingFluid;
+
+accessible class net/minecraft/world/item/crafting/Ingredient$TagValue
+accessible method net/minecraft/world/item/crafting/Ingredient$TagValue <init> (Lnet/minecraft/tags/TagKey;)V
+accessible class net/minecraft/world/item/crafting/Ingredient$ItemValue
+accessible method net/minecraft/world/item/crafting/Ingredient$ItemValue <init> (Lnet/minecraft/world/item/ItemStack;)V
+accessible field net/minecraft/world/entity/Mob targetSelector Lnet/minecraft/world/entity/ai/goal/GoalSelector;
+accessible class net/minecraft/client/particle/ParticleEngine$SpriteParticleRegistration
+accessible field io/github/fabricators_of_create/porting_lib/transfer/item/SlotItemHandler index I
+accessible field net/minecraft/world/item/BucketItem content Lnet/minecraft/world/level/material/Fluid;
+accessible field net/minecraft/client/gui/screens/Screen renderables Ljava/util/List;
+accessible method net/minecraft/world/level/block/Block popExperience (Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;I)V
+accessible field net/minecraft/client/gui/screens/Screen narratables Ljava/util/List;
+accessible field net/minecraft/world/item/ItemStackLinkedSet TYPE_AND_TAG Lit/unimi/dsi/fastutil/Hash$Strategy;
+accessible class net/minecraft/data/tags/IntrinsicHolderTagsProvider$IntrinsicTagAppender

@@ -4,6 +4,10 @@ import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.WrenchableDirectionalBlock;
+
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomLandingEffectsBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomRunningEffectsBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.WeakPowerCheckingBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.BlockParticleOption;
@@ -24,7 +28,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.Vec3;
 
-public class StickerBlock extends WrenchableDirectionalBlock implements IBE<StickerBlockEntity> {
+public class StickerBlock extends WrenchableDirectionalBlock implements IBE<StickerBlockEntity>, WeakPowerCheckingBlock, CustomLandingEffectsBlock, CustomRunningEffectsBlock {
 
 	public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
 	public static final BooleanProperty EXTENDED = BlockStateProperties.EXTENDED;
@@ -134,7 +138,7 @@ public class StickerBlock extends WrenchableDirectionalBlock implements IBE<Stic
 				entity.getY(), entity.getZ(), numberOfParticles, 0.0D, 0.0D, 0.0D, (double) 0.15F);
 			return true;
 		}
-		return super.addLandingEffects(state1, worldserver, pos, state2, entity, numberOfParticles);
+		return false;
 	}
 
 	@Override
@@ -142,14 +146,14 @@ public class StickerBlock extends WrenchableDirectionalBlock implements IBE<Stic
 		if (state.getValue(FACING) == Direction.UP) {
 			Vec3 Vector3d = entity.getDeltaMovement();
 			world.addParticle(
-				new BlockParticleOption(ParticleTypes.BLOCK, Blocks.SLIME_BLOCK.defaultBlockState()).setPos(pos),
+				new BlockParticleOption(ParticleTypes.BLOCK, Blocks.SLIME_BLOCK.defaultBlockState()).setSourcePos(pos),
 				entity.getX() + ((double) world.random.nextFloat() - 0.5D) * (double) entity.getBbWidth(),
 				entity.getY() + 0.1D,
 				entity.getZ() + ((double) world.random.nextFloat() - 0.5D) * (double) entity.getBbWidth(),
 				Vector3d.x * -4.0D, 1.5D, Vector3d.z * -4.0D);
 			return true;
 		}
-		return super.addRunningEffects(state, world, pos, entity);
+		return false;
 	}
 
 }

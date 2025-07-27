@@ -2,6 +2,8 @@ package com.simibubi.create.impl.unpacking;
 
 import java.util.List;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.api.packager.unpacking.UnpackingHandler;
@@ -54,7 +56,7 @@ public enum CrafterUnpackingHandler implements UnpackingHandler {
 			for (ItemStack stack : items) {
 				if (ItemStack.isSameItemSameComponents(stack, targetStack.stack)) {
 					ItemStack toInsert = stack.copyWithCount(1);
-					if (inventory.insertItem(0, toInsert, simulate).isEmpty()) {
+					if (CreateTransferUtil.insertItem(inventory.getSlot(0), toInsert, simulate).isEmpty()) {
 						stack.shrink(1);
 						// one item per crafter, move to next once successful
 						continue outer;

@@ -4,6 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
+
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleVariantStorage;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.simibubi.create.AllBlockEntityTypes;
@@ -38,15 +49,10 @@ import net.minecraft.world.level.block.LeverBlock;
 import net.minecraft.world.level.block.RedstoneLampBlock;
 import net.minecraft.world.level.material.Fluids;
 
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.FluidType;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 @GameTestGroup(path = "fluids")
-public class TestFluids {
+public class TestFluids implements FabricGameTest {
 	@GameTest(template = "hose_pulley_transfer", timeoutTicks = CreateGameTestHelper.TWENTY_SECONDS)
 	public static void hosePulleyTransfer(CreateGameTestHelper helper) {
 		BlockPos lever = new BlockPos(7, 7, 5);
@@ -65,10 +71,10 @@ public class TestFluids {
 					.forEach(pos -> helper.assertBlockPresent(Blocks.AIR, pos));
 			// check nothing left in pulley
 			BlockPos pulleyPos = new BlockPos(4, 7, 3);
-			IFluidHandler storage = helper.fluidStorageAt(pulleyPos);
+			Storage<FluidVariant> storage = helper.fluidStorageAt(pulleyPos);
 			if (storage instanceof HosePulleyFluidHandler hose) {
-				IFluidHandler internalTank = hose.getInternalTank();
-				if (!internalTank.drain(1, FluidAction.SIMULATE).isEmpty())
+				SingleVariantStorage<FluidVariant> internalTank = hose.getInternalTank();
+				if (!CreateTransferUtil.extractFluid(internalTank, 1, true).isEmpty())
 					helper.fail("Pulley not empty");
 			} else {
 				helper.fail("Not a pulley");
@@ -93,7 +99,7 @@ public class TestFluids {
 		BlockPos lever = new BlockPos(4, 3, 3);
 		BlockPos basin = new BlockPos(5, 2, 2);
 		BlockPos water = new BlockPos(2, 2, 2);
-		FluidStack expectedResult = new FluidStack(Fluids.WATER, FluidType.BUCKET_VOLUME);
+		FluidStack expectedResult = new FluidStack(Fluids.WATER, 1000);
 		helper.pullLever(lever);
 		helper.succeedWhen(() -> {
 			helper.assertBlockPresent(Blocks.AIR, water);
@@ -222,7 +228,7 @@ public class TestFluids {
 		List<BlockPos> chests = List.of(new BlockPos(6, 4, 2), new BlockPos(6, 4, 3));
 		List<BlockPos> deployers = chests.stream().map(pos -> pos.below(2)).toList();
 		helper.runAfterDelay(3, () -> chests.forEach(chest ->
-				planks.forEach(plank -> ItemHandlerHelper.insertItem(helper.itemStorageAt(chest), new ItemStack(plank), false))
+				planks.forEach(plank -> CreateTransferUtil.insertItem(helper.itemStorageAt(chest), new ItemStack(plank), false))
 		));
 
 		BlockPos smallWheel = new BlockPos(4, 2, 2);
@@ -247,9 +253,9 @@ public class TestFluids {
 			// next item
 			planks.remove(0);
 			deployers.forEach(pos -> {
-				IItemHandler handler = helper.itemStorageAt(pos);
-				for (int i = 0; i < handler.getSlots(); i++) {
-					handler.extractItem(i, Integer.MAX_VALUE, false);
+				Storage<ItemVariant> handler = helper.itemStorageAt(pos);
+				for (StorageView<ItemVariant> view : handler) {
+					CreateTransferUtil.extractItem(view, Integer.MAX_VALUE, false);
 				}
 			});
 			if (!planks.isEmpty())
@@ -262,7 +268,7 @@ public class TestFluids {
 		BlockPos lever = new BlockPos(3, 3, 1);
 		BlockPos output = new BlockPos(3, 4, 4);
 		BlockPos tankOutput = new BlockPos(1, 2, 4);
-		FluidStack expected = new FluidStack(Fluids.WATER, 2 * FluidType.BUCKET_VOLUME);
+		FluidStack expected = new FluidStack(Fluids.WATER, 2 * 1000);
 		helper.pullLever(lever);
 		helper.succeedWhen(() -> {
 			helper.assertFluidPresent(expected, tankOutput);

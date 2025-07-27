@@ -4,8 +4,13 @@ import com.simibubi.create.content.logistics.box.PackageItem;
 import com.simibubi.create.foundation.item.ItemHandlerWrapper;
 import com.simibubi.create.foundation.item.ItemHelper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+import com.simibubi.create.infrastructure.fabric.transfer.FinalCommitSnapshot;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
 
 public class PackagePortAutomationInventoryWrapper extends ItemHandlerWrapper {
 
@@ -13,16 +18,16 @@ public class PackagePortAutomationInventoryWrapper extends ItemHandlerWrapper {
 
 	private boolean access;
 
-	public PackagePortAutomationInventoryWrapper(IItemHandlerModifiable wrapped, PackagePortBlockEntity ppbe) {
+	public PackagePortAutomationInventoryWrapper(SlottedStackStorage wrapped, PackagePortBlockEntity ppbe) {
 		super(wrapped);
 		this.ppbe = ppbe;
 		access = false;
 	}
 
 	@Override
-	public ItemStack extractItem(int slot, int amount, boolean simulate) {
+	public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
 		if (access)
-			return super.extractItem(slot, amount, simulate);
+			return super.extract(resource, maxAmount, transaction);
 
 		access = true;
 		ItemStack extract = ItemHelper.extract(this, stack -> {
@@ -30,20 +35,50 @@ public class PackagePortAutomationInventoryWrapper extends ItemHandlerWrapper {
 				return false;
 			String filterString = ppbe.getFilterString();
 			return filterString != null && PackageItem.matchAddress(stack, filterString);
-		}, simulate);
+		}, true);
+
+		(new FinalCommitSnapshot(maxAmount, () -> {
+			ItemHelper.extract(this, stack -> {
+				if (!PackageItem.isPackage(stack))
+					return false;
+				String filterString = ppbe.getFilterString();
+				return filterString != null && PackageItem.matchAddress(stack, filterString);
+			}, true);
+		})).updateSnapshots(transaction);
 		access = false;
 
-		return extract;
+		return extract.getCount();
 	}
 
 	@Override
-	public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-		if (!PackageItem.isPackage(stack))
-			return stack;
-		String filterString = ppbe.getFilterString();
-		if (filterString != null && PackageItem.matchAddress(stack, filterString))
-			return stack;
-		return super.insertItem(slot, stack, simulate);
+	public long extractSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
+		if (access)
+			return super.extractSlot(slot, resource, maxAmount, transaction);
+
+		return extract(resource, maxAmount, transaction);
 	}
 
+	@Override
+	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+		var stack = CreateTransferUtil.getLimitedStack(resource, maxAmount);
+		if (!PackageItem.isPackage(stack))
+			return 0;
+		String filterString = ppbe.getFilterString();
+		if (filterString != null && PackageItem.matchAddress(stack, filterString))
+			return 0;
+
+		return super.insert(resource, maxAmount, transaction);
+	}
+
+	@Override
+	public long insertSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
+		var stack = CreateTransferUtil.getLimitedStack(resource, maxAmount);
+		if (!PackageItem.isPackage(stack))
+			return 0;
+		String filterString = ppbe.getFilterString();
+		if (filterString != null && PackageItem.matchAddress(stack, filterString))
+			return 0;
+
+		return super.insertSlot(slot, resource, maxAmount, transaction);
+	}
 }

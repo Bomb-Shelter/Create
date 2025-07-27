@@ -8,6 +8,7 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.content.kinetics.base.RotatedPillarKineticBlock;
 import com.simibubi.create.foundation.block.IBE;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.WeakPowerCheckingBlock;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.core.BlockPos;
@@ -33,14 +34,14 @@ import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.material.PushReaction;
 
 public class ChainDriveBlock extends RotatedPillarKineticBlock
-	implements IBE<KineticBlockEntity>, TransformableBlock {
+	implements IBE<KineticBlockEntity>, TransformableBlock, WeakPowerCheckingBlock {
 
 	public static final Property<Part> PART = EnumProperty.create("part", Part.class);
 	public static final BooleanProperty CONNECTED_ALONG_FIRST_COORDINATE =
 		DirectionalAxisKineticBlock.AXIS_ALONG_FIRST_COORDINATE;
 
 	public ChainDriveBlock(Properties properties) {
-		super(properties);
+		super(properties.pushReaction(PushReaction.NORMAL));
 		registerDefaultState(defaultBlockState().setValue(PART, Part.NONE));
 	}
 
@@ -48,11 +49,6 @@ public class ChainDriveBlock extends RotatedPillarKineticBlock
     public boolean shouldCheckWeakPower(BlockState state, SignalGetter level, BlockPos pos, Direction side) {
         return false;
     }
-
-	@Override
-	public PushReaction getPistonPushReaction(BlockState state) {
-		return PushReaction.NORMAL;
-	}
 
 	@Override
 	protected void createBlockStateDefinition(Builder<Block, BlockState> builder) {

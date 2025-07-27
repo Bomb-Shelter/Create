@@ -3,6 +3,17 @@ package com.simibubi.create.api.contraption.storage.item.simple;
 import java.util.Optional;
 import java.util.function.Function;
 
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.MapCodec;
@@ -17,17 +28,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemStackHandler;
-
 /**
  * Widely-applicable mounted storage implementation.
  * Gets an item handler from the mounted block, copies it to an ItemStackHandler,
  * and then copies the inventory back to the target when unmounting.
- * All blocks for which this mounted storage is registered must provide an
- * {@link IItemHandlerModifiable} to {@link ItemHandler#BLOCK}.
+ * All blocks for which this mounted storage is registered must provide a
+ * {@link SlottedStackStorage} to {@link ItemStorage#SIDED}.
  * <br>
  * To use this implementation, either register {@link AllMountedStorageTypes#SIMPLE} to your block
  * manually, or add your block to the {@link AllTags.AllBlockTags#SIMPLE_MOUNTED_STORAGE} tag.
@@ -36,11 +42,11 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 public class SimpleMountedStorage extends WrapperMountedItemStorage<ItemStackHandler> {
 	public static final MapCodec<SimpleMountedStorage> CODEC = codec(SimpleMountedStorage::new);
 
-	public SimpleMountedStorage(MountedItemStorageType<?> type, IItemHandler handler) {
+	public SimpleMountedStorage(MountedItemStorageType<?> type, SlottedStackStorage handler) {
 		super(type, copyToItemStackHandler(handler));
 	}
 
-	public SimpleMountedStorage(IItemHandler handler) {
+	public SimpleMountedStorage(SlottedStackStorage handler) {
 		this(AllMountedStorageTypes.SIMPLE.get(), handler);
 	}
 
@@ -49,10 +55,10 @@ public class SimpleMountedStorage extends WrapperMountedItemStorage<ItemStackHan
 		if (be == null)
 			return;
 
-		IItemHandler cap = level.getCapability(ItemHandler.BLOCK, pos, null);
+		Storage<ItemVariant> cap = ItemStorage.SIDED.find(level, pos, state, be, null);
 		if (cap != null) {
 			validate(cap).ifPresent(handler -> {
-				for (int i = 0; i < handler.getSlots(); i++) {
+				for (int i = 0; i < handler.getSlotCount(); i++) {
 					handler.setStackInSlot(i, this.getStackInSlot(i));
 				}
 			});
@@ -63,15 +69,18 @@ public class SimpleMountedStorage extends WrapperMountedItemStorage<ItemStackHan
 	 * Make sure the targeted handler is valid for copying items back into.
 	 * It is highly recommended to call super in overrides.
 	 */
-	protected Optional<IItemHandlerModifiable> validate(IItemHandler handler) {
-		if (handler.getSlots() == this.getSlots() && handler instanceof IItemHandlerModifiable modifiable) {
+	protected Optional<SlottedStackStorage> validate(Storage<ItemVariant> handler) {
+		if (!(handler instanceof SlottedStorage<ItemVariant> slottedStorage))
+			return Optional.empty();
+
+		if (slottedStorage.getSlotCount() == this.getSlotCount() && handler instanceof SlottedStackStorage modifiable) {
 			return Optional.of(modifiable);
 		} else {
 			return Optional.empty();
 		}
 	}
 
-	public static <T extends SimpleMountedStorage> MapCodec<T> codec(Function<IItemHandler, T> factory) {
+	public static <T extends SimpleMountedStorage> MapCodec<T> codec(Function<SlottedStackStorage, T> factory) {
 		return CreateCodecs.ITEM_STACK_HANDLER.xmap(factory, storage -> storage.wrapped).fieldOf("value");
 	}
 }

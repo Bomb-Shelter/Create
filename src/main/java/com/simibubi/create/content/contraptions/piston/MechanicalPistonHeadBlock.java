@@ -36,7 +36,7 @@ public class MechanicalPistonHeadBlock extends WrenchableDirectionalBlock implem
     public static final EnumProperty<PistonType> TYPE = BlockStateProperties.PISTON_TYPE;
 
     public MechanicalPistonHeadBlock(Properties p_i48415_1_) {
-        super(p_i48415_1_);
+        super(p_i48415_1_.pushReaction(PushReaction.NORMAL));
         registerDefaultState(super.defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, false));
     }
 
@@ -46,14 +46,8 @@ public class MechanicalPistonHeadBlock extends WrenchableDirectionalBlock implem
         super.createBlockStateDefinition(builder);
     }
 
-    @Override
-    public PushReaction getPistonPushReaction(BlockState state) {
-        return PushReaction.NORMAL;
-    }
-
-    @Override
-    public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos,
-									   Player player) {
+	@Override
+	public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
         return AllBlocks.PISTON_EXTENSION_POLE.asStack();
     }
 

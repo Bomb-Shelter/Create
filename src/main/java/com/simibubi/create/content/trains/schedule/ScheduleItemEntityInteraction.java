@@ -8,6 +8,7 @@ import com.simibubi.create.content.trains.entity.CarriageContraptionEntity;
 import com.simibubi.create.content.trains.entity.Train;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.EntityInteractSpecific;
 import net.createmod.catnip.data.Couple;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
@@ -17,14 +18,11 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.EntityInteractSpecific;
-
-@EventBusSubscriber
 public class ScheduleItemEntityInteraction {
+	public static void init() {
+		EntityInteractSpecific.EVENT.register(ScheduleItemEntityInteraction::interactWithConductor);
+	}
 
-	@SubscribeEvent
 	public static void interactWithConductor(EntityInteractSpecific event) {
 		Entity entity = event.getTarget();
 		Player player = event.getEntity();

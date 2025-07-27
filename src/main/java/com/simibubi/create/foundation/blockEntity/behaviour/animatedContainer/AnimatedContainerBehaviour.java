@@ -13,9 +13,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
-public class AnimatedContainerBehaviour<M extends MenuBase<? extends SmartBlockEntity>> extends BlockEntityBehaviour {
+public class AnimatedContainerBehaviour<D, M extends MenuBase<? extends SmartBlockEntity, D>> extends BlockEntityBehaviour {
 
-	public static final BehaviourType<AnimatedContainerBehaviour<?>> TYPE = new BehaviourType<>();
+	public static final BehaviourType<AnimatedContainerBehaviour<?, ?>> TYPE = new BehaviourType<>();
 
 	public int openCount;
 

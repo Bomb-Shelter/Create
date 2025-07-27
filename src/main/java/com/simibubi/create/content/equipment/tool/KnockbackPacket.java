@@ -8,8 +8,8 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public record KnockbackPacket(float yRot, float strength) implements ClientboundPacketPayload {
 	public static final StreamCodec<ByteBuf, KnockbackPacket> STREAM_CODEC = StreamCodec.composite(
@@ -24,7 +24,7 @@ public record KnockbackPacket(float yRot, float strength) implements Clientbound
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void handle(LocalPlayer player) {
 		if (player != null)
 			CardboardSwordItem.knockback(player, strength, yRot);

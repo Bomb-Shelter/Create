@@ -10,6 +10,8 @@ import com.simibubi.create.content.kinetics.base.HorizontalKineticBlock;
 import com.simibubi.create.content.logistics.depot.EjectorBlockEntity.State;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
+
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomFrictionBlock;
 import net.createmod.catnip.platform.CatnipServices;
 import com.simibubi.create.foundation.item.ItemHelper;
 
@@ -38,7 +40,7 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class EjectorBlock extends HorizontalKineticBlock implements IBE<EjectorBlockEntity>, ProperWaterloggedBlock {
+public class EjectorBlock extends HorizontalKineticBlock implements IBE<EjectorBlockEntity>, ProperWaterloggedBlock, CustomFrictionBlock {
 
 	public EjectorBlock(Properties properties) {
 		super(properties);
@@ -77,7 +79,7 @@ public class EjectorBlock extends HorizontalKineticBlock implements IBE<EjectorB
 	public float getFriction(BlockState state, LevelReader world, BlockPos pos, Entity entity) {
 		return getBlockEntityOptional(world, pos).filter(ete -> ete.state == State.LAUNCHING)
 			.map($ -> 1f)
-			.orElse(super.getFriction(state, world, pos, entity));
+			.orElse(super.getFriction());
 	}
 
 	@Override

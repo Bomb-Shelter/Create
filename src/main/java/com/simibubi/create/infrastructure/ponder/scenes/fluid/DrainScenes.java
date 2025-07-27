@@ -4,21 +4,23 @@ import com.simibubi.create.content.fluids.drain.ItemDrainBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.element.ElementLink;
 import net.createmod.ponder.api.element.WorldSectionElement;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.material.Fluids;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class DrainScenes {
 
@@ -57,9 +59,9 @@ public class DrainScenes {
 		scene.world().modifyBlockEntity(drainPos, ItemDrainBlockEntity.class, be -> {
 			be.getBehaviour(SmartFluidTankBehaviour.TYPE)
 				.allowInsertion();
-			IFluidHandler fh = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+			Storage<FluidVariant> fh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 			if (fh != null)
-				fh.fill(new FluidStack(Fluids.LAVA, 1000), FluidAction.EXECUTE);
+				CreateTransferUtil.insertFluid(fh, new FluidStack(Fluids.LAVA, 1000), false);
 		});
 		scene.idle(10);
 
@@ -72,9 +74,9 @@ public class DrainScenes {
 
 		scene.world().modifyBlockEntity(drainPos, ItemDrainBlockEntity.class,
 			be -> {
-				IFluidHandler fh = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+				Storage<FluidVariant> fh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 				if (fh != null)
-					fh.drain(500, FluidAction.EXECUTE);
+					CreateTransferUtil.extractFluid(fh, 500, false);
 			});
 
 		scene.world().moveSection(drainLink, util.vector().of(1, 0, 0), 7);

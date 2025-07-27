@@ -101,11 +101,11 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.LevelTickAccess;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class TrackBlock extends Block
-	implements IBE<TrackBlockEntity>, IWrenchable, ITrackBlock, SpecialBlockItemRequirement, ProperWaterloggedBlock, IHaveBigOutline {
+	implements IBE<TrackBlockEntity>, IWrenchable, ITrackBlock, SpecialBlockItemRequirement, ProperWaterloggedBlock, IHaveBigOutline, MultiPosDestructionHandler {
 
 	public static final EnumProperty<TrackShape> SHAPE = EnumProperty.create("shape", TrackShape.class);
 	public static final BooleanProperty HAS_BE = BooleanProperty.create("turn");
@@ -113,7 +113,7 @@ public class TrackBlock extends Block
 	protected final TrackMaterial material;
 
 	public TrackBlock(Properties p_49795_, TrackMaterial material) {
-		super(p_49795_);
+		super(p_49795_.pushReaction(PushReaction.BLOCK));
 		registerDefaultState(defaultBlockState().setValue(SHAPE, TrackShape.ZO)
 			.setValue(HAS_BE, false)
 			.setValue(WATERLOGGED, false));
@@ -125,11 +125,11 @@ public class TrackBlock extends Block
 		super.createBlockStateDefinition(p_49915_.add(SHAPE, HAS_BE, WATERLOGGED));
 	}
 
-	@Override
+	/*@Override
 	public @Nullable PathType getBlockPathType(BlockState state, BlockGetter level, BlockPos pos,
 											   @Nullable Mob mob) {
 		return PathType.RAIL;
-	}
+	}*/
 
 	@Override
 	public FluidState getFluidState(BlockState state) {
@@ -190,10 +190,10 @@ public class TrackBlock extends Block
 		return stateForPlacement.setValue(SHAPE, best);
 	}
 
-	@Override
+	/*@Override
 	public PushReaction getPistonPushReaction(BlockState pState) {
 		return PushReaction.BLOCK;
-	}
+	}*/
 
 	@Override
 	public BlockState playerWillDestroy(Level pLevel, BlockPos pPos, BlockState pState, Player pPlayer) {
@@ -646,7 +646,7 @@ public class TrackBlock extends Block
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public PartialModel prepareAssemblyOverlay(BlockGetter world, BlockPos pos, BlockState state, Direction direction,
 											   PoseStack ms) {
 		TransformStack.of(ms)
@@ -655,7 +655,7 @@ public class TrackBlock extends Block
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public <Self extends Affine<Self>> PartialModel prepareTrackOverlay(Affine<Self> affine, BlockGetter world, BlockPos pos, BlockState state,
 																		BezierTrackPointLocation bezierPoint, AxisDirection direction, RenderedTrackOverlayType type) {
 		Vec3 axis = null;
@@ -777,6 +777,17 @@ public class TrackBlock extends Block
 	@Override
 	public TrackMaterial getMaterial() {
 		return material;
+	}
+
+	@Environment(EnvType.CLIENT)
+	@Override
+	@Nullable
+	public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
+		BlockEntity blockEntity = level.getBlockEntity(pos);
+		if (blockEntity instanceof TrackBlockEntity track) {
+			return new HashSet<>(track.connections.keySet());
+		}
+		return null;
 	}
 
 	public static class RenderProperties extends ReducedDestroyEffects implements MultiPosDestructionHandler {

@@ -56,7 +56,7 @@ public abstract class DisplayTarget {
 		if (line == 0)
 			return;
 
-		CompoundTag tag = target.getPersistentData();
+		CompoundTag tag = target.getPortingLibPersistentData();
 		CompoundTag compound = tag.getCompound("DisplayLink");
 		compound.putLong("Line" + line, context.blockEntity()
 			.getBlockPos()
@@ -65,7 +65,7 @@ public abstract class DisplayTarget {
 	}
 
 	public boolean isReserved(int line, BlockEntity target, DisplayLinkContext context) {
-		CompoundTag tag = target.getPersistentData();
+		CompoundTag tag = target.getPortingLibPersistentData();
 		CompoundTag compound = tag.getCompound("DisplayLink");
 
 		if (!compound.contains("Line" + line))

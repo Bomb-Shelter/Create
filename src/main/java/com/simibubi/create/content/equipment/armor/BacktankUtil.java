@@ -12,7 +12,7 @@ import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.foundation.utility.DistExecutor;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
-import net.neoforged.api.distmarker.Dist;
+import net.fabricmc.api.EnvType;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap.Entry;
 import net.minecraft.ChatFormatting;
@@ -106,7 +106,7 @@ public class BacktankUtil {
 
 	public static int maxAir(ItemStack backtank) {
 		int enchantLevel = 0;
-		ItemEnchantments enchants = backtank.getTagEnchantments();
+		ItemEnchantments enchants = backtank.getEnchantments();
 		for (Entry<Holder<Enchantment>> entry : enchants.entrySet()) {
 			if (entry.getKey().is(AllEnchantments.CAPACITY)) {
 				enchantLevel = entry.getIntValue();
@@ -143,7 +143,7 @@ public class BacktankUtil {
 	public static boolean isBarVisible(ItemStack stack, int usesPerTank) {
 		if (usesPerTank == 0)
 			return false;
-		Player player = DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().player);
+		Player player = DistExecutor.unsafeCallWhenOn(EnvType.CLIENT, () -> () -> Minecraft.getInstance().player);
 		if (player == null)
 			return false;
 		List<ItemStack> backtanks = getAllWithAir(player);
@@ -155,7 +155,7 @@ public class BacktankUtil {
 	public static int getBarWidth(ItemStack stack, int usesPerTank) {
 		if (usesPerTank == 0)
 			return 13;
-		Player player = DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().player);
+		Player player = DistExecutor.unsafeCallWhenOn(EnvType.CLIENT, () -> () -> Minecraft.getInstance().player);
 		if (player == null)
 			return 13;
 
@@ -181,7 +181,7 @@ public class BacktankUtil {
 	public static int getBarColor(ItemStack stack, int usesPerTank) {
 		if (usesPerTank == 0)
 			return 0;
-		Player player = DistExecutor.unsafeCallWhenOn(Dist.CLIENT, () -> () -> Minecraft.getInstance().player);
+		Player player = DistExecutor.unsafeCallWhenOn(EnvType.CLIENT, () -> () -> Minecraft.getInstance().player);
 		if (player == null)
 			return 0;
 		List<ItemStack> backtanks = getAllWithAir(player);

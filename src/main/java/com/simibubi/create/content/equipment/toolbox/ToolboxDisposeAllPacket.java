@@ -1,5 +1,7 @@
 package com.simibubi.create.content.equipment.toolbox;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.simibubi.create.AllPackets;
@@ -15,8 +17,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
-import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 public record ToolboxDisposeAllPacket(BlockPos toolboxPos) implements ServerboundPacketPayload {
 	public static final StreamCodec<ByteBuf, ToolboxDisposeAllPacket> STREAM_CODEC = BlockPos.STREAM_CODEC.map(
@@ -40,7 +40,7 @@ public record ToolboxDisposeAllPacket(BlockPos toolboxPos) implements Serverboun
 		if (!(blockEntity instanceof ToolboxBlockEntity toolbox))
 			return;
 
-		CompoundTag compound = player.getPersistentData()
+		CompoundTag compound = player.getCustomData()
 				.getCompound("CreateToolboxData");
 		MutableBoolean sendData = new MutableBoolean(false);
 
@@ -54,7 +54,7 @@ public record ToolboxDisposeAllPacket(BlockPos toolboxPos) implements Serverboun
 				}
 
 				ItemStack itemStack = player.getInventory().getItem(i);
-				ItemStack remainder = ItemHandlerHelper.insertItemStacked(toolbox.inventory, itemStack, false);
+				ItemStack remainder = CreateTransferUtil.insertItemStacked(toolbox.inventory, itemStack, false);
 				if (remainder.getCount() != itemStack.getCount())
 					player.getInventory().setItem(i, remainder);
 			}

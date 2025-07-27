@@ -3,6 +3,10 @@ package com.simibubi.create.content.trains.track;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.content.trains.track.TrackBlockOutline.BezierPointSelection;
+
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
+import io.github.fabricators_of_create.porting_lib.client_events.event.client.InputEvent;
 import net.createmod.catnip.platform.CatnipServices;
 import com.simibubi.create.foundation.utility.CreateLang;
 
@@ -22,7 +26,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.client.event.InputEvent;
 
 public class CurvedTrackInteraction {
 
@@ -52,7 +55,7 @@ public class CurvedTrackInteraction {
 			}
 
 			if (breakTicks % 4.0F == 0.0F) {
-				SoundType soundtype = blockState.getSoundType(level, breakPos, player);
+				SoundType soundtype = CreateFabricUtil.getSoundType(blockState, level, breakPos, player);
 				mc.getSoundManager()
 					.play(new SimpleSoundInstance(soundtype.getHitSound(), SoundSource.BLOCKS,
 						(soundtype.getVolume() + 1.0F) / 8.0F, soundtype.getPitch() * 0.5F,

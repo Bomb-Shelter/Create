@@ -6,6 +6,8 @@ import com.simibubi.create.Create;
 import com.simibubi.create.foundation.networking.BlockEntityConfigurationPacket;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
 import io.netty.buffer.ByteBuf;
 
 import net.minecraft.core.BlockPos;
@@ -66,7 +68,7 @@ public class CurvedTrackDestroyPacket extends BlockEntityConfigurationPacket<Tra
 			bezierConnection.spawnItems(level);
 
 		bezierConnection.spawnDestroyParticles(level);
-		SoundType soundtype = blockState.getSoundType(level, pos, player);
+		SoundType soundtype = CreateFabricUtil.getSoundType(blockState, level, pos, player);
 		if (soundtype == null)
 			return;
 

@@ -2,6 +2,12 @@ package com.simibubi.create.content.contraptions.minecart;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.simibubi.create.infrastructure.fabric.transfer.FinalCommitSnapshot;
+
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.api.contraption.storage.fluid.MountedFluidStorageWrapper;
@@ -13,7 +19,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.neoforge.fluids.FluidStack;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class TrainCargoManager extends MountedStorageManager {
 
@@ -75,18 +81,42 @@ public class TrainCargoManager extends MountedStorageManager {
 		}
 
 		@Override
-		public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-			ItemStack remainder = super.insertItem(slot, stack, simulate);
-			if (!simulate && stack.getCount() != remainder.getCount())
-				changeDetected();
-			return remainder;
+		public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+			long inserted = super.insert(resource, maxAmount, transaction);
+			if (inserted > 0)
+				new FinalCommitSnapshot(maxAmount, TrainCargoManager.this::changeDetected)
+					.updateSnapshots(transaction);
+
+			return inserted;
 		}
 
 		@Override
-		public ItemStack extractItem(int slot, int amount, boolean simulate) {
-			ItemStack extracted = super.extractItem(slot, amount, simulate);
-			if (!simulate && !extracted.isEmpty())
-				changeDetected();
+		public long insertSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
+			long inserted = super.insertSlot(slot, resource, maxAmount, transaction);
+			if (inserted > 0)
+				new FinalCommitSnapshot(maxAmount, TrainCargoManager.this::changeDetected)
+					.updateSnapshots(transaction);
+
+			return inserted;
+		}
+
+		@Override
+		public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+			long extracted = super.extract(resource, maxAmount, transaction);
+			if (extracted > 0)
+				new FinalCommitSnapshot(maxAmount, TrainCargoManager.this::changeDetected)
+					.updateSnapshots(transaction);
+
+			return extracted;
+		}
+
+		@Override
+		public long extractSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
+			long extracted = super.extractSlot(slot, resource, maxAmount, transaction);
+			if (extracted > 0)
+				new FinalCommitSnapshot(maxAmount, TrainCargoManager.this::changeDetected)
+					.updateSnapshots(transaction);
+
 			return extracted;
 		}
 
@@ -105,26 +135,21 @@ public class TrainCargoManager extends MountedStorageManager {
 		}
 
 		@Override
-		public int fill(FluidStack resource, FluidAction action) {
-			int filled = super.fill(resource, action);
-			if (action.execute() && filled > 0)
-				changeDetected();
+		public long insert(FluidVariant resource, long maxAmount, TransactionContext transaction) {
+			long filled = super.insert(resource, maxAmount, transaction);
+			if (filled > 0)
+				new FinalCommitSnapshot(maxAmount, TrainCargoManager.this::changeDetected)
+					.updateSnapshots(transaction);
 			return filled;
 		}
 
 		@Override
-		public FluidStack drain(FluidStack resource, FluidAction action) {
-			FluidStack drained = super.drain(resource, action);
-			if (action.execute() && !drained.isEmpty())
-				changeDetected();
-			return drained;
-		}
+		public long extract(FluidVariant resource, long maxAmount, TransactionContext transaction) {
+			long drained = super.extract(resource, maxAmount, transaction);
+			if (drained > 0)
+				new FinalCommitSnapshot(maxAmount, TrainCargoManager.this::changeDetected)
+					.updateSnapshots(transaction);
 
-		@Override
-		public FluidStack drain(int maxDrain, FluidAction action) {
-			FluidStack drained = super.drain(maxDrain, action);
-			if (action.execute() && !drained.isEmpty())
-				changeDetected();
 			return drained;
 		}
 

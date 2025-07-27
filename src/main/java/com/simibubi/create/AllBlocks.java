@@ -275,6 +275,9 @@ import com.tterrag.registrate.providers.RegistrateRecipeProvider;
 import com.tterrag.registrate.util.DataIngredient;
 import com.tterrag.registrate.util.entry.BlockEntry;
 
+import io.github.fabricators_of_create.porting_lib.models.generators.ConfiguredModel;
+import io.github.fabricators_of_create.porting_lib.models.generators.ModelFile;
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
 import net.createmod.catnip.data.Couple;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.core.Direction.Axis;
@@ -315,11 +318,6 @@ import net.minecraft.world.level.storage.loot.functions.CopyNameFunction;
 import net.minecraft.world.level.storage.loot.predicates.ExplosionCondition;
 import net.minecraft.world.level.storage.loot.predicates.LootItemCondition;
 import net.minecraft.world.level.storage.loot.providers.number.ConstantValue;
-
-import net.neoforged.neoforge.client.model.generators.ConfiguredModel;
-import net.neoforged.neoforge.client.model.generators.ModelFile;
-import net.neoforged.neoforge.common.Tags;
-import net.neoforged.neoforge.common.util.DeferredSoundType;
 
 @SuppressWarnings("removal")
 public class AllBlocks {
@@ -536,7 +534,7 @@ public class AllBlocks {
 		.transform(CStress.setNoImpact())
 		.transform(displaySource(AllDisplaySources.ITEM_NAMES))
 		.onRegister(CreateRegistrate.blockModel(() -> BeltModel::new))
-		.clientExtension(() -> () -> new BeltBlock.RenderProperties())
+		//.clientExtension(() -> () -> new BeltBlock.RenderProperties())
 		.register();
 
 	public static final BlockEntry<ChainConveyorBlock> CHAIN_CONVEYOR =
@@ -599,7 +597,7 @@ public class AllBlocks {
 	public static final BlockEntry<WaterWheelStructuralBlock> WATER_WHEEL_STRUCTURAL =
 		REGISTRATE.block("water_wheel_structure", WaterWheelStructuralBlock::new)
 			.initialProperties(SharedProperties::wooden)
-			.clientExtension(() -> () -> new WaterWheelStructuralBlock.RenderProperties())
+			//.clientExtension(() -> () -> new WaterWheelStructuralBlock.RenderProperties())
 			.blockstate((c, p) -> p.getVariantBuilder(c.get())
 				.forAllStatesExcept(BlockStateGen.mapToAir(p), WaterWheelStructuralBlock.FACING))
 			.properties(p -> p.noOcclusion()
@@ -813,7 +811,7 @@ public class AllBlocks {
 			.isSuffocating((state, level, pos) -> false))
 		.transform(pickaxeOnly())
 		.addLayer(() -> RenderType::cutoutMipped)
-		.clientExtension(() -> () -> new ReducedDestroyEffects())
+		//.clientExtension(() -> () -> new ReducedDestroyEffects())
 		.blockstate(new ChuteGenerator()::generate)
 		.item(ChuteItem::new)
 		.transform(customItemModel("_", "block"))
@@ -827,7 +825,7 @@ public class AllBlocks {
 			.isSuffocating((state, level, pos) -> false)
 			.isRedstoneConductor((state, level, pos) -> false))
 		.addLayer(() -> RenderType::cutoutMipped)
-		.clientExtension(() -> () -> new ReducedDestroyEffects())
+		//.clientExtension(() -> () -> new ReducedDestroyEffects())
 		.transform(pickaxeOnly())
 		.blockstate((c, p) -> BlockStateGen.simpleBlock(c, p, AssetLookup.forPowered(c, p)))
 		.item()
@@ -1614,7 +1612,7 @@ public class AllBlocks {
 			.forceSolidOn())
 		.addLayer(() -> RenderType::cutoutMipped)
 		.transform(pickaxeOnly())
-		.clientExtension(() -> () -> new TrackBlock.RenderProperties())
+		//.clientExtension(() -> () -> new TrackBlock.RenderProperties())
 		.onRegister(CreateRegistrate.blockModel(() -> TrackModel::new))
 		.blockstate(new TrackBlockStateGenerator()::generate)
 		.tag(AllBlockTags.RELOCATION_NOT_SUPPORTED.tag)
@@ -1723,7 +1721,7 @@ public class AllBlocks {
 			.properties(p -> p.mapColor(MapColor.STONE))
 			.transform(pickaxeOnly())
 			.tag(AllBlockTags.SAFE_NBT.tag)
-			.clientExtension(() -> () -> new ReducedDestroyEffects())
+			//.clientExtension(() -> () -> new ReducedDestroyEffects())
 			.onRegister(movementBehaviour(FunnelMovementBehaviour.andesite()))
 			.blockstate(new FunnelGenerator("andesite", false)::generate)
 			.item(FunnelItem::new)
@@ -1739,7 +1737,7 @@ public class AllBlocks {
 			.properties(p -> p.mapColor(MapColor.STONE))
 			.transform(pickaxeOnly())
 			.tag(AllBlockTags.SAFE_NBT.tag)
-			.clientExtension(() -> () -> new ReducedDestroyEffects())
+			//.clientExtension(() -> () -> new ReducedDestroyEffects())
 			.blockstate(new BeltFunnelGenerator("andesite")::generate)
 			.loot((p, b) -> p.dropOther(b, ANDESITE_FUNNEL.get()))
 			.register();
@@ -1751,7 +1749,7 @@ public class AllBlocks {
 			.properties(p -> p.mapColor(MapColor.TERRACOTTA_YELLOW))
 			.transform(pickaxeOnly())
 			.tag(AllBlockTags.SAFE_NBT.tag)
-			.clientExtension(() -> () -> new ReducedDestroyEffects())
+			//.clientExtension(() -> () -> new ReducedDestroyEffects())
 			.onRegister(movementBehaviour(FunnelMovementBehaviour.brass()))
 			.blockstate(new FunnelGenerator("brass", true)::generate)
 			.item(FunnelItem::new)
@@ -1767,7 +1765,7 @@ public class AllBlocks {
 			.properties(p -> p.mapColor(MapColor.TERRACOTTA_YELLOW))
 			.transform(pickaxeOnly())
 			.tag(AllBlockTags.SAFE_NBT.tag)
-			.clientExtension(() -> () -> new ReducedDestroyEffects())
+			//.clientExtension(() -> () -> new ReducedDestroyEffects())
 			.blockstate(new BeltFunnelGenerator("brass")::generate)
 			.loot((p, b) -> p.dropOther(b, BRASS_FUNNEL.get()))
 			.register();
@@ -2017,7 +2015,7 @@ public class AllBlocks {
 		REGISTRATE.block("copper_table_cloth", p -> new TableClothBlock(p, "copper"))
 			.transform(BuilderTransformers.tableCloth("copper", SharedProperties::copperMetal, false))
 			.properties(p -> p.requiresCorrectToolForDrops())
-			.recipe((c, p) -> p.stonecutting(DataIngredient.tag(net.neoforged.neoforge.common.Tags.Items.INGOTS_COPPER),
+			.recipe((c, p) -> p.stonecutting(DataIngredient.tag(io.github.fabricators_of_create.porting_lib.tags.Tags.Items.INGOTS_COPPER),
 				RecipeCategory.DECORATIONS, c::get, 2))
 			.transform(pickaxeOnly())
 			.lang("Copper Table Cover")
@@ -2292,7 +2290,7 @@ public class AllBlocks {
 	public static final BlockEntry<MetalLadderBlock> COPPER_LADDER =
 		REGISTRATE.block("copper_ladder", MetalLadderBlock::new)
 			.transform(BuilderTransformers.ladder("copper",
-				() -> DataIngredient.tag(net.neoforged.neoforge.common.Tags.Items.INGOTS_COPPER), MapColor.COLOR_ORANGE))
+				() -> DataIngredient.tag(io.github.fabricators_of_create.porting_lib.tags.Tags.Items.INGOTS_COPPER), MapColor.COLOR_ORANGE))
 			.register();
 
 	public static final BlockEntry<IronBarsBlock> ANDESITE_BARS = MetalBarsGen.createBars("andesite", true,
@@ -2300,7 +2298,7 @@ public class AllBlocks {
 	public static final BlockEntry<IronBarsBlock> BRASS_BARS = MetalBarsGen.createBars("brass", true,
 		() -> DataIngredient.tag(AllTags.commonItemTag("ingots/brass")), MapColor.TERRACOTTA_YELLOW);
 	public static final BlockEntry<IronBarsBlock> COPPER_BARS = MetalBarsGen.createBars("copper", true,
-		() -> DataIngredient.tag(net.neoforged.neoforge.common.Tags.Items.INGOTS_COPPER), MapColor.COLOR_ORANGE);
+		() -> DataIngredient.tag(io.github.fabricators_of_create.porting_lib.tags.Tags.Items.INGOTS_COPPER), MapColor.COLOR_ORANGE);
 
 	public static final BlockEntry<MetalScaffoldingBlock> ANDESITE_SCAFFOLD = REGISTRATE
 		.block("andesite_scaffolding", MetalScaffoldingBlock::new)
@@ -2319,7 +2317,7 @@ public class AllBlocks {
 	public static final BlockEntry<MetalScaffoldingBlock> COPPER_SCAFFOLD =
 		REGISTRATE.block("copper_scaffolding", MetalScaffoldingBlock::new)
 			.transform(BuilderTransformers.scaffold("copper",
-				() -> DataIngredient.tag(net.neoforged.neoforge.common.Tags.Items.INGOTS_COPPER), MapColor.COLOR_ORANGE,
+				() -> DataIngredient.tag(io.github.fabricators_of_create.porting_lib.tags.Tags.Items.INGOTS_COPPER), MapColor.COLOR_ORANGE,
 				AllSpriteShifts.COPPER_SCAFFOLD, AllSpriteShifts.COPPER_SCAFFOLD_INSIDE, AllSpriteShifts.COPPER_CASING))
 			.register();
 
@@ -2631,9 +2629,9 @@ public class AllBlocks {
 		REGISTRATE.block("experience_block", ExperienceBlock::new)
 			.initialProperties(SharedProperties::softMetal)
 			.properties(p -> p.mapColor(MapColor.PLANT)
-				.sound(new DeferredSoundType(1, .5f, () -> SoundEvents.AMETHYST_BLOCK_BREAK,
-					() -> SoundEvents.AMETHYST_BLOCK_STEP, () -> SoundEvents.AMETHYST_BLOCK_PLACE,
-					() -> SoundEvents.AMETHYST_BLOCK_HIT, () -> SoundEvents.AMETHYST_BLOCK_FALL))
+				.sound(new SoundType(1, .5f, SoundEvents.AMETHYST_BLOCK_BREAK,
+					SoundEvents.AMETHYST_BLOCK_STEP, SoundEvents.AMETHYST_BLOCK_PLACE,
+					SoundEvents.AMETHYST_BLOCK_HIT, SoundEvents.AMETHYST_BLOCK_FALL))
 				.requiresCorrectToolForDrops()
 				.lightLevel(s -> 15))
 			.blockstate((c, p) -> p.simpleBlock(c.get(), AssetLookup.standardModel(c, p)))
@@ -2687,14 +2685,14 @@ public class AllBlocks {
 
 	public static final CopperBlockSet COPPER_SHINGLES = new CopperBlockSet(REGISTRATE, "copper_shingles",
 		"copper_roof_top", CopperBlockSet.DEFAULT_VARIANTS, (c, p) -> {
-		p.stonecutting(DataIngredient.tag(net.neoforged.neoforge.common.Tags.Items.INGOTS_COPPER), RecipeCategory.BUILDING_BLOCKS,
+		p.stonecutting(DataIngredient.tag(io.github.fabricators_of_create.porting_lib.tags.Tags.Items.INGOTS_COPPER), RecipeCategory.BUILDING_BLOCKS,
 			c::get, 2);
 	}, (ws, block) -> connectedTextures(() -> new RoofBlockCTBehaviour(AllSpriteShifts.COPPER_SHINGLES.get(ws)))
 		.accept(block));
 
 	public static final CopperBlockSet COPPER_TILES =
 		new CopperBlockSet(REGISTRATE, "copper_tiles", "copper_roof_top", CopperBlockSet.DEFAULT_VARIANTS, (c, p) -> {
-			p.stonecutting(DataIngredient.tag(net.neoforged.neoforge.common.Tags.Items.INGOTS_COPPER), RecipeCategory.BUILDING_BLOCKS,
+			p.stonecutting(DataIngredient.tag(io.github.fabricators_of_create.porting_lib.tags.Tags.Items.INGOTS_COPPER), RecipeCategory.BUILDING_BLOCKS,
 				c::get, 2);
 		}, (ws, block) -> connectedTextures(() -> new RoofBlockCTBehaviour(AllSpriteShifts.COPPER_TILES.get(ws)))
 			.accept(block));

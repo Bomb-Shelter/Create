@@ -3,14 +3,30 @@ package com.simibubi.create.content.decoration.copycat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.foundation.model.BakedModelWrapperWithData;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.FaceHidingBlock;
+import io.github.fabricators_of_create.porting_lib.models.CustomParticleIconModel;
+import io.github.fabricators_of_create.porting_lib.models.data.ModelData;
+import io.github.fabricators_of_create.porting_lib.models.data.ModelData.Builder;
+import io.github.fabricators_of_create.porting_lib.models.data.ModelProperty;
 import net.createmod.catnip.data.Iterate;
+import net.fabricmc.fabric.api.renderer.v1.RendererAccess;
+import net.fabricmc.fabric.api.renderer.v1.material.BlendMode;
+import net.fabricmc.fabric.api.renderer.v1.material.MaterialFinder;
+import net.fabricmc.fabric.api.renderer.v1.material.RenderMaterial;
+import net.fabricmc.fabric.api.renderer.v1.mesh.MutableQuadView;
+import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
+import net.fabricmc.fabric.api.renderer.v1.render.RenderContext.QuadTransform;
+import net.fabricmc.fabric.api.rendering.data.v1.RenderAttachedBlockView;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -23,139 +39,88 @@ import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.neoforge.client.model.data.ModelData;
-import net.neoforged.neoforge.client.model.data.ModelData.Builder;
-import net.neoforged.neoforge.client.model.data.ModelProperty;
-
-public abstract class CopycatModel extends BakedModelWrapperWithData {
-
-	public static final ModelProperty<BlockState> MATERIAL_PROPERTY = new ModelProperty<>();
-	private static final ModelProperty<OcclusionData> OCCLUSION_PROPERTY = new ModelProperty<>();
-	private static final ModelProperty<ModelData> WRAPPED_DATA_PROPERTY = new ModelProperty<>();
+public abstract class CopycatModel extends BakedModelWrapperWithData implements CustomParticleIconModel {
 
 	public CopycatModel(BakedModel originalModel) {
 		super(originalModel);
 	}
 
-	@Override
-	protected Builder gatherModelData(Builder builder, BlockAndTintGetter world, BlockPos pos, BlockState state,
-		ModelData blockEntityData) {
-		BlockState material = getMaterial(blockEntityData);
-		if (material == null)
-			return builder;
-
-		builder.with(MATERIAL_PROPERTY, material);
-
-		if (!(state.getBlock() instanceof CopycatBlock copycatBlock))
-			return builder;
-
-		OcclusionData occlusionData = new OcclusionData();
-		gatherOcclusionData(world, pos, state, material, occlusionData, copycatBlock);
-		builder.with(OCCLUSION_PROPERTY, occlusionData);
-
-		ModelData wrappedData = getModelOf(material).getModelData(
-			new FilteredBlockAndTintGetter(world,
-				targetPos -> copycatBlock.canConnectTexturesToward(world, pos, targetPos, state)),
-			pos, material, ModelData.EMPTY);
-		return builder.with(WRAPPED_DATA_PROPERTY, wrappedData);
-	}
-
 	private void gatherOcclusionData(BlockAndTintGetter world, BlockPos pos, BlockState state, BlockState material,
-		OcclusionData occlusionData, CopycatBlock copycatBlock) {
+									 OcclusionData occlusionData, CopycatBlock copycatBlock) {
 		MutableBlockPos mutablePos = new MutableBlockPos();
 		for (Direction face : Iterate.directions) {
-
-			// Rubidium: Run an additional IForgeBlock.hidesNeighborFace check because it
-			// seems to be missing in Block.shouldRenderFace
-			MutableBlockPos neighbourPos = mutablePos.setWithOffset(pos, face);
-			BlockState neighbourState = world.getBlockState(neighbourPos);
-			if (state.supportsExternalFaceHiding()
-				&& neighbourState.hidesNeighborFace(world, neighbourPos, state, face.getOpposite())) {
-				occlusionData.occlude(face);
-				continue;
-			}
-
 			if (!copycatBlock.canFaceBeOccluded(state, face))
 				continue;
+			MutableBlockPos neighbourPos = mutablePos.setWithOffset(pos, face);
 			if (!Block.shouldRenderFace(material, world, pos, face, neighbourPos))
 				occlusionData.occlude(face);
 		}
 	}
-	
+
 	@Override
-	public List<BakedQuad> getQuads(BlockState state, Direction side, RandomSource rand) {
-		return getCroppedQuads(state, side, rand, getMaterial(ModelData.EMPTY), ModelData.EMPTY,
-			RenderType.cutoutMipped());
+	public boolean isVanillaAdapter() {
+		return false;
 	}
 
 	@Override
-	public List<BakedQuad> getQuads(BlockState state, Direction side, RandomSource rand, ModelData data, RenderType renderType) {
-
-		// Rubidium: see below
-		if (side != null && state.getBlock() instanceof CopycatBlock ccb && ccb.shouldFaceAlwaysRender(state, side))
-			return Collections.emptyList();
-
-		BlockState material = getMaterial(data);
-
-		if (material == null)
-			return super.getQuads(state, side, rand, data, renderType);
-
-		OcclusionData occlusionData = data.get(OCCLUSION_PROPERTY);
-		if (occlusionData != null && occlusionData.isOccluded(side))
-			return super.getQuads(state, side, rand, data, renderType);
-
-		ModelData wrappedData = data.get(WRAPPED_DATA_PROPERTY);
-		if (wrappedData == null)
-			wrappedData = ModelData.EMPTY;
-		if (renderType != null && !Minecraft.getInstance()
-			.getBlockRenderer()
-			.getBlockModel(material)
-			.getRenderTypes(material, rand, wrappedData)
-			.contains(renderType))
-			return super.getQuads(state, side, rand, data, renderType);
-
-		List<BakedQuad> croppedQuads = getCroppedQuads(state, side, rand, material, wrappedData, renderType);
-
-		// Rubidium: render side!=null versions of the base material during side==null,
-		// to avoid getting culled away
-		if (side == null && state.getBlock() instanceof CopycatBlock ccb) {
-			boolean immutable = true;
-			for (Direction nonOcclusionSide : Iterate.directions)
-				if (ccb.shouldFaceAlwaysRender(state, nonOcclusionSide)) {
-					if (immutable) {
-						croppedQuads = new ArrayList<>(croppedQuads);
-						immutable = false;
-					}
-					croppedQuads.addAll(getCroppedQuads(state, nonOcclusionSide, rand, material, wrappedData, renderType));
-				}
+	public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context) {
+		BlockState material;
+		if (blockView instanceof RenderAttachedBlockView attachmentView
+			&& attachmentView.getBlockEntityRenderAttachment(pos) instanceof BlockState material1) {
+			material = material1;
+		} else {
+			material = AllBlocks.COPYCAT_BASE.getDefaultState();
 		}
 
-		return croppedQuads;
+		OcclusionData occlusionData = new OcclusionData();
+		if (state.getBlock() instanceof CopycatBlock copycatBlock) {
+			gatherOcclusionData(blockView, pos, state, material, occlusionData, copycatBlock);
+		}
+
+		CullFaceRemovalData cullFaceRemovalData = new CullFaceRemovalData();
+		if (state.getBlock() instanceof CopycatBlock copycatBlock) {
+			for (Direction cullFace : Iterate.directions) {
+				if (copycatBlock.shouldFaceAlwaysRender(state, cullFace)) {
+					cullFaceRemovalData.remove(cullFace);
+				}
+			}
+		}
+
+		// fabric: If it is the default state do not push transformations, will cause issues with GhostBlockRenderer
+		boolean shouldTransform = material != AllBlocks.COPYCAT_BASE.getDefaultState();
+
+		// fabric: need to change the default render material
+		if (shouldTransform)
+			context.pushTransform(MaterialFixer.create(material));
+
+		emitBlockQuadsInner(blockView, state, pos, randomSupplier, context, material, cullFaceRemovalData, occlusionData);
+
+		// fabric: pop the material changer transform
+		if (shouldTransform)
+			context.popTransform();
 	}
 
-	/**
-	 * The returned list must not be mutated.
-	 */
-	protected abstract List<BakedQuad> getCroppedQuads(BlockState state, Direction side, RandomSource rand,
-		BlockState material, ModelData wrappedData, RenderType renderType);
+	protected abstract void emitBlockQuadsInner(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context, BlockState material, CullFaceRemovalData cullFaceRemovalData, OcclusionData occlusionData);
 
 	@Override
-	public TextureAtlasSprite getParticleIcon(ModelData data) {
-		BlockState material = getMaterial(data);
+	public TextureAtlasSprite getParticleIcon(Object data) {
+		if (data instanceof BlockState state) {
+			BlockState material = getMaterial(state);
 
-		if (material == null)
-			return super.getParticleIcon(data);
+			return getIcon(getModelOf(material), null);
+		}
 
-		ModelData wrappedData = data.get(WRAPPED_DATA_PROPERTY);
-		if (wrappedData == null)
-			wrappedData = ModelData.EMPTY;
+		return CustomParticleIconModel.super.getParticleIcon(data);
+	}
 
-		return getModelOf(material).getParticleIcon(wrappedData);
+	public static TextureAtlasSprite getIcon(BakedModel model, @Nullable Object data) {
+		if (model instanceof CustomParticleIconModel particleIconModel)
+			return particleIconModel.getParticleIcon(data);
+		return model.getParticleIcon();
 	}
 
 	@Nullable
-	public static BlockState getMaterial(ModelData data) {
-		BlockState material = data == null ? null : data.get(MATERIAL_PROPERTY);
+	public static BlockState getMaterial(BlockState material) {
 		return material == null ? AllBlocks.COPYCAT_BASE.getDefaultState() : material;
 	}
 
@@ -165,7 +130,7 @@ public abstract class CopycatModel extends BakedModelWrapperWithData {
 			.getBlockModel(state);
 	}
 
-	private static class OcclusionData {
+	protected static class OcclusionData {
 		private final boolean[] occluded;
 
 		public OcclusionData() {
@@ -181,4 +146,38 @@ public abstract class CopycatModel extends BakedModelWrapperWithData {
 		}
 	}
 
+	protected static class CullFaceRemovalData {
+		private final boolean[] shouldRemove;
+
+		public CullFaceRemovalData() {
+			shouldRemove = new boolean[6];
+		}
+
+		public void remove(Direction face) {
+			shouldRemove[face.get3DDataValue()] = true;
+		}
+
+		public boolean shouldRemove(Direction face) {
+			return face == null ? false : shouldRemove[face.get3DDataValue()];
+		}
+	}
+
+	private record MaterialFixer(RenderMaterial materialDefault) implements QuadTransform {
+		@Override
+		public boolean transform(MutableQuadView quad) {
+			if (quad.material().blendMode() == BlendMode.DEFAULT) {
+				// default needs to be changed from the Copycat's default (cutout) to the wrapped material's default.
+				quad.material(materialDefault);
+			}
+			return true;
+		}
+
+		public static MaterialFixer create(BlockState materialState) {
+			RenderType type = ItemBlockRenderTypes.getChunkRenderType(materialState);
+			BlendMode blendMode = BlendMode.fromRenderLayer(type);
+			MaterialFinder finder = Objects.requireNonNull(RendererAccess.INSTANCE.getRenderer()).materialFinder();
+			RenderMaterial renderMaterial = finder.blendMode(0, blendMode).find();
+			return new MaterialFixer(renderMaterial);
+		}
+	}
 }

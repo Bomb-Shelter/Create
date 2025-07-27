@@ -7,7 +7,10 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.utility.BlockHelper;
 import com.simibubi.create.foundation.utility.RaycastHelper;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickBlock;
 import net.createmod.catnip.data.Iterate;
+import net.fabricmc.api.EnvType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Vec3i;
@@ -21,15 +24,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.LogicalSide;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
-@EventBusSubscriber
 public class EdgeInteractionHandler {
 
-	@SubscribeEvent
+	public static void init() {
+		RightClickBlock.EVENT.register(EdgeInteractionHandler::onBlockActivated);
+	}
+
 	public static void onBlockActivated(PlayerInteractEvent.RightClickBlock event) {
 		Level world = event.getLevel();
 		BlockPos pos = event.getPos();
@@ -52,7 +53,7 @@ public class EdgeInteractionHandler {
 		if (activatedDirection == null)
 			return;
 
-		if (event.getSide() != LogicalSide.CLIENT)
+		if (event.getSide() != EnvType.CLIENT)
 			behaviour.connectionCallback.apply(world, pos, pos.relative(activatedDirection));
 		event.setCanceled(true);
 		event.setCancellationResult(InteractionResult.SUCCESS);

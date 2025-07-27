@@ -21,7 +21,11 @@ import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollVa
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import dev.engine_room.flywheel.lib.transform.TransformStack;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomRenderBoundingBoxBlockEntity;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.data.IntAttached;
 import net.createmod.catnip.data.Iterate;
@@ -31,6 +35,9 @@ import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.math.AngleHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -63,13 +70,10 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public class EjectorBlockEntity extends KineticBlockEntity {
+public class EjectorBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity {
 
 	List<IntAttached<ItemStack>> launchedItems;
 	ScrollValueBehaviour maxStackSize;
@@ -102,12 +106,12 @@ public class EjectorBlockEntity extends KineticBlockEntity {
 		powered = false;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.WEIGHTED_EJECTOR.get(),
-				(be, context) -> be.depotBehaviour.itemHandler
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @org.jetbrains.annotations.Nullable Storage<ItemVariant> getItemStorage(@org.jetbrains.annotations.Nullable Direction side) {
+		return depotBehaviour.itemHandler;
 	}
 
 	@Override
@@ -240,7 +244,7 @@ public class EjectorBlockEntity extends KineticBlockEntity {
 			}
 
 			ItemStackHandler outputs = depotBehaviour.processingOutputBuffer;
-			for (int i = 0; i < outputs.getSlots(); i++) {
+			for (int i = 0; i < outputs.getSlotCount(); i++) {
 				ItemStack remainder =
 					directOutput.tryExportingToBeltFunnel(outputs.getStackInSlot(i), funnelFacing, false);
 				if (remainder != null)
@@ -269,9 +273,10 @@ public class EjectorBlockEntity extends KineticBlockEntity {
 		depotBehaviour.incoming.clear();
 
 		ItemStackHandler outputs = depotBehaviour.processingOutputBuffer;
-		for (int i = 0; i < outputs.getSlots(); i++) {
-			ItemStack extractItem = outputs.extractItem(i, 64, false);
-			if (!extractItem.isEmpty())
+		for (int i = 0; i < outputs.getSlotCount(); i++) {
+			ItemStack extractItem = outputs.getStackInSlot(i);
+			long extracted = CreateTransferUtil.extractAnyItem(outputs.getSlot(i), 64);
+			if (extracted > 0)
 				addToLaunchedItems(extractItem);
 		}
 	}
@@ -603,9 +608,9 @@ public class EjectorBlockEntity extends KineticBlockEntity {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public AABB getRenderBoundingBox() {
-		return AABB.INFINITE;
+		return CustomRenderBoundingBoxBlockEntity.INFINITE_EXTENT_AABB;
 	}
 
 	private static abstract class EntityHack extends Entity {

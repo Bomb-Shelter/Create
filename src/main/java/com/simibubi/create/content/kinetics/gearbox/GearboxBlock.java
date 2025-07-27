@@ -25,12 +25,7 @@ import net.minecraft.world.phys.HitResult;
 public class GearboxBlock extends RotatedPillarKineticBlock implements IBE<GearboxBlockEntity> {
 
 	public GearboxBlock(Properties properties) {
-		super(properties);
-	}
-
-	@Override
-	public PushReaction getPistonPushReaction(BlockState state) {
-		return PushReaction.PUSH_ONLY;
+		super(properties.pushReaction(PushReaction.PUSH_ONLY));
 	}
 
 	@SuppressWarnings("deprecation")
@@ -42,10 +37,9 @@ public class GearboxBlock extends RotatedPillarKineticBlock implements IBE<Gearb
 	}
 
 	@Override
-	public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos,
-			Player player) {
+	public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
 		if (state.getValue(AXIS).isVertical())
-			return super.getCloneItemStack(state, target, level, pos, player);
+			return super.getCloneItemStack(level, pos, state);
 		return new ItemStack(AllItems.VERTICAL_GEARBOX.get());
 	}
 

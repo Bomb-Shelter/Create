@@ -2,6 +2,7 @@ package com.simibubi.create.foundation.mixin;
 
 import javax.annotation.Nullable;
 
+import org.spongepowered.asm.mixin.Dynamic;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -20,6 +21,7 @@ import net.minecraft.world.level.block.entity.StructureBlockEntity;
 
 @Mixin(TestCommand.class)
 public class TestCommandMixin {
+	@Dynamic
 	@Redirect(
 			method = "runTest(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;Lnet/minecraft/gametest/framework/MultipleTestTracker;)V",
 			at = @At(
@@ -31,7 +33,7 @@ public class TestCommandMixin {
 	private static TestFunction create$getCorrectTestFunction(String testName,
 															  ServerLevel level, BlockPos pos, @Nullable MultipleTestTracker tracker) {
 		StructureBlockEntity be = (StructureBlockEntity) level.getBlockEntity(pos);
-		CompoundTag data = be.getPersistentData();
+		CompoundTag data = be.getPortingLibPersistentData();
 		if (!data.contains("CreateTestFunction", Tag.TAG_STRING))
 			return GameTestRegistry.getTestFunction(testName);
 		String name = data.getString("CreateTestFunction");

@@ -6,10 +6,14 @@ import java.util.function.BiConsumer;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.simibubi.create.AllDamageTypes;
+import com.simibubi.create.AllEnchantments;
 import com.simibubi.create.AllKeys;
 import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.Create;
-import com.simibubi.create.compat.curios.CuriosDataGenerator;
+import com.simibubi.create.api.registry.CreateRegistries;
+import com.simibubi.create.compat.trinkets.TrinketsDataGenerator;
+import com.simibubi.create.content.equipment.potatoCannon.AllPotatoProjectileTypes;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.data.CreateDatamapProvider;
 import com.simibubi.create.foundation.data.DamageTypeTagGen;
@@ -17,55 +21,64 @@ import com.simibubi.create.foundation.data.recipe.CreateMechanicalCraftingRecipe
 import com.simibubi.create.foundation.data.recipe.CreateRecipeProvider;
 import com.simibubi.create.foundation.data.recipe.CreateSequencedAssemblyRecipeGen;
 import com.simibubi.create.foundation.data.recipe.CreateStandardRecipeGen;
+import com.simibubi.create.foundation.mixin.accessor.fabric.DataGenerator$PackGeneratorAccessor;
 import com.simibubi.create.foundation.ponder.CreatePonderPlugin;
 import com.simibubi.create.foundation.utility.FilesHelper;
+import com.simibubi.create.infrastructure.worldgen.AllConfiguredFeatures;
+import com.simibubi.create.infrastructure.worldgen.AllPlacedFeatures;
 import com.tterrag.registrate.providers.ProviderType;
 
+import io.github.fabricators_of_create.porting_lib.data.ExistingFileHelper;
 import net.createmod.ponder.foundation.PonderIndex;
+import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator.Pack;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.RegistrySetBuilder;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
 
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
-import net.neoforged.neoforge.data.event.GatherDataEvent;
-
-public class CreateDatagen {
-	public static void gatherDataHighPriority(GatherDataEvent event) {
-		if (event.getMods().contains(Create.ID))
-			addExtraRegistrateData();
+public class CreateDatagen implements DataGeneratorEntrypoint {
+	@Override
+	public void buildRegistry(RegistrySetBuilder registryBuilder) {
+		registryBuilder.add(Registries.ENCHANTMENT, AllEnchantments::bootstrap)
+			.add(Registries.DAMAGE_TYPE, AllDamageTypes::bootstrap)
+			.add(Registries.CONFIGURED_FEATURE, AllConfiguredFeatures::bootstrap)
+			.add(Registries.PLACED_FEATURE, AllPlacedFeatures::bootstrap)
+			//.add(NeoForgeRegistries.Keys.BIOME_MODIFIERS, AllBiomeModifiers::bootstrap)
+			.add(CreateRegistries.POTATO_PROJECTILE_TYPE, AllPotatoProjectileTypes::bootstrap);
 	}
 
-	public static void gatherData(GatherDataEvent event) {
-		if (!event.getMods().contains(Create.ID))
-			return;
+	@Override
+	public void onInitializeDataGenerator(FabricDataGenerator fabricDataGenerator) {
+		Pack generator = fabricDataGenerator.createPack();
+		//CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
+		ExistingFileHelper existingFileHelper = ExistingFileHelper.withResourcesFromArg();
 
-		DataGenerator generator = event.getGenerator();
-		PackOutput output = generator.getPackOutput();
-		CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
-		ExistingFileHelper existingFileHelper = event.getExistingFileHelper();
+		Create.registrate().onData(generator, existingFileHelper);
 
-		generator.addProvider(event.includeClient(), AllSoundEvents.provider(generator));
+		if (fabricDataGenerator.getModId().equals(Create.ID))
+			addExtraRegistrateData();
 
-		GeneratedEntriesProvider generatedEntriesProvider = new GeneratedEntriesProvider(output, lookupProvider);
-		lookupProvider = generatedEntriesProvider.getRegistryProvider();
-		generator.addProvider(event.includeServer(), generatedEntriesProvider);
+		generator.addProvider((FabricDataOutput output) -> AllSoundEvents.provider(fabricDataGenerator, output));
 
-		generator.addProvider(event.includeServer(), new CreateRecipeSerializerTagsProvider(output, lookupProvider, existingFileHelper));
-		generator.addProvider(event.includeServer(), new CreateContraptionTypeTagsProvider(output, lookupProvider, existingFileHelper));
-		generator.addProvider(event.includeServer(), new CreateMountedItemStorageTypeTagsProvider(output, lookupProvider, existingFileHelper));
-		generator.addProvider(event.includeServer(), new DamageTypeTagGen(output, lookupProvider, existingFileHelper));
-		generator.addProvider(event.includeServer(), new AllAdvancements(output, lookupProvider));
-		generator.addProvider(event.includeServer(), new CreateStandardRecipeGen(output, lookupProvider));
-		generator.addProvider(event.includeServer(), new CreateMechanicalCraftingRecipeGen(output, lookupProvider));
-		generator.addProvider(event.includeServer(), new CreateSequencedAssemblyRecipeGen(output, lookupProvider));
-		generator.addProvider(event.includeServer(), new CreateDatamapProvider(output, lookupProvider));
-		generator.addProvider(event.includeServer(), new VanillaHatOffsetGenerator(output, lookupProvider));
-		generator.addProvider(event.includeServer(), new CuriosDataGenerator(output, lookupProvider, existingFileHelper));
-		generator.addProvider(event.includeServer(), new CreateEnchantmentTagsProvider(output, lookupProvider, existingFileHelper));
+		generator.addProvider((output, lookupProvider) -> new CreateRecipeSerializerTagsProvider(output, lookupProvider, existingFileHelper));
+		generator.addProvider((output, lookupProvider) -> new CreateContraptionTypeTagsProvider(output, lookupProvider, existingFileHelper));
+		generator.addProvider((output, lookupProvider) -> new CreateMountedItemStorageTypeTagsProvider(output, lookupProvider, existingFileHelper));
+		generator.addProvider((output, lookupProvider) -> new DamageTypeTagGen(output, lookupProvider, existingFileHelper));
+		generator.addProvider((output, lookupProvider) -> new AllAdvancements(output, lookupProvider));
+		generator.addProvider((output, lookupProvider) -> new CreateStandardRecipeGen(output, lookupProvider));
+		generator.addProvider((output, lookupProvider) -> new CreateMechanicalCraftingRecipeGen(output, lookupProvider));
+		generator.addProvider((output, lookupProvider) -> new CreateSequencedAssemblyRecipeGen(output, lookupProvider));
+		generator.addProvider((output, lookupProvider) -> new CreateDatamapProvider(output, lookupProvider));
+		generator.addProvider((output, lookupProvider) -> new VanillaHatOffsetGenerator(output, lookupProvider));
+		//generator.addProvider(new TrinketsDataGenerator(output, lookupProvider, existingFileHelper));
+		generator.addProvider((output, lookupProvider) -> new CreateEnchantmentTagsProvider(output, lookupProvider, existingFileHelper));
+		generator.addProvider((output, lookupProvider) -> new GeneratedEntriesProvider(output, lookupProvider));
 
-		if (event.includeServer()) {
-			CreateRecipeProvider.registerAllProcessing(generator, output, lookupProvider);
-		}
+		CreateRecipeProvider.registerAllProcessing(generator);
 	}
 
 	private static void addExtraRegistrateData() {

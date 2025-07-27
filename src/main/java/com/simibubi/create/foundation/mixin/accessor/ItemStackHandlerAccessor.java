@@ -5,10 +5,9 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 import net.minecraft.core.NonNullList;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
-@Mixin(ItemStackHandler.class)
+//@Mixin(ItemStackHandler.class)
 public interface ItemStackHandlerAccessor {
-	@Accessor("stacks")
+	//@Accessor("stacks")
 	NonNullList<ItemStack> create$getStacks();
 }

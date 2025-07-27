@@ -3,6 +3,8 @@ package com.simibubi.create.content.contraptions.behaviour.dispenser.storage;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.MapCodec;
@@ -17,23 +19,20 @@ import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-
 public class DispenserMountedStorage extends SimpleMountedStorage {
 	public static final MapCodec<DispenserMountedStorage> CODEC = SimpleMountedStorage.codec(DispenserMountedStorage::new);
 
-	protected DispenserMountedStorage(MountedItemStorageType<?> type, IItemHandler handler) {
+	protected DispenserMountedStorage(MountedItemStorageType<?> type, SlottedStackStorage handler) {
 		super(type, handler);
 	}
 
-	public DispenserMountedStorage(IItemHandler handler) {
+	public DispenserMountedStorage(SlottedStackStorage handler) {
 		this(AllMountedStorageTypes.DISPENSER.get(), handler);
 	}
 
 	@Override
 	@Nullable
-	protected MenuProvider createMenuProvider(Component name, IItemHandlerModifiable handler,
+	protected MenuProvider createMenuProvider(Component name, SlottedStackStorage handler,
 											  Predicate<Player> stillValid, Consumer<Player> onClose) {
 		return MountedStorageMenus.createGeneric9x9(name, handler, stillValid, onClose);
 	}

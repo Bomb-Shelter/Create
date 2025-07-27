@@ -76,7 +76,7 @@ public class CreateTestFunction {
 
 		// 		// give structure block test info
 		//		StructureBlockEntity be = (StructureBlockEntity) helper.getBlockEntity(BlockPos.ZERO);
-		//		be.getPersistentData().putString("CreateTestFunction", fullName);
+		//		be.getPortingLibPersistentData().putString("CreateTestFunction", fullName);
 		//		super.run(CreateGameTestHelper.of(helper));
 
 		return new CreateTestFunction(
@@ -118,7 +118,7 @@ public class CreateTestFunction {
 			helper.andThen(gameTestHelper -> {
 				// give structure block test info
 				StructureBlockEntity be = gameTestHelper.getBlockEntity(BlockPos.ZERO);
-				be.getPersistentData().putString("CreateTestFunction", fullName);
+				be.getPortingLibPersistentData().putString("CreateTestFunction", fullName);
 			}).accept(CreateGameTestHelper.of(consumer));
 		};
 	}

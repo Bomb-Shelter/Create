@@ -12,6 +12,6 @@ import net.minecraft.world.entity.Entity;
 public class EntityMixin {
 	@ModifyReturnValue(method = "fireImmune()Z", at = @At("RETURN"))
 	public boolean create$onFireImmune(boolean original) {
-		return ((Entity) (Object) this).getPersistentData().getBoolean(NetheriteDivingHandler.FIRE_IMMUNE_KEY) || original;
+		return ((Entity) (Object) this).getCustomData().getBoolean(NetheriteDivingHandler.FIRE_IMMUNE_KEY) || original;
 	}
 }

@@ -12,7 +12,14 @@ import com.simibubi.create.foundation.blockEntity.ComparatorUtil;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.simibubi.create.foundation.fluid.FluidHelper.FluidExchange;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomSoundTypeBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.LightEmissiveBlock;
 import net.createmod.catnip.lang.Lang;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.BlockParticleOption;
@@ -51,12 +58,9 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.common.util.DeferredSoundType;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
-public class FluidTankBlock extends Block implements IWrenchable, IBE<FluidTankBlockEntity> {
+public class FluidTankBlock extends Block implements IWrenchable, IBE<FluidTankBlockEntity>, LightEmissiveBlock, CustomSoundTypeBlock {
 
 	public static final BooleanProperty TOP = BooleanProperty.create("top");
 	public static final BooleanProperty BOTTOM = BooleanProperty.create("bottom");
@@ -158,11 +162,10 @@ public class FluidTankBlock extends Block implements IWrenchable, IBE<FluidTankB
 		if (be == null)
 			return ItemInteractionResult.FAIL;
 
-		IFluidHandler tankCapability = level.getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
-		if (tankCapability == null)
+		Storage<FluidVariant> storage = FluidStorage.SIDED.find(level, pos, state, be, null);
+		if (storage == null || !(storage instanceof SlottedStorage<FluidVariant> tankCapability))
 			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-		FluidStack prevFluidInTank = tankCapability.getFluidInTank(0)
-			.copy();
+		FluidStack prevFluidInTank = new FluidStack(tankCapability.getSlot(0));
 
 		if (FluidHelper.tryEmptyItemIntoBE(level, player, hand, stack, be))
 			exchange = FluidExchange.ITEM_TO_TANK;
@@ -178,7 +181,7 @@ public class FluidTankBlock extends Block implements IWrenchable, IBE<FluidTankB
 
 		SoundEvent soundevent = null;
 		BlockState fluidState = null;
-		FluidStack fluidInTank = tankCapability.getFluidInTank(0);
+		FluidStack fluidInTank = new FluidStack(tankCapability.getSlot(0));
 
 		if (exchange == FluidExchange.ITEM_TO_TANK) {
 			if (creative && !onClient) {
@@ -221,7 +224,7 @@ public class FluidTankBlock extends Block implements IWrenchable, IBE<FluidTankB
 					if (fluidState != null && onClient) {
 						BlockParticleOption blockParticleData =
 							new BlockParticleOption(ParticleTypes.BLOCK, fluidState);
-						float fluidLevel = (float) fluidInTank.getAmount() / tankCapability.getTankCapacity(0);
+						float fluidLevel = (float) fluidInTank.getAmount() / tankCapability.getSlot(0).getCapacity();
 
 						boolean reversed = fluidInTank.getFluid()
 							.getFluidType()
@@ -322,13 +325,13 @@ public class FluidTankBlock extends Block implements IWrenchable, IBE<FluidTankB
 
 	// Tanks are less noisy when placed in batch
 	public static final SoundType SILENCED_METAL =
-		new DeferredSoundType(0.1F, 1.5F, () -> SoundEvents.METAL_BREAK, () -> SoundEvents.METAL_STEP,
-			() -> SoundEvents.METAL_PLACE, () -> SoundEvents.METAL_HIT, () -> SoundEvents.METAL_FALL);
+		new SoundType(0.1F, 1.5F, SoundEvents.METAL_BREAK, SoundEvents.METAL_STEP,
+			SoundEvents.METAL_PLACE, SoundEvents.METAL_HIT, SoundEvents.METAL_FALL);
 
 	@Override
 	public SoundType getSoundType(BlockState state, LevelReader world, BlockPos pos, Entity entity) {
-		SoundType soundType = super.getSoundType(state, world, pos, entity);
-		if (entity != null && entity.getPersistentData()
+		SoundType soundType = this.getSoundType(state);
+		if (entity != null && entity.getCustomData()
 			.contains("SilenceTankSound"))
 			return SILENCED_METAL;
 		return soundType;

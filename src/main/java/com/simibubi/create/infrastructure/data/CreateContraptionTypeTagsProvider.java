@@ -2,6 +2,11 @@ package com.simibubi.create.infrastructure.data;
 
 import java.util.concurrent.CompletableFuture;
 
+import io.github.fabricators_of_create.porting_lib.data.ExistingFileHelper;
+
+import io.github.fabricators_of_create.porting_lib.data.PortingLibTagsProvider;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllContraptionTypes;
@@ -15,10 +20,8 @@ import net.minecraft.core.HolderLookup.Provider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.TagsProvider;
 
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
-
-public class CreateContraptionTypeTagsProvider extends TagsProvider<ContraptionType> {
-	public CreateContraptionTypeTagsProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, @Nullable ExistingFileHelper existingFileHelper) {
+public class CreateContraptionTypeTagsProvider extends PortingLibTagsProvider<ContraptionType> {
+	public CreateContraptionTypeTagsProvider(FabricDataOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, @Nullable ExistingFileHelper existingFileHelper) {
 		super(output, CreateRegistries.CONTRAPTION_TYPE, lookupProvider, Create.ID, existingFileHelper);
 	}
 

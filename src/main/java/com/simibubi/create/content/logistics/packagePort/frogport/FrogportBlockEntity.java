@@ -16,10 +16,17 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.foundation.item.TooltipHelper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -39,13 +46,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import org.jetbrains.annotations.Nullable;
 
-public class FrogportBlockEntity extends PackagePortBlockEntity implements IHaveHoveringInformation {
+public class FrogportBlockEntity extends PackagePortBlockEntity implements IHaveHoveringInformation, SidedStorageBlockEntity {
 
 	public ItemStack animatedPackage;
 	public LerpedFloat manualOpenAnimationProgress;
@@ -77,12 +80,12 @@ public class FrogportBlockEntity extends PackagePortBlockEntity implements IHave
 		goggles = false;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-			Capabilities.ItemHandler.BLOCK,
-			AllBlockEntityTypes.PACKAGE_FROGPORT.get(),
-			(be, context) -> be.itemHandler
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		return itemHandler;
 	}
 
 	@Override
@@ -121,7 +124,7 @@ public class FrogportBlockEntity extends PackagePortBlockEntity implements IHave
 	public void sendAnticipate() {
 		if (isAnimationInProgress())
 			return;
-		for (int i = 0; i < inventory.getSlots(); i++)
+		for (int i = 0; i < inventory.getSlotCount(); i++)
 			if (inventory.getStackInSlot(i)
 				.isEmpty()) {
 				sendAnticipate = true;
@@ -191,7 +194,7 @@ public class FrogportBlockEntity extends PackagePortBlockEntity implements IHave
 		}
 
 		if (!currentlyDepositing) {
-			if (!ItemHandlerHelper.insertItem(inventory, animatedPackage.copy(), false)
+			if (!CreateTransferUtil.insertItem(inventory, animatedPackage.copy(), false)
 				.isEmpty())
 				drop(animatedPackage);
 		}
@@ -245,23 +248,22 @@ public class FrogportBlockEntity extends PackagePortBlockEntity implements IHave
 			return;
 
 		boolean empty = true;
-		for (int i = 0; i < itemHandler.getSlots(); i++)
-			if (!itemHandler.getStackInSlot(i)
-				.isEmpty())
+		for (StorageView<ItemVariant> view : itemHandler)
+			if (!view.isResourceBlank() && view.getAmount() > 0)
 				empty = false;
 		if (empty)
 			return;
-		IItemHandler handler = getAdjacentInventory(Direction.DOWN);
+		Storage<ItemVariant> handler = getAdjacentInventory(Direction.DOWN);
 		if (handler == null)
 			return;
 
-		for (int i = 0; i < itemHandler.getSlots(); i++) {
-			ItemStack stackInSlot = itemHandler.extractItem(i, 1, true);
+		for (StorageView<ItemVariant> view : itemHandler) {
+			ItemStack stackInSlot = CreateTransferUtil.extractItem(view, 1, true);
 			if (stackInSlot.isEmpty())
 				continue;
-			ItemStack remainder = ItemHandlerHelper.insertItemStacked(handler, stackInSlot, false);
+			ItemStack remainder = CreateTransferUtil.insertItemStacked(handler, stackInSlot, false);
 			if (remainder.isEmpty()) {
-				itemHandler.extractItem(i, 1, false);
+				CreateTransferUtil.extractItem(view, 1, false);
 				level.blockEntityChanged(worldPosition);
 			} else
 				failedLastExport = true;
@@ -282,7 +284,7 @@ public class FrogportBlockEntity extends PackagePortBlockEntity implements IHave
 		for (Direction side : Iterate.directions) {
 			if (side != Direction.DOWN)
 				continue;
-			IItemHandler handler = getAdjacentInventory(side);
+			Storage<ItemVariant> handler = getAdjacentInventory(side);
 			if (handler == null)
 				continue;
 			if (tryPullingFrom(handler))
@@ -290,7 +292,7 @@ public class FrogportBlockEntity extends PackagePortBlockEntity implements IHave
 		}
 	}
 
-	public boolean tryPullingFrom(IItemHandler handler) {
+	public boolean tryPullingFrom(Storage<ItemVariant> handler) {
 		ItemStack extract = ItemHelper.extract(handler, stack -> {
 			if (!PackageItem.isPackage(stack))
 				return false;
@@ -305,11 +307,11 @@ public class FrogportBlockEntity extends PackagePortBlockEntity implements IHave
 
 	}
 
-	protected IItemHandler getAdjacentInventory(Direction side) {
+	protected Storage<ItemVariant> getAdjacentInventory(Direction side) {
 		BlockEntity blockEntity = level.getBlockEntity(worldPosition.relative(side));
 		if (blockEntity == null || blockEntity instanceof FrogportBlockEntity)
 			return null;
-		return level.getCapability(ItemHandler.BLOCK, blockEntity.getBlockPos(), side.getOpposite());
+		return TransferUtil.getItemStorage(level, blockEntity.getBlockPos(), blockEntity, side.getOpposite());
 	}
 
 	@Override

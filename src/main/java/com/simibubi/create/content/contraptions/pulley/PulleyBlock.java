@@ -86,7 +86,7 @@ public class PulleyBlock extends HorizontalAxisKineticBlock implements IBE<Pulle
 	private static class RopeBlockBase extends Block implements SimpleWaterloggedBlock {
 
 		public RopeBlockBase(Properties properties) {
-			super(properties);
+			super(properties.pushReaction(PushReaction.BLOCK));
 			registerDefaultState(super.defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, false));
 		}
 
@@ -95,14 +95,13 @@ public class PulleyBlock extends HorizontalAxisKineticBlock implements IBE<Pulle
 			return false;
 		}
 
-		@Override
+		/*@Override
 		public PushReaction getPistonPushReaction(BlockState state) {
 			return PushReaction.BLOCK;
-		}
+		}*/
 
 		@Override
-		public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos,
-										   Player player) {
+		public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
 			return AllBlocks.ROPE_PULLEY.asStack();
 		}
 

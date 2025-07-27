@@ -15,6 +15,8 @@ import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe.Bu
 import com.simibubi.create.foundation.fluid.FluidIngredient;
 import com.simibubi.create.foundation.mixin.accessor.PotionBrewingAccessor;
 
+import io.github.fabricators_of_create.porting_lib.brewing.BrewingRecipe;
+import io.github.fabricators_of_create.porting_lib.brewing.IBrewingRecipe;
 import net.minecraft.core.Holder.Reference;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -28,9 +30,7 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 
-import net.neoforged.neoforge.common.brewing.BrewingRecipe;
-import net.neoforged.neoforge.common.brewing.IBrewingRecipe;
-import net.neoforged.neoforge.fluids.FluidStack;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class PotionMixingRecipes {
 

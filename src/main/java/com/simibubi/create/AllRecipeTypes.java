@@ -6,6 +6,12 @@ import java.util.function.Supplier;
 
 import com.simibubi.create.content.kinetics.deployer.ItemApplicationRecipeParams;
 
+import io.github.fabricators_of_create.porting_lib.common.util.SimpleRecipeType;
+import io.github.fabricators_of_create.porting_lib.mixin.common.ShapedRecipePattern$DataMixin;
+import io.github.fabricators_of_create.porting_lib.registry.DeferredHolder;
+
+import io.github.fabricators_of_create.porting_lib.registry.DeferredRegister;
+
 import org.jetbrains.annotations.ApiStatus.Internal;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,10 +55,6 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.item.crafting.ShapedRecipePattern;
 import net.minecraft.world.item.crafting.SimpleCraftingRecipeSerializer;
 import net.minecraft.world.level.Level;
-
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.registries.DeferredHolder;
-import net.neoforged.neoforge.registries.DeferredRegister;
 
 public enum AllRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
 
@@ -113,7 +115,7 @@ public enum AllRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
 		id = Create.asResource(name);
 		this.serializerSupplier = serializerSupplier;
 		serializerObject = Registers.SERIALIZER_REGISTER.register(name, serializerSupplier);
-		typeObject = Registers.TYPE_REGISTER.register(name, () -> RecipeType.simple(id));
+		typeObject = Registers.TYPE_REGISTER.register(name, () -> new SimpleRecipeType<>(id));
 		type = typeObject;
 		isProcessingRecipe = false;
 	}
@@ -129,10 +131,10 @@ public enum AllRecipeTypes implements IRecipeTypeInfo, StringRepresentable {
 	}
 
 	@Internal
-	public static void register(IEventBus modEventBus) {
-		ShapedRecipePattern.setCraftingSize(9, 9);
-		Registers.SERIALIZER_REGISTER.register(modEventBus);
-		Registers.TYPE_REGISTER.register(modEventBus);
+	public static void register() {
+		//ShapedRecipePattern.setCraftingSize(9, 9); // Fabric: Porting Lib has just removed the crafting size limits entirely
+		Registers.SERIALIZER_REGISTER.register();
+		Registers.TYPE_REGISTER.register();
 	}
 
 	@Override

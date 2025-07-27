@@ -6,6 +6,9 @@ import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.content.trains.track.TrackPlacement.PlacementInfo;
 import com.simibubi.create.foundation.utility.CreateLang;
+
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickBlock;
 import net.createmod.catnip.platform.CatnipServices;
 
 import net.createmod.catnip.data.Pair;
@@ -29,13 +32,9 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-@EventBusSubscriber(Dist.CLIENT)
 public class TrackBlockItem extends BlockItem {
 
 	public TrackBlockItem(Block pBlock, Properties pProperties) {
@@ -150,8 +149,15 @@ public class TrackBlockItem extends BlockItem {
 		return true;
 	}
 
-	@SubscribeEvent
-	@OnlyIn(Dist.CLIENT)
+	static {
+		CatnipServices.PLATFORM.executeOnClientOnly(() -> TrackBlockItem::initClient);
+	}
+
+	private static void initClient() {
+		RightClickBlock.EVENT.register(TrackBlockItem::sendExtenderPacket);
+	}
+
+	@Environment(EnvType.CLIENT)
 	public static void sendExtenderPacket(PlayerInteractEvent.RightClickBlock event) {
 		ItemStack stack = event.getItemStack();
 		if (!event.getLevel().isClientSide)

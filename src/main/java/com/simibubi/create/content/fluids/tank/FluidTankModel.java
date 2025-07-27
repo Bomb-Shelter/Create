@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 import com.simibubi.create.AllSpriteShifts;
 import com.simibubi.create.api.connectivity.ConnectivityHandler;
@@ -11,6 +12,7 @@ import com.simibubi.create.foundation.block.connected.CTModel;
 import com.simibubi.create.foundation.block.connected.CTSpriteShiftEntry;
 
 import net.createmod.catnip.data.Iterate;
+import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
@@ -19,13 +21,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.client.model.data.ModelData;
-import net.neoforged.neoforge.client.model.data.ModelData.Builder;
-import net.neoforged.neoforge.client.model.data.ModelProperty;
 
 public class FluidTankModel extends CTModel {
-
-	protected static final ModelProperty<CullData> CULL_PROPERTY = new ModelProperty<>();
 
 	public static FluidTankModel standard(BakedModel originalModel) {
 		return new FluidTankModel(originalModel, AllSpriteShifts.FLUID_TANK, AllSpriteShifts.FLUID_TANK_TOP,
@@ -38,34 +35,26 @@ public class FluidTankModel extends CTModel {
 	}
 
 	private FluidTankModel(BakedModel originalModel, CTSpriteShiftEntry side, CTSpriteShiftEntry top,
-		CTSpriteShiftEntry inner) {
+						   CTSpriteShiftEntry inner) {
 		super(originalModel, new FluidTankCTBehaviour(side, top, inner));
 	}
 
 	@Override
-	protected ModelData.Builder gatherModelData(Builder builder, BlockAndTintGetter world, BlockPos pos, BlockState state,
-		ModelData blockEntityData) {
-		super.gatherModelData(builder, world, pos, state, blockEntityData);
+	public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context) {
 		CullData cullData = new CullData();
 		for (Direction d : Iterate.horizontalDirections)
-			cullData.setCulled(d, ConnectivityHandler.isConnected(world, pos, pos.relative(d)));
-		return builder.with(CULL_PROPERTY, cullData);
-	}
+			cullData.setCulled(d, ConnectivityHandler.isConnected(blockView, pos, pos.relative(d)));
 
-	@Override
-	public List<BakedQuad> getQuads(BlockState state, Direction side, RandomSource rand, ModelData extraData, RenderType renderType) {
-		if (side != null)
-			return Collections.emptyList();
-
-		List<BakedQuad> quads = new ArrayList<>();
-		for (Direction d : Iterate.directions) {
-			if (extraData.has(CULL_PROPERTY) && extraData.get(CULL_PROPERTY)
-				.isCulled(d))
-				continue;
-			quads.addAll(super.getQuads(state, d, rand, extraData, renderType));
-		}
-		quads.addAll(super.getQuads(state, null, rand, extraData, renderType));
-		return quads;
+		context.pushTransform(quad -> {
+			Direction cullFace = quad.cullFace();
+			if (cullFace != null && cullData.isCulled(cullFace)) {
+				return false;
+			}
+			quad.cullFace(null);
+			return true;
+		});
+		super.emitBlockQuads(blockView, state, pos, randomSupplier, context);
+		context.popTransform();
 	}
 
 	private static class CullData {

@@ -10,6 +10,11 @@ import com.simibubi.create.AllTags;
 import com.simibubi.create.api.data.recipe.ProcessingRecipeGen;
 import com.simibubi.create.api.data.recipe.StandardProcessingRecipeGen;
 
+import io.github.fabricators_of_create.porting_lib.fluids.FluidType;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataGenerator;
@@ -23,8 +28,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
 
-import net.neoforged.neoforge.common.Tags;
-import net.neoforged.neoforge.fluids.FluidType;
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
 
 /**
  * The class that handles gathering Create's generated recipes for most types.
@@ -34,7 +38,7 @@ import net.neoforged.neoforge.fluids.FluidType;
 public final class CreateRecipeProvider extends RecipeProvider {
 
 	static final List<ProcessingRecipeGen<?, ?, ?>> GENERATORS = new ArrayList<>();
-	static final int BUCKET = FluidType.BUCKET_VOLUME;
+	static final int BUCKET = 1000;
 	static final int BOTTLE = 250;
 
 	public CreateRecipeProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
@@ -42,25 +46,11 @@ public final class CreateRecipeProvider extends RecipeProvider {
 	}
 
 	@Override
-	protected void buildRecipes(RecipeOutput recipeOutput) {
+	public void buildRecipes(RecipeOutput recipeOutput) {
 	}
 
-	public static void registerAllProcessing(DataGenerator gen, PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
-		GENERATORS.add(new CreateCrushingRecipeGen(output, registries));
-		GENERATORS.add(new CreateMillingRecipeGen(output, registries));
-		GENERATORS.add(new CreateCuttingRecipeGen(output, registries));
-		GENERATORS.add(new CreateWashingRecipeGen(output, registries));
-		GENERATORS.add(new CreatePolishingRecipeGen(output, registries));
-		GENERATORS.add(new CreateDeployingRecipeGen(output, registries));
-		GENERATORS.add(new CreateMixingRecipeGen(output, registries));
-		GENERATORS.add(new CreateCompactingRecipeGen(output, registries));
-		GENERATORS.add(new CreatePressingRecipeGen(output, registries));
-		GENERATORS.add(new CreateFillingRecipeGen(output, registries));
-		GENERATORS.add(new CreateEmptyingRecipeGen(output, registries));
-		GENERATORS.add(new CreateHauntingRecipeGen(output, registries));
-		GENERATORS.add(new CreateItemApplicationRecipeGen(output, registries));
-
-		gen.addProvider(true, new DataProvider() {
+	public static void registerAllProcessing(FabricDataGenerator.Pack gen) {
+		gen.addProvider((output, registries) -> new DataProvider() {
 
 			@Override
 			public String getName() {
@@ -69,6 +59,20 @@ public final class CreateRecipeProvider extends RecipeProvider {
 
 			@Override
 			public CompletableFuture<?> run(CachedOutput dc) {
+				GENERATORS.add(new CreateCrushingRecipeGen(output, registries));
+				GENERATORS.add(new CreateMillingRecipeGen(output, registries));
+				GENERATORS.add(new CreateCuttingRecipeGen(output, registries));
+				GENERATORS.add(new CreateWashingRecipeGen(output, registries));
+				GENERATORS.add(new CreatePolishingRecipeGen(output, registries));
+				GENERATORS.add(new CreateDeployingRecipeGen(output, registries));
+				GENERATORS.add(new CreateMixingRecipeGen(output, registries));
+				GENERATORS.add(new CreateCompactingRecipeGen(output, registries));
+				GENERATORS.add(new CreatePressingRecipeGen(output, registries));
+				GENERATORS.add(new CreateFillingRecipeGen(output, registries));
+				GENERATORS.add(new CreateEmptyingRecipeGen(output, registries));
+				GENERATORS.add(new CreateHauntingRecipeGen(output, registries));
+				GENERATORS.add(new CreateItemApplicationRecipeGen(output, registries));
+
 				return CompletableFuture.allOf(GENERATORS.stream()
 					.map(gen -> gen.run(dc))
 					.toArray(CompletableFuture[]::new));

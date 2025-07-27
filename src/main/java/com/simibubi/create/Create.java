@@ -2,6 +2,31 @@ package com.simibubi.create;
 
 import java.util.Random;
 
+import com.simibubi.create.api.registry.CreateBuiltInRegistries;
+import com.simibubi.create.content.contraptions.minecart.CouplingHandler;
+import com.simibubi.create.content.equipment.armor.CardboardArmorHandler;
+import com.simibubi.create.content.equipment.bell.HauntedBellPulser;
+import com.simibubi.create.content.equipment.symmetryWand.SymmetryHandler;
+import com.simibubi.create.content.equipment.wrench.WrenchEventHandler;
+import com.simibubi.create.content.equipment.zapper.ZapperInteractionHandler;
+import com.simibubi.create.content.fluids.FluidBottleItemHook;
+import com.simibubi.create.content.fluids.FluidReactions;
+import com.simibubi.create.content.logistics.itemHatch.ItemHatchHandler;
+import com.simibubi.create.content.logistics.stockTicker.StockTickerInteractionHandler;
+import com.simibubi.create.content.processing.burner.BlazeBurnerHandler;
+import com.simibubi.create.content.redstone.link.LinkHandler;
+import com.simibubi.create.content.trains.schedule.ScheduleItemEntityInteraction;
+import com.simibubi.create.foundation.blockEntity.behaviour.ValueSettingsInputHandler;
+import com.simibubi.create.foundation.blockEntity.behaviour.edgeInteraction.EdgeInteractionHandler;
+import com.simibubi.create.foundation.events.CommonEvents;
+
+import com.simibubi.create.impl.registry.CreateRegistriesImpl;
+
+import com.simibubi.create.infrastructure.RemapHelper;
+import com.simibubi.create.infrastructure.worldgen.AllBiomeModifiers;
+
+import net.fabricmc.api.ModInitializer;
+
 import org.slf4j.Logger;
 
 import com.google.gson.Gson;
@@ -10,7 +35,7 @@ import com.mojang.logging.LogUtils;
 import com.simibubi.create.api.registrate.CreateRegistrateRegistrationCallback;
 import com.simibubi.create.compat.Mods;
 import com.simibubi.create.compat.computercraft.ComputerCraftProxy;
-import com.simibubi.create.compat.curios.Curios;
+import com.simibubi.create.compat.trinkets.Trinkets;
 import com.simibubi.create.compat.inventorySorter.InventorySorterCompat;
 import com.simibubi.create.content.decoration.palettes.AllPaletteBlocks;
 import com.simibubi.create.content.equipment.armor.AllArmorMaterials;
@@ -47,24 +72,13 @@ import com.simibubi.create.infrastructure.worldgen.AllPlacementModifiers;
 
 import net.createmod.catnip.lang.FontHelper;
 import net.createmod.catnip.lang.LangBuilder;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.level.Level;
 
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.ModLoadingContext;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.neoforge.common.NeoForgeMod;
-import net.neoforged.neoforge.registries.RegisterEvent;
-
-@Mod(Create.ID)
-public class Create {
+public class Create implements ModInitializer {
 	public static final String ID = "create";
 	public static final String NAME = "Create";
 
@@ -102,20 +116,20 @@ public class Create {
 	public static final GlobalLogisticsManager LOGISTICS = new GlobalLogisticsManager();
 	public static final ServerLagger LAGGER = new ServerLagger();
 
-	public Create(IEventBus eventBus, ModContainer modContainer) {
-		onCtor(eventBus, modContainer);
+	@Override
+	public void onInitialize() {
+		onCtor();
 	}
 
-	public static void onCtor(IEventBus modEventBus, ModContainer modContainer) {
+	public static void onCtor() {
 		LOGGER.info("{} {} initializing! Commit hash: {}", NAME, CreateBuildInfo.VERSION, CreateBuildInfo.GIT_COMMIT);
-		ModLoadingContext modLoadingContext = ModLoadingContext.get();
 
-		REGISTRATE.registerEventListeners(modEventBus);
+		//REGISTRATE.registerEventListeners();
 
 		AllSoundEvents.prepare();
 		AllTags.init();
-		AllCreativeModeTabs.register(modEventBus);
-		AllArmorMaterials.register(modEventBus);
+		AllCreativeModeTabs.register();
+		AllArmorMaterials.register();
 		AllDisplaySources.register();
 		AllDisplayTargets.register();
 		AllBlocks.register();
@@ -125,23 +139,23 @@ public class Create {
 		AllMenuTypes.register();
 		AllEntityTypes.register();
 		AllBlockEntityTypes.register();
-		AllRecipeTypes.register(modEventBus);
-		AllParticleTypes.register(modEventBus);
-		AllStructureProcessorTypes.register(modEventBus);
-		AllEntityDataSerializers.register(modEventBus);
+		AllRecipeTypes.register();
+		AllParticleTypes.register();
+		AllStructureProcessorTypes.register();
+		AllEntityDataSerializers.register();
 		AllPackets.register();
-		AllFeatures.register(modEventBus);
-		AllPlacementModifiers.register(modEventBus);
-		AllIngredients.register(modEventBus);
-		AllAttachmentTypes.register(modEventBus);
-		AllDataComponents.register(modEventBus);
-		AllMapDecorationTypes.register(modEventBus);
+		AllFeatures.register();
+		AllPlacementModifiers.register();
+		AllIngredients.register();
+		AllAttachmentTypes.register();
+		AllDataComponents.register();
+		AllMapDecorationTypes.register();
 		AllMountedStorageTypes.register();
 
-		AllConfigs.register(modLoadingContext, modContainer);
+		AllConfigs.register();
 
 		// TODO - Make these use Registry.register and move them into the RegisterEvent
-		AllPackagePortTargetTypes.register(modEventBus);
+		AllPackagePortTargetTypes.register();
 
 		AllSchematicStateFilters.registerDefaults();
 
@@ -152,25 +166,50 @@ public class Create {
 
 		ComputerCraftProxy.register();
 
-		NeoForgeMod.enableMilkFluid();
+		//NeoForgeMod.enableMilkFluid();
+		REGISTRATE.registerEventListeners();
 
-		modEventBus.addListener(Create::init);
-		modEventBus.addListener(Create::onRegister);
-		modEventBus.addListener(AllEntityTypes::registerEntityAttributes);
-		modEventBus.addListener(EventPriority.HIGHEST, CreateDatagen::gatherDataHighPriority);
-		modEventBus.addListener(EventPriority.LOWEST, CreateDatagen::gatherData);
-		modEventBus.addListener(AllSoundEvents::register);
+		Create.init();
+		Create.onRegister();
+		AllEntityTypes.registerEntityAttributes();
+		//modEventBus.addListener(EventPriority.HIGHEST, CreateDatagen::gatherDataHighPriority);
+		//modEventBus.addListener(EventPriority.LOWEST, CreateDatagen::gatherData);
+		AllSoundEvents.register();
 
 		// FIXME: this is not thread-safe
-		Mods.CURIOS.executeIfInstalled(() -> () -> Curios.init(modEventBus));
-		Mods.INVENTORYSORTER.executeIfInstalled(() -> () -> InventorySorterCompat.init(modEventBus));
+		Mods.TRINKETS.executeIfInstalled(() -> () -> Trinkets.init());
+		//Mods.INVENTORYSORTER.executeIfInstalled(() -> () -> InventorySorterCompat.init());
+
+		CommonEvents.init();
+		CouplingHandler.init();
+		CardboardArmorHandler.init();
+		HauntedBellPulser.init();
+		SymmetryHandler.init();
+		WrenchEventHandler.init();
+		ZapperInteractionHandler.init();
+		FluidBottleItemHook.init();
+		FluidReactions.init();
+		ItemHatchHandler.init();
+		StockTickerInteractionHandler.init();
+		BlazeBurnerHandler.init();
+		LinkHandler.init();
+		ScheduleItemEntityInteraction.init();
+		ValueSettingsInputHandler.init();
+		EdgeInteractionHandler.init();
+		CreateRegistriesImpl.init();
+		AllBiomeModifiers.bootstrap();
+		RemapHelper.init();
+
+		for (Runnable callback : CreateBuiltInRegistries.bakeCallbacks) {
+			callback.run();
+		}
 	}
 
-	public static void init(final FMLCommonSetupEvent event) {
+	public static void init() {
 		AllFluids.registerFluidInteractions();
 		CreateNBTProcessors.register();
 
-		event.enqueueWork(() -> {
+		{
 			// TODO: custom registration should all happen in one place
 			// Most registration happens in the constructor.
 			// These registrations use Create's registered objects directly so they must run after registration has finished.
@@ -185,10 +224,10 @@ public class Create {
 			AllUnpackingHandlers.registerDefaults();
 			AllInventoryIdentifiers.registerDefaults();
 			// --
-		});
+		}
 	}
 
-	public static void onRegister(final RegisterEvent event) {
+	public static void onRegister() {
 		AllArmInteractionPointTypes.init();
 		AllFanProcessingTypes.init();
 		AllItemAttributeTypes.init();
@@ -197,7 +236,7 @@ public class Create {
 		AllPotatoProjectileEntityHitActions.init();
 		AllPotatoProjectileBlockHitActions.init();
 
-		if (event.getRegistry() == BuiltInRegistries.TRIGGER_TYPES) {
+		/*if (event.getRegistry() == BuiltInRegistries.TRIGGER_TYPES)*/ {
 			AllAdvancements.register();
 			AllTriggers.register();
 		}

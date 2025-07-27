@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.FaceHidingBlock;
 import net.minecraft.world.ItemInteractionResult;
 
 import org.jetbrains.annotations.NotNull;
@@ -60,7 +61,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.ticks.TickPriority;
 
 public class FluidPipeBlock extends PipeBlock implements SimpleWaterloggedBlock, IWrenchableWithBracket,
-	IBE<FluidPipeBlockEntity>, EncasableBlock, TransformableBlock {
+	IBE<FluidPipeBlockEntity>, EncasableBlock, TransformableBlock, FaceHidingBlock {
 
 	private static final VoxelShape OCCLUSION_BOX = Block.box(4, 4, 4, 12, 12, 12);
 

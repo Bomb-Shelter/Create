@@ -3,6 +3,9 @@ package com.simibubi.create.content.kinetics.chainConveyor;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.content.equipment.blueprint.BlueprintOverlayRenderer;
+
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickBlock;
 import net.createmod.catnip.platform.CatnipServices;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
@@ -32,13 +35,8 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.fabricmc.fabric.api.entity.FakePlayer;
 
-@EventBusSubscriber(Dist.CLIENT)
 public class ChainConveyorConnectionHandler {
 
 	private static BlockPos firstPos;
@@ -62,7 +60,10 @@ public class ChainConveyorConnectionHandler {
 		return true;
 	}
 
-	@SubscribeEvent
+	static {
+		RightClickBlock.EVENT.register(ChainConveyorConnectionHandler::onItemUsedOnBlock);
+	}
+
 	public static void onItemUsedOnBlock(PlayerInteractEvent.RightClickBlock event) {
 		ItemStack itemStack = event.getItemStack();
 		BlockPos pos = event.getPos();

@@ -7,23 +7,23 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.SidedFilteringBehaviour;
 import com.simibubi.create.foundation.utility.AdventureUtil;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickBlock;
 import net.createmod.catnip.platform.CatnipServices;
+import net.fabricmc.api.EnvType;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.LogicalSide;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.fabricmc.fabric.api.entity.FakePlayer;
 
-@EventBusSubscriber
 public class ValueSettingsInputHandler {
+	public static void init() {
+		RightClickBlock.EVENT.register(ValueSettingsInputHandler::onBlockActivated);
+	}
 
-	@SubscribeEvent
 	public static void onBlockActivated(PlayerInteractEvent.RightClickBlock event) {
 		Level world = event.getLevel();
 		BlockPos pos = event.getPos();
@@ -37,7 +37,7 @@ public class ValueSettingsInputHandler {
 		if (!(world.getBlockEntity(pos)instanceof SmartBlockEntity sbe))
 			return;
 
-		if (event.getSide() == LogicalSide.CLIENT)
+		if (event.getSide() == EnvType.CLIENT)
 			CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> CreateClient.VALUE_SETTINGS_HANDLER.cancelIfWarmupAlreadyStarted(event));
 
 		if (event.isCanceled())
@@ -83,7 +83,7 @@ public class ValueSettingsInputHandler {
 				return;
 			}
 
-			if (event.getSide() == LogicalSide.CLIENT) {
+			if (event.getSide() == EnvType.CLIENT) {
 				BehaviourType<?> type = behaviour.getType();
 				CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> CreateClient.VALUE_SETTINGS_HANDLER
 					.startInteractionWith(pos, type, hand, ray.getDirection()));

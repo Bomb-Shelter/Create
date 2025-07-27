@@ -4,13 +4,13 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
 
+import com.simibubi.create.infrastructure.fabric.crafting.CompoundIngredient;
+
 import io.netty.handler.codec.DecoderException;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.Recipe;
-
-import net.neoforged.neoforge.common.crafting.CompoundIngredient;
 
 public class SequencedRecipe<T extends ProcessingRecipe<?, ?>> {
 	public static final Codec<SequencedRecipe<?>> CODEC = Recipe.CODEC

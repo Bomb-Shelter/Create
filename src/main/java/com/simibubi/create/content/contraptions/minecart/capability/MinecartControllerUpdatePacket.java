@@ -16,8 +16,8 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.entity.Entity;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public record MinecartControllerUpdatePacket(int entityId, @Nullable CompoundTag nbt) implements ClientboundPacketPayload {
 	public static final StreamCodec<ByteBuf, MinecartControllerUpdatePacket> STREAM_CODEC = StreamCodec.composite(
@@ -31,16 +31,16 @@ public record MinecartControllerUpdatePacket(int entityId, @Nullable CompoundTag
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void handle(LocalPlayer player) {
 		Entity entityByID = player.clientLevel.getEntity(entityId);
 		if (entityByID == null)
 			return;
-		if (entityByID.hasData(AllAttachmentTypes.MINECART_CONTROLLER)) {
+		if (entityByID.hasAttached(AllAttachmentTypes.MINECART_CONTROLLER)) {
 			if (nbt == null) {
-				entityByID.removeData(AllAttachmentTypes.MINECART_CONTROLLER);
+				entityByID.removeAttached(AllAttachmentTypes.MINECART_CONTROLLER);
 			} else {
-				MinecartController controller = entityByID.getData(AllAttachmentTypes.MINECART_CONTROLLER);
+				MinecartController controller = entityByID.getAttachedOrCreate(AllAttachmentTypes.MINECART_CONTROLLER);
 				controller.deserializeNBT(player.registryAccess(), nbt);
 			}
 		}

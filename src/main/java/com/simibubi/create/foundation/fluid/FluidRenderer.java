@@ -6,8 +6,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import dev.engine_room.flywheel.lib.transform.TransformStack;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidType;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.render.FluidRenderHelper;
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -17,13 +20,11 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.material.Fluid;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.FluidType;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
-@OnlyIn(Dist.CLIENT)
+@Environment(EnvType.CLIENT)
 public class FluidRenderer {
 	public static void renderFluidStream(FluidStack fluidStack, Direction direction, float radius, float progress,
 		boolean inbound, MultiBufferSource buffer, PoseStack ms, int light) {
@@ -33,14 +34,15 @@ public class FluidRenderer {
 	public static void renderFluidStream(FluidStack fluidStack, Direction direction, float radius, float progress,
 		boolean inbound, VertexConsumer builder, PoseStack ms, int light) {
 		Fluid fluid = fluidStack.getFluid();
-		IClientFluidTypeExtensions clientFluid = IClientFluidTypeExtensions.of(fluid);
+		FluidRenderHandler clientFluid = FluidRenderHandlerRegistry.INSTANCE.get(fluid);
 		FluidType fluidAttributes = fluid.getFluidType();
 		Function<ResourceLocation, TextureAtlasSprite> spriteAtlas = Minecraft.getInstance()
 			.getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
-		TextureAtlasSprite flowTexture = spriteAtlas.apply(clientFluid.getFlowingTexture(fluidStack));
-		TextureAtlasSprite stillTexture = spriteAtlas.apply(clientFluid.getStillTexture(fluidStack));
+		TextureAtlasSprite[] textures = clientFluid.getFluidSprites(null, null, fluid.defaultFluidState());
+		TextureAtlasSprite flowTexture = textures[1];
+		TextureAtlasSprite stillTexture = textures[0];
 
-		int color = clientFluid.getTintColor(fluidStack);
+		int color = clientFluid.getFluidColor(null, null, fluid.defaultFluidState());
 		int blockLightIn = (light >> 4) & 0xF;
 		int luminosity = Math.max(blockLightIn, fluidAttributes.getLightLevel(fluidStack));
 		light = (light & 0xF00000) | luminosity << 4;

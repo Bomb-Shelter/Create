@@ -2,6 +2,11 @@ package com.simibubi.create.compat.jei;
 
 import java.util.List;
 
+import mezz.jei.api.fabric.ingredients.fluids.IJeiFluidIngredient;
+
+import net.minecraft.core.component.DataComponentMap;
+import net.minecraft.core.component.DataComponentPatch;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllDataComponents;
@@ -13,18 +18,17 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.alchemy.PotionContents;
 
-import net.neoforged.neoforge.fluids.FluidStack;
-
 /* From JEI's Potion item subtype interpreter */
-public class PotionFluidSubtypeInterpreter implements ISubtypeInterpreter<FluidStack> {
+public class PotionFluidSubtypeInterpreter implements ISubtypeInterpreter<IJeiFluidIngredient> {
 	@Override
-	public @Nullable Object getSubtypeData(FluidStack ingredient, UidContext context) {
-		if (ingredient.getComponentsPatch().isEmpty())
+	public @Nullable Object getSubtypeData(IJeiFluidIngredient ingredient, UidContext context) {
+		if (ingredient.getFluidVariant().getComponents().isEmpty())
 			return null;
 
-		PotionContents contents = ingredient.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
-		String potionTypeString = ingredient.getDescriptionId();
-		String bottleType = ingredient.getOrDefault(AllDataComponents.POTION_FLUID_BOTTLE_TYPE, BottleType.REGULAR).name();
+		DataComponentMap components = ingredient.getFluidVariant().getComponentMap();
+		PotionContents contents = components.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
+		String potionTypeString = ingredient.getFluidVariant().getRegistryEntry().unwrapKey().orElseThrow().location().toLanguageKey("fluid");
+		String bottleType = components.getOrDefault(AllDataComponents.POTION_FLUID_BOTTLE_TYPE, BottleType.REGULAR).name();
 
 		StringBuilder stringBuilder = new StringBuilder(potionTypeString);
 		List<MobEffectInstance> effects = contents.customEffects();
@@ -43,7 +47,7 @@ public class PotionFluidSubtypeInterpreter implements ISubtypeInterpreter<FluidS
 	}
 
 	@Override
-	public String getLegacyStringSubtypeInfo(FluidStack ingredient, UidContext context) {
+	public String getLegacyStringSubtypeInfo(IJeiFluidIngredient ingredient, UidContext context) {
 		return "";
 	}
 }

@@ -21,8 +21,8 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class ClipboardBlockItem extends BlockItem implements SupportsItemCopying {
 
@@ -68,7 +68,7 @@ public class ClipboardBlockItem extends BlockItem implements SupportsItemCopying
 		return InteractionResultHolder.success(heldItem);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private void openScreen(Player player, ItemStack stack) {
 		if (Minecraft.getInstance().player == player)
 			ScreenOpener.open(new ClipboardScreen(player.getInventory().selected, stack, null));
@@ -77,7 +77,7 @@ public class ClipboardBlockItem extends BlockItem implements SupportsItemCopying
 	public void registerModelOverrides() {
 		CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> ClipboardOverrides.registerModelOverridesClient(this));
 	}
-	
+
 	@Override
 	public DataComponentType<?> getComponentType() {
 		return AllDataComponents.CLIPBOARD_PAGES;

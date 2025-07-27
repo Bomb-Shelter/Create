@@ -8,6 +8,7 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.Create;
 
+import io.github.fabricators_of_create.porting_lib.registry.DeferredRegister;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.sounds.SoundEvent;
@@ -16,8 +17,6 @@ import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ArmorMaterial;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.registries.DeferredRegister;
 
 import org.jetbrains.annotations.ApiStatus.Internal;
 
@@ -79,7 +78,7 @@ public class AllArmorMaterials {
 	}
 
 	@Internal
-	public static void register(IEventBus eventBus) {
-		ARMOR_MATERIALS.register(eventBus);
+	public static void register() {
+		ARMOR_MATERIALS.register();
 	}
 }

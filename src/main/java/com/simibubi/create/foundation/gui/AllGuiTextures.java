@@ -8,8 +8,8 @@ import net.createmod.catnip.gui.element.ScreenElement;
 import net.createmod.catnip.theme.Color;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public enum AllGuiTextures implements ScreenElement, TextureSheetSegment {
 
@@ -290,12 +290,12 @@ public enum AllGuiTextures implements ScreenElement, TextureSheetSegment {
 		return location;
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void render(GuiGraphics graphics, int x, int y) {
 		graphics.blit(location, x, y, startX, startY, width, height);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void render(GuiGraphics graphics, int x, int y, Color c) {
 		bind();
 		UIRenderHelper.drawColoredTexture(graphics, c, x, y, startX, startY, width, height);

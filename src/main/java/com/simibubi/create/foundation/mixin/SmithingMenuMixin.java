@@ -1,5 +1,7 @@
 package com.simibubi.create.foundation.mixin;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -38,8 +40,8 @@ public class SmithingMenuMixin {
 	private ItemStack create$preventUnbreakingOnBacktanks(ItemStack original) {
 		if (AllItems.COPPER_BACKTANK.isIn(original) || AllItems.NETHERITE_BACKTANK.isIn(original)) {
 			ItemEnchantments.Mutable mutableEnchantments =
-				new ItemEnchantments.Mutable(original.getTagEnchantments());
-			mutableEnchantments.removeIf(enchant -> !original.supportsEnchantment(enchant));
+				new ItemEnchantments.Mutable(original.getEnchantments());
+			mutableEnchantments.removeIf(enchant -> !CreateFabricUtil.supportsEnchantment(original, enchant));
 			original.set(DataComponents.ENCHANTMENTS, mutableEnchantments.toImmutable());
 		}
 

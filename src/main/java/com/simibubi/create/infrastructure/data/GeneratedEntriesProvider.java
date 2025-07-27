@@ -12,13 +12,12 @@ import com.simibubi.create.infrastructure.worldgen.AllBiomeModifiers;
 import com.simibubi.create.infrastructure.worldgen.AllConfiguredFeatures;
 import com.simibubi.create.infrastructure.worldgen.AllPlacedFeatures;
 
+import io.github.fabricators_of_create.porting_lib.data.DatapackBuiltinEntriesProvider;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.RegistrySetBuilder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
-
-import net.neoforged.neoforge.common.data.DatapackBuiltinEntriesProvider;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 public class GeneratedEntriesProvider extends DatapackBuiltinEntriesProvider {
 	private static final RegistrySetBuilder BUILDER = new RegistrySetBuilder()
@@ -26,10 +25,10 @@ public class GeneratedEntriesProvider extends DatapackBuiltinEntriesProvider {
 			.add(Registries.DAMAGE_TYPE, AllDamageTypes::bootstrap)
 		.add(Registries.CONFIGURED_FEATURE, AllConfiguredFeatures::bootstrap)
 		.add(Registries.PLACED_FEATURE, AllPlacedFeatures::bootstrap)
-		.add(NeoForgeRegistries.Keys.BIOME_MODIFIERS, AllBiomeModifiers::bootstrap)
+		//.add(NeoForgeRegistries.Keys.BIOME_MODIFIERS, AllBiomeModifiers::bootstrap)
 		.add(CreateRegistries.POTATO_PROJECTILE_TYPE, AllPotatoProjectileTypes::bootstrap);
 
-	public GeneratedEntriesProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
+	public GeneratedEntriesProvider(FabricDataOutput output, CompletableFuture<HolderLookup.Provider> registries) {
 		super(output, registries, BUILDER, Set.of(Create.ID));
 	}
 

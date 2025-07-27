@@ -1,13 +1,12 @@
 package com.simibubi.create.content.fluids;
 
+import io.github.fabricators_of_create.porting_lib.fluids.BaseFlowingFluid;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
-
-import net.neoforged.neoforge.fluids.BaseFlowingFluid;
 
 public class VirtualFluid extends BaseFlowingFluid {
 

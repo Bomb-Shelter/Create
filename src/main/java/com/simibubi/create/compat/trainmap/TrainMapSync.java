@@ -36,7 +36,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 public class TrainMapSync {
 
@@ -156,12 +155,12 @@ public class TrainMapSync {
 			send(sender.server, false);
 	}
 
-	public static void serverTick(ServerTickEvent event) {
+	public static void serverTick(MinecraftServer server) {
 		ticks++;
 		if (ticks % fullPacketInterval == 0)
-			send(event.getServer(), false);
+			send(server, false);
 		else if (ticks % lightPacketInterval == 0)
-			send(event.getServer(), true);
+			send(server, true);
 	}
 
 	public static void send(MinecraftServer minecraftServer, boolean light) {
@@ -187,7 +186,7 @@ public class TrainMapSync {
 
 		entry.positions = new Float[train.carriages.size() * 6];
 		entry.dimensions = new ArrayList<>();
-		
+
 		Arrays.fill(entry.positions, Float.valueOf(0));
 
 		List<Carriage> carriages = train.carriages;

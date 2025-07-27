@@ -2,9 +2,12 @@ package com.simibubi.create.compat.thresholdSwitch;
 
 import com.simibubi.create.compat.Mods;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.items.IItemHandler;
 
 public class FunctionalStorage implements ThresholdSwitchCompat {
 
@@ -16,7 +19,7 @@ public class FunctionalStorage implements ThresholdSwitchCompat {
 	}
 
 	@Override
-	public long getSpaceInSlot(IItemHandler inv, int slot) {
-		return inv.getSlotLimit(slot);
+	public long getSpaceInSlot(SlottedStorage<ItemVariant> inv, int slot) {
+		return inv.getSlot(slot).getCapacity();
 	}
 }

@@ -7,7 +7,17 @@ import com.simibubi.create.content.fluids.transfer.GenericItemEmptying;
 import com.simibubi.create.content.fluids.transfer.GenericItemFilling;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.fluids.BaseFlowingFluid;
+import io.github.fabricators_of_create.porting_lib.fluids.sound.SoundActions;
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.createmod.catnip.data.Pair;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.FluidTags;
@@ -21,13 +31,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.common.SoundActions;
-import net.neoforged.neoforge.fluids.BaseFlowingFluid;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
-import net.neoforged.neoforge.fluids.capability.IFluidHandlerItem;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class FluidHelper {
 
@@ -37,6 +41,10 @@ public class FluidHelper {
 
 	public static boolean isWater(Fluid fluid) {
 		return convertToStill(fluid) == Fluids.WATER;
+	}
+
+	public static boolean isWater(FluidVariant fluidVariant) {
+		return isWater(fluidVariant.getFluid());
 	}
 
 	public static boolean isLava(Fluid fluid) {
@@ -100,6 +108,16 @@ public class FluidHelper {
 		return copy;
 	}
 
+	public static FluidStack copyStackWithAmount(FluidStack fs, long amount) {
+		if (amount <= 0)
+			return FluidStack.EMPTY;
+		if (fs.isEmpty())
+			return FluidStack.EMPTY;
+		FluidStack copy = fs.copy();
+		copy.setAmount(amount);
+		return copy;
+	}
+
 	public static Fluid convertToFlowing(Fluid fluid) {
 		if (fluid == Fluids.WATER)
 			return Fluids.FLOWING_WATER;
@@ -126,17 +144,17 @@ public class FluidHelper {
 			return false;
 
 		Pair<FluidStack, ItemStack> emptyingResult = GenericItemEmptying.emptyItem(worldIn, heldItem, true);
-		IFluidHandler capability = worldIn.getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+		Storage<FluidVariant> capability = TransferUtil.getFluidStorage(worldIn, be.getBlockPos(), be, null);
 		FluidStack fluidStack = emptyingResult.getFirst();
 
-		if (capability == null || fluidStack.getAmount() != capability.fill(fluidStack, FluidAction.SIMULATE))
+		if (capability == null || fluidStack.getAmount() != CreateTransferUtil.simulateInsertFluid(capability, fluidStack))
 			return false;
 		if (worldIn.isClientSide)
 			return true;
 
 		ItemStack copyOfHeld = heldItem.copy();
 		emptyingResult = GenericItemEmptying.emptyItem(worldIn, copyOfHeld, false);
-		capability.fill(fluidStack, FluidAction.EXECUTE);
+		TransferUtil.insertFluid(capability, fluidStack);
 
 		if (!player.isCreative() && !(be instanceof CreativeFluidTankBlockEntity)) {
 			if (copyOfHeld.isEmpty())
@@ -155,16 +173,15 @@ public class FluidHelper {
 		if (!GenericItemFilling.canItemBeFilled(world, heldItem))
 			return false;
 
-		IFluidHandler capability = world.getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+		Storage<FluidVariant> capability = TransferUtil.getFluidStorage(world, be.getBlockPos(), be, null);
 
 		if (capability == null)
 			return false;
 
-		for (int i = 0; i < capability.getTanks(); i++) {
-			FluidStack fluid = capability.getFluidInTank(i);
-			if (fluid.isEmpty())
+		for (StorageView<FluidVariant> fluid : capability) {
+			if (fluid.isResourceBlank() || fluid.getAmount() <= 0)
 				continue;
-			int requiredAmountForItem = GenericItemFilling.getRequiredAmountForItem(world, heldItem, fluid.copy());
+			long requiredAmountForItem = GenericItemFilling.getRequiredAmountForItem(world, heldItem, new FluidStack(fluid));
 			if (requiredAmountForItem == -1)
 				continue;
 			if (requiredAmountForItem > fluid.getAmount())
@@ -175,11 +192,11 @@ public class FluidHelper {
 
 			if (player.isCreative() || be instanceof CreativeFluidTankBlockEntity)
 				heldItem = heldItem.copy();
-			ItemStack out = GenericItemFilling.fillItem(world, requiredAmountForItem, heldItem, fluid.copy());
+			ItemStack out = GenericItemFilling.fillItem(world, requiredAmountForItem, heldItem, new FluidStack(fluid));
 
-			FluidStack copy = fluid.copy();
+			FluidStack copy = new FluidStack(fluid);
 			copy.setAmount(requiredAmountForItem);
-			capability.drain(copy, FluidAction.EXECUTE);
+			CreateTransferUtil.extractFluid(fluid, copy, false);
 
 			if (!player.isCreative())
 				player.getInventory()
@@ -192,50 +209,47 @@ public class FluidHelper {
 	}
 
 	@Nullable
-	public static FluidExchange exchange(IFluidHandler fluidTank, IFluidHandlerItem fluidItem, FluidExchange preferred,
+	public static FluidExchange exchange(Storage<FluidVariant> fluidTank, Storage<FluidVariant> fluidItem, FluidExchange preferred,
 		int maxAmount) {
 		return exchange(fluidTank, fluidItem, preferred, true, maxAmount);
 	}
 
 	@Nullable
-	public static FluidExchange exchangeAll(IFluidHandler fluidTank, IFluidHandlerItem fluidItem,
+	public static FluidExchange exchangeAll(Storage<FluidVariant> fluidTank, Storage<FluidVariant> fluidItem,
 		FluidExchange preferred) {
 		return exchange(fluidTank, fluidItem, preferred, false, Integer.MAX_VALUE);
 	}
 
 	@Nullable
-	private static FluidExchange exchange(IFluidHandler fluidTank, IFluidHandlerItem fluidItem, FluidExchange preferred,
+	private static FluidExchange exchange(Storage<FluidVariant> fluidTank, Storage<FluidVariant> fluidItem, FluidExchange preferred,
 		boolean singleOp, int maxTransferAmountPerTank) {
 
 		// Locks in the transfer direction of this operation
 		FluidExchange lockedExchange = null;
 
-		for (int tankSlot = 0; tankSlot < fluidTank.getTanks(); tankSlot++) {
-			for (int slot = 0; slot < fluidItem.getTanks(); slot++) {
+		for (StorageView<FluidVariant> fluidInTank : fluidTank) {
+			for (StorageView<FluidVariant> fluidInItem : fluidItem) {
+				long tankCapacity = fluidInTank.getCapacity() - fluidInTank.getAmount();
+				boolean tankEmpty = fluidInTank.isResourceBlank() || fluidInTank.getAmount() <= 0;
 
-				FluidStack fluidInTank = fluidTank.getFluidInTank(tankSlot);
-				int tankCapacity = fluidTank.getTankCapacity(tankSlot) - fluidInTank.getAmount();
-				boolean tankEmpty = fluidInTank.isEmpty();
-
-				FluidStack fluidInItem = fluidItem.getFluidInTank(tankSlot);
-				int itemCapacity = fluidItem.getTankCapacity(tankSlot) - fluidInItem.getAmount();
-				boolean itemEmpty = fluidInItem.isEmpty();
+				long itemCapacity = fluidInItem.getCapacity() - fluidInItem.getAmount();
+				boolean itemEmpty = fluidInItem.isResourceBlank() || fluidInItem.getAmount() <= 0;
 
 				boolean undecided = lockedExchange == null;
 				boolean canMoveToTank = (undecided || lockedExchange == FluidExchange.ITEM_TO_TANK) && tankCapacity > 0;
 				boolean canMoveToItem = (undecided || lockedExchange == FluidExchange.TANK_TO_ITEM) && itemCapacity > 0;
 
 				// Incompatible Liquids
-				if (!tankEmpty && !itemEmpty && !FluidStack.isSameFluidSameComponents(fluidInItem, fluidInTank))
+				if (!tankEmpty && !itemEmpty && !FluidStack.isSameFluidSameComponents(new FluidStack(fluidInItem), new FluidStack(fluidInTank)))
 					continue;
 
 				// Transfer liquid to tank
 				if (((tankEmpty || itemCapacity <= 0) && canMoveToTank)
 					|| undecided && preferred == FluidExchange.ITEM_TO_TANK) {
 
-					int amount = fluidTank.fill(
-						fluidItem.drain(Math.min(maxTransferAmountPerTank, tankCapacity), FluidAction.EXECUTE),
-						FluidAction.EXECUTE);
+					long amount = CreateTransferUtil.insertFluid(fluidTank,
+						CreateTransferUtil.extractAnyFluid(fluidItem, Math.min(maxTransferAmountPerTank, tankCapacity), false),
+						false);
 					if (amount > 0) {
 						lockedExchange = FluidExchange.ITEM_TO_TANK;
 						if (singleOp)
@@ -248,9 +262,9 @@ public class FluidHelper {
 				if (((itemEmpty || tankCapacity <= 0) && canMoveToItem)
 					|| undecided && preferred == FluidExchange.TANK_TO_ITEM) {
 
-					int amount = fluidItem.fill(
-						fluidTank.drain(Math.min(maxTransferAmountPerTank, itemCapacity), FluidAction.EXECUTE),
-						FluidAction.EXECUTE);
+					long amount = CreateTransferUtil.insertFluid(fluidItem,
+						CreateTransferUtil.extractAnyFluid(fluidTank, Math.min(maxTransferAmountPerTank, itemCapacity), false),
+						false);
 					if (amount > 0) {
 						lockedExchange = FluidExchange.TANK_TO_ITEM;
 						if (singleOp)

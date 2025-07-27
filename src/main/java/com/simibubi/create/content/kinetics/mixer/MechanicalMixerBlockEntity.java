@@ -19,9 +19,13 @@ import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTank
 import com.simibubi.create.foundation.item.SmartInventory;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.math.VecHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.HolderLookup;
@@ -42,10 +46,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class MechanicalMixerBlockEntity extends BasinOperatingBlockEntity {
 
@@ -184,7 +186,7 @@ public class MechanicalMixerBlockEntity extends BasinOperatingBlockEntity {
 
 		for (SmartInventory inv : basin.get()
 			.getInvs()) {
-			for (int slot = 0; slot < inv.getSlots(); slot++) {
+			for (int slot = 0; slot < inv.getSlotCount(); slot++) {
 				ItemStack stackInSlot = inv.getItem(slot);
 				if (stackInSlot.isEmpty())
 					continue;
@@ -231,16 +233,15 @@ public class MechanicalMixerBlockEntity extends BasinOperatingBlockEntity {
 		if (basin.isEmpty())
 			return matchingRecipes;
 
-		IItemHandler availableItems = level.getCapability(Capabilities.ItemHandler.BLOCK, basinBlockEntity.getBlockPos(), null);
+		Storage<ItemVariant> availableItems = TransferUtil.getItemStorage(level, basinBlockEntity.getBlockPos(), basinBlockEntity, null);
 		if (availableItems == null)
 			return matchingRecipes;
 
-		for (int i = 0; i < availableItems.getSlots(); i++) {
-			ItemStack stack = availableItems.getStackInSlot(i);
-			if (stack.isEmpty())
+		for (StorageView<ItemVariant> view : availableItems) {
+			if (view.isResourceBlank() || view.getAmount() <= 0)
 				continue;
 
-			List<MixingRecipe> list = PotionMixingRecipes.sortRecipesByItem(level).get(stack.getItem());
+			List<MixingRecipe> list = PotionMixingRecipes.sortRecipesByItem(level).get(view.getResource().getItem());
 			if (list == null)
 				continue;
 			for (MixingRecipe mixingRecipe : list)
@@ -300,7 +301,7 @@ public class MechanicalMixerBlockEntity extends BasinOperatingBlockEntity {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void tickAudio() {
 		super.tickAudio();
 

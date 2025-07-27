@@ -1,5 +1,6 @@
 package com.simibubi.create.foundation.events;
 
+import com.mojang.brigadier.CommandDispatcher;
 import com.simibubi.create.AllMapDecorationTypes;
 import com.simibubi.create.Create;
 import com.simibubi.create.compat.trainmap.TrainMapSync;
@@ -59,7 +60,30 @@ import com.simibubi.create.foundation.utility.ServerSpeedProvider;
 import com.simibubi.create.foundation.utility.TickBasedCache;
 import com.simibubi.create.infrastructure.command.AllCommands;
 
+import io.github.fabricators_of_create.porting_lib.conditions.events.AddReloadListenersEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityEvents.EnteringSection;
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityJoinLevelEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityLeaveLevelEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.AttackEntityEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerEvents;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerEvents.PlayerLoggedInEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerEvents.PlayerLoggedOutEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerEvents.StartTracking;
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.EntityTickEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.EntityTickEvent.Pre;
+import io.github.fabricators_of_create.porting_lib.event.common.AddPackFindersEvent;
+import io.github.fabricators_of_create.porting_lib.gui.map.MapDecorationRendererManager;
+import io.github.fabricators_of_create.porting_lib.level.events.LevelEvent;
+import io.github.fabricators_of_create.porting_lib.level.events.LevelEvent.Load;
+import io.github.fabricators_of_create.porting_lib.level.events.LevelEvent.Unload;
 import net.createmod.catnip.data.WorldAttached;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientChunkEvents;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.repository.Pack;
@@ -69,62 +93,60 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.chunk.LevelChunk;
 
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.gui.map.RegisterMapDecorationRenderersEvent;
-import net.neoforged.neoforge.event.AddPackFindersEvent;
-import net.neoforged.neoforge.event.AddReloadListenerEvent;
-import net.neoforged.neoforge.event.RegisterCommandsEvent;
-import net.neoforged.neoforge.event.entity.EntityEvent;
-import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import net.neoforged.neoforge.event.entity.EntityLeaveLevelEvent;
-import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
-import net.neoforged.neoforge.event.level.ChunkEvent;
-import net.neoforged.neoforge.event.level.LevelEvent;
-import net.neoforged.neoforge.event.server.ServerStoppingEvent;
-import net.neoforged.neoforge.event.tick.EntityTickEvent;
-
-@EventBusSubscriber
 public class CommonEvents {
+	public static void init() {
+		ServerTickEvents.END_SERVER_TICK.register(CommonEvents::onServerTick);
+		ServerChunkEvents.CHUNK_UNLOAD.register((world, chunk) -> onChunkUnloaded(chunk));
+		ClientChunkEvents.CHUNK_UNLOAD.register((world, chunk) -> onChunkUnloaded(chunk));
+		PlayerLoggedInEvent.EVENT.register(CommonEvents::playerLoggedIn);
+		PlayerLoggedOutEvent.EVENT.register(CommonEvents::playerLoggedOut);
+		ServerTickEvents.END_WORLD_TICK.register(CommonEvents::onServerWorldTick);
+		Pre.EVENT.register(CommonEvents::onEntityTick);
+		EntityJoinLevelEvent.EVENT.register(CommonEvents::onEntityAdded);
+		AttackEntityEvent.EVENT.register(CommonEvents::onEntityAttackedByPlayer);
+		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
+			registerCommands(dispatcher);
+		});
+		EnteringSection.EVENT.register(CommonEvents::onEntityEnterSection);
+		AddReloadListenersEvent.EVENT.register(CommonEvents::addReloadListeners);
+		ServerLifecycleEvents.SERVER_STOPPING.register(server -> serverStopping());
+		Load.EVENT.register(CommonEvents::onLoadWorld);
+		Unload.EVENT.register(CommonEvents::onUnloadWorld);
+		EntityJoinLevelEvent.EVENT.register(CommonEvents::attachData);
+		EntityLeaveLevelEvent.EVENT.register(CommonEvents::onEntityLeaveLevel);
+		StartTracking.EVENT.register(CommonEvents::startTracking);
+		AddPackFindersEvent.EVENT.register(ModBusEvents::addPackFinders);
+		ModBusEvents.onRegisterMapDecorationRenderers();
+	}
 
-	@SubscribeEvent
-	public static void onServerTick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event) {
+	public static void onServerTick(MinecraftServer server) {
 		Create.SCHEMATIC_RECEIVER.tick();
 		Create.LAGGER.tick();
 		ServerSpeedProvider.serverTick();
 		Create.RAILWAYS.sync.serverTick();
-		TrainMapSync.serverTick(event);
+		TrainMapSync.serverTick(server);
 		ServerChainConveyorHandler.tick();
 		TickBasedCache.tick();
 	}
 
-	@SubscribeEvent
-	public static void onChunkUnloaded(ChunkEvent.Unload event) {
-		CapabilityMinecartController.onChunkUnloaded(event);
+	public static void onChunkUnloaded(LevelChunk chunk) {
+		CapabilityMinecartController.onChunkUnloaded(chunk.getLevel(), chunk);
 	}
 
-	@SubscribeEvent
 	public static void playerLoggedIn(PlayerLoggedInEvent event) {
 		Player player = event.getEntity();
 		ToolboxHandler.playerLogin(player);
 		Create.RAILWAYS.playerLogin(player);
 	}
 
-	@SubscribeEvent
 	public static void playerLoggedOut(PlayerLoggedOutEvent event) {
 		Player player = event.getEntity();
 		Create.RAILWAYS.playerLogout(player);
 	}
 
-	@SubscribeEvent
-	public static void onServerWorldTick(net.neoforged.neoforge.event.tick.LevelTickEvent.Post event) {
-		Level world = event.getLevel();
-		if (world.isClientSide())
-			return;
+	public static void onServerWorldTick(Level world) {
 		ContraptionHandler.tick(world);
 		CapabilityMinecartController.tick(world);
 		CouplingPhysics.tick(world);
@@ -134,7 +156,6 @@ public class CommonEvents {
 		Create.LOGISTICS.tick(world);
 	}
 
-	@SubscribeEvent
 	public static void onEntityTick(EntityTickEvent.Pre event) {
 		CapabilityMinecartController.entityTick(event);
 
@@ -146,40 +167,33 @@ public class CommonEvents {
 		}
 	}
 
-	@SubscribeEvent
 	public static void onEntityAdded(EntityJoinLevelEvent event) {
 		Entity entity = event.getEntity();
 		Level world = event.getLevel();
 		ContraptionHandler.addSpawnedContraptionsToCollisionList(entity, world);
 	}
 
-	@SubscribeEvent
 	public static void onEntityAttackedByPlayer(AttackEntityEvent event) {
 		WrenchItem.wrenchInstaKillsMinecarts(event);
 	}
 
-	@SubscribeEvent
-	public static void registerCommands(RegisterCommandsEvent event) {
-		AllCommands.register(event.getDispatcher());
+	public static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
+		AllCommands.register(dispatcher);
 	}
 
-	@SubscribeEvent
-	public static void onEntityEnterSection(EntityEvent.EnteringSection event) {
+	public static void onEntityEnterSection(EnteringSection event) {
 		CarriageEntityHandler.onEntityEnterSection(event);
 	}
 
-	@SubscribeEvent
-	public static void addReloadListeners(AddReloadListenerEvent event) {
+	public static void addReloadListeners(AddReloadListenersEvent event) {
 		event.addListener(RecipeFinder.LISTENER);
 		event.addListener(BeltHelper.LISTENER);
 	}
 
-	@SubscribeEvent
-	public static void serverStopping(ServerStoppingEvent event) {
+	public static void serverStopping() {
 		Create.SCHEMATIC_RECEIVER.shutdown();
 	}
 
-	@SubscribeEvent
 	public static void onLoadWorld(LevelEvent.Load event) {
 		LevelAccessor world = event.getLevel();
 		Create.REDSTONE_LINK_NETWORK_HANDLER.onLoadWorld(world);
@@ -188,7 +202,6 @@ public class CommonEvents {
 		Create.LOGISTICS.levelLoaded(world);
 	}
 
-	@SubscribeEvent
 	public static void onUnloadWorld(LevelEvent.Unload event) {
 		LevelAccessor world = event.getLevel();
 		Create.REDSTONE_LINK_NETWORK_HANDLER.onUnloadWorld(world);
@@ -197,20 +210,17 @@ public class CommonEvents {
 		CobbleGenOptimisation.invalidateWorld(world);
 	}
 
-	@SubscribeEvent
-	public static void attachData(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event) {
+	public static void attachData(EntityJoinLevelEvent event) {
 		CapabilityMinecartController.attach(event);
 	}
 
-	@net.neoforged.bus.api.SubscribeEvent
 	public static void onEntityLeaveLevel(EntityLeaveLevelEvent event) {
 		if (!event.getEntity()
 			.isAlive())
 			CapabilityMinecartController.onEntityDeath(event);
 	}
 
-	@SubscribeEvent
-	public static void startTracking(PlayerEvent.StartTracking event) {
+	public static void startTracking(PlayerEvents.StartTracking event) {
 		CapabilityMinecartController.startTracking(event);
 	}
 
@@ -221,9 +231,7 @@ public class CommonEvents {
 		}
 	}
 
-	@EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
 	public static class ModBusEvents {
-		@SubscribeEvent
 		public static void addPackFinders(AddPackFindersEvent event) {
 			// Uncomment and rename pack to add built in resource packs
 //			if (event.getPackType() == PackType.CLIENT_RESOURCES) {
@@ -251,47 +259,47 @@ public class CommonEvents {
 			}
 		}
 
-		@net.neoforged.bus.api.SubscribeEvent
-		public static void onRegisterMapDecorationRenderers(RegisterMapDecorationRenderersEvent event) {
-			event.register(AllMapDecorationTypes.STATION_MAP_DECORATION.value(), new StationMapDecorationRenderer());
+		//@net.neoforged.bus.api.SubscribeEvent
+		public static void onRegisterMapDecorationRenderers() {
+			MapDecorationRendererManager.register(AllMapDecorationTypes.STATION_MAP_DECORATION.value(), new StationMapDecorationRenderer());
 		}
 
-		@net.neoforged.bus.api.SubscribeEvent
-		public static void registerCapabilities(net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent event) {
-			ChuteBlockEntity.registerCapabilities(event);
-			SmartChuteBlockEntity.registerCapabilities(event);
-			BeltBlockEntity.registerCapabilities(event);
-			BasinBlockEntity.registerCapabilities(event);
-			BeltTunnelBlockEntity.registerCapabilities(event);
-			BrassTunnelBlockEntity.registerCapabilities(event);
-			CreativeCrateBlockEntity.registerCapabilities(event);
-			CrushingWheelControllerBlockEntity.registerCapabilities(event);
-			ToolboxBlockEntity.registerCapabilities(event);
-			DeployerBlockEntity.registerCapabilities(event);
-			DepotBlockEntity.registerCapabilities(event);
-			PortableFluidInterfaceBlockEntity.registerCapabilities(event);
-			SpoutBlockEntity.registerCapabilities(event);
-			PortableItemInterfaceBlockEntity.registerCapabilities(event);
-			SawBlockEntity.registerCapabilities(event);
-			EjectorBlockEntity.registerCapabilities(event);
-			FluidTankBlockEntity.registerCapabilities(event);
-			CreativeFluidTankBlockEntity.registerCapabilities(event);
-			HosePulleyBlockEntity.registerCapabilities(event);
-			ItemDrainBlockEntity.registerCapabilities(event);
-			ItemVaultBlockEntity.registerCapabilities(event);
-			MechanicalCrafterBlockEntity.registerCapabilities(event);
-			MillstoneBlockEntity.registerCapabilities(event);
-			StressGaugeBlockEntity.registerCapabilities(event);
-			SpeedGaugeBlockEntity.registerCapabilities(event);
-			StationBlockEntity.registerCapabilities(event);
-			SpeedControllerBlockEntity.registerCapabilities(event);
-			SequencedGearshiftBlockEntity.registerCapabilities(event);
-			DisplayLinkBlockEntity.registerCapabilities(event);
-			StockTickerBlockEntity.registerCapabilities(event);
-			PackagerBlockEntity.registerCapabilities(event);
-			RepackagerBlockEntity.registerCapabilities(event);
-			PostboxBlockEntity.registerCapabilities(event);
-			FrogportBlockEntity.registerCapabilities(event);
+		//@net.neoforged.bus.api.SubscribeEvent
+		public static void registerCapabilities() {
+			ChuteBlockEntity.registerCapabilities();
+			SmartChuteBlockEntity.registerCapabilities();
+			BeltBlockEntity.registerCapabilities();
+			BasinBlockEntity.registerCapabilities();
+			BeltTunnelBlockEntity.registerCapabilities();
+			BrassTunnelBlockEntity.registerCapabilities();
+			CreativeCrateBlockEntity.registerCapabilities();
+			CrushingWheelControllerBlockEntity.registerCapabilities();
+			ToolboxBlockEntity.registerCapabilities();
+			DeployerBlockEntity.registerCapabilities();
+			DepotBlockEntity.registerCapabilities();
+			PortableFluidInterfaceBlockEntity.registerCapabilities();
+			SpoutBlockEntity.registerCapabilities();
+			PortableItemInterfaceBlockEntity.registerCapabilities();
+			SawBlockEntity.registerCapabilities();
+			EjectorBlockEntity.registerCapabilities();
+			FluidTankBlockEntity.registerCapabilities();
+			CreativeFluidTankBlockEntity.registerCapabilities();
+			HosePulleyBlockEntity.registerCapabilities();
+			ItemDrainBlockEntity.registerCapabilities();
+			ItemVaultBlockEntity.registerCapabilities();
+			MechanicalCrafterBlockEntity.registerCapabilities();
+			MillstoneBlockEntity.registerCapabilities();
+			StressGaugeBlockEntity.registerCapabilities();
+			SpeedGaugeBlockEntity.registerCapabilities();
+			StationBlockEntity.registerCapabilities();
+			SpeedControllerBlockEntity.registerCapabilities();
+			SequencedGearshiftBlockEntity.registerCapabilities();
+			DisplayLinkBlockEntity.registerCapabilities();
+			StockTickerBlockEntity.registerCapabilities();
+			PackagerBlockEntity.registerCapabilities();
+			RepackagerBlockEntity.registerCapabilities();
+			PostboxBlockEntity.registerCapabilities();
+			FrogportBlockEntity.registerCapabilities();
 		}
 	}
 }

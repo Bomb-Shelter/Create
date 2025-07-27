@@ -11,6 +11,8 @@ import java.util.stream.Stream;
 
 import javax.annotation.Nullable;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.google.common.cache.Cache;
@@ -33,7 +35,6 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class LogisticallyLinkedBehaviour extends BlockEntityBehaviour {
 
@@ -191,7 +192,7 @@ public class LogisticallyLinkedBehaviour extends BlockEntityBehaviour {
 		InventorySummary summary = LogisticsManager.ACCURATE_SUMMARIES.getIfPresent(freqId);
 		if (summary == null)
 			return;
-		for (int i = 0; i < packageContents.getSlots(); i++) {
+		for (int i = 0; i < packageContents.getSlotCount(); i++) {
 			ItemStack orderedStack = packageContents.getStackInSlot(i);
 			if (orderedStack.isEmpty())
 				continue;

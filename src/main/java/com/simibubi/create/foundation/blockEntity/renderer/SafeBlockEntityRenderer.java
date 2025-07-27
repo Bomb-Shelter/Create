@@ -57,11 +57,11 @@ public abstract class SafeBlockEntityRenderer<T extends BlockEntity> implements 
 		return !frustum.isVisible(itemBB);
 	}
 
-	@Override
+	/*@Override
 	public @NotNull AABB getRenderBoundingBox(@NotNull T blockEntity) {
 		if (blockEntity instanceof CachedRenderBBBlockEntity cbe)
 			return cbe.getRenderBoundingBox();
 
 		return BlockEntityRenderer.super.getRenderBoundingBox(blockEntity);
-	}
+	}*/
 }

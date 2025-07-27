@@ -55,7 +55,7 @@ public class SawBlock extends DirectionalAxisKineticBlock implements IBE<SawBloc
 	private static final int placementHelperId = PlacementHelpers.register(new PlacementHelper());
 
 	public SawBlock(Properties properties) {
-		super(properties);
+		super(properties.pushReaction(PushReaction.NORMAL));
 	}
 
 	@Override
@@ -137,7 +137,7 @@ public class SawBlock extends DirectionalAxisKineticBlock implements IBE<SawBloc
 			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 
 		return onBlockEntityUseItemOn(level, pos, be -> {
-			for (int i = 0; i < be.inventory.getSlots(); i++) {
+			for (int i = 0; i < be.inventory.getSlotCount(); i++) {
 				ItemStack heldItemStack = be.inventory.getStackInSlot(i);
 				if (!level.isClientSide && !heldItemStack.isEmpty())
 					player.getInventory()
@@ -177,11 +177,6 @@ public class SawBlock extends DirectionalAxisKineticBlock implements IBE<SawBloc
 				return;
 			be.insertItem((ItemEntity) entityIn);
 		});
-	}
-
-	@Override
-	public PushReaction getPistonPushReaction(BlockState state) {
-		return PushReaction.NORMAL;
 	}
 
 	public static boolean isHorizontal(BlockState state) {

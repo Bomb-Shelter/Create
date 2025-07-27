@@ -23,8 +23,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.BlockDestructionProgress;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
-
 @Mixin(LevelRenderer.class)
 public class LevelRendererMixin {
 	@Shadow
@@ -37,8 +35,7 @@ public class LevelRendererMixin {
 	@Inject(method = "destroyBlockProgress(ILnet/minecraft/core/BlockPos;I)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/server/level/BlockDestructionProgress;updateTick(I)V", shift = Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD)
 	private void create$onDestroyBlockProgress(int breakerId, BlockPos pos, int progress, CallbackInfo ci, BlockDestructionProgress progressObj) {
 		BlockState state = level.getBlockState(pos);
-		IClientBlockExtensions properties = IClientBlockExtensions.of(state);
-		if (properties instanceof MultiPosDestructionHandler handler) {
+		if (state.getBlock() instanceof MultiPosDestructionHandler handler) {
 			Set<BlockPos> extraPositions = handler.getExtraPositions(level, pos, state, progress);
 			if (extraPositions != null) {
 				extraPositions.remove(pos);

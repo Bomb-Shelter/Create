@@ -54,7 +54,7 @@ public class DrillBlock extends DirectionalKineticBlock implements IBE<DrillBloc
 	private static final int placementHelperId = PlacementHelpers.register(new PlacementHelper());
 
 	public DrillBlock(Properties properties) {
-		super(properties);
+		super(properties.pushReaction(PushReaction.NORMAL));
 		registerDefaultState(super.defaultBlockState().setValue(BlockStateProperties.WATERLOGGED, false));
 	}
 
@@ -93,11 +93,6 @@ public class DrillBlock extends DirectionalKineticBlock implements IBE<DrillBloc
 	public boolean hasShaftTowards(LevelReader world, BlockPos pos, BlockState state, Direction face) {
 		return face == state.getValue(FACING)
 			.getOpposite();
-	}
-
-	@Override
-	public PushReaction getPistonPushReaction(BlockState state) {
-		return PushReaction.NORMAL;
 	}
 
 	@Override

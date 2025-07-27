@@ -35,8 +35,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class GlobalRailwayManager {
 
@@ -289,7 +289,7 @@ public class GlobalRailwayManager {
 		return m.getValue();
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private void clientManager(MutableObject<GlobalRailwayManager> m) {
 		m.setValue(CreateClient.RAILWAYS);
 	}

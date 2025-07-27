@@ -2,10 +2,12 @@ package com.simibubi.create.content.fluids.pipes;
 
 import java.util.function.Consumer;
 
-import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
-import net.neoforged.neoforge.fluids.FluidStack;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
-import net.neoforged.neoforge.fluids.FluidType;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidType;
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
+
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -93,13 +95,12 @@ public class GlassPipeVisual extends AbstractBlockEntityVisual<StraightPipeBlock
 			}
 
 			Fluid fluid = fluidStack.getFluid();
-			IClientFluidTypeExtensions clientFluid = IClientFluidTypeExtensions.of(fluid);
+			FluidRenderHandler clientFluid = FluidRenderHandlerRegistry.INSTANCE.get(fluid);
 			FluidType fluidAttributes = fluid.getFluidType();
-			var atlas = Minecraft.getInstance()
-				.getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
-			TextureAtlasSprite flowTexture = atlas.apply(clientFluid.getFlowingTexture(fluidStack));
+			TextureAtlasSprite[] sprites = clientFluid.getFluidSprites(level, pos, fluid.defaultFluidState());
+			TextureAtlasSprite flowTexture = sprites[1];
 
-			int color = clientFluid.getTintColor(fluidStack);
+			int color = clientFluid.getFluidColor(level, pos, fluid.defaultFluidState());
 			int blockLightIn = (light >> 4) & 0xF;
 			int luminosity = Math.max(blockLightIn, fluidAttributes.getLightLevel(fluidStack));
 			int light = (this.light & 0xF00000) | luminosity << 4;
@@ -129,7 +130,7 @@ public class GlassPipeVisual extends AbstractBlockEntityVisual<StraightPipeBlock
 			fluidInstance.setChanged();
 
 			if (progress != 1) {
-				TextureAtlasSprite stillTexture = atlas.apply(clientFluid.getStillTexture(fluidStack));
+				TextureAtlasSprite stillTexture = sprites[0];
 				surface.get(stillTexture)
 					.setIdentityTransform()
 					.translate(getVisualPosition())

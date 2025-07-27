@@ -1,0 +1,10 @@
+{
+  "values": [
+    "minecraft:bamboo",
+    "minecraft:sugar_cane",
+    {
+      "id": "#minecraft:saplings",
+      "required": false
+    }
+  ]
+}

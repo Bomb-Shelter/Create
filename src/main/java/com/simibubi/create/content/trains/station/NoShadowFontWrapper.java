@@ -52,10 +52,10 @@ public class NoShadowFontWrapper extends Font {
 			pPackedLightCoords, pBidirectional);
 	}
 
-	@Override
+	/*@Override
 	public FormattedText ellipsize(FormattedText text, int maxWidth) {
 		return wrapped.ellipsize(text, maxWidth);
-	}
+	}*/
 
 	@Override
 	public int wordWrapHeight(FormattedText pText, int pMaxWidth) {

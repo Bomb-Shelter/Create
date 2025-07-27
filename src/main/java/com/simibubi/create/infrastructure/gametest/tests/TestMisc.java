@@ -12,6 +12,7 @@ import com.simibubi.create.content.schematics.cannon.SchematicannonBlockEntity.S
 import com.simibubi.create.infrastructure.gametest.CreateGameTestHelper;
 import com.simibubi.create.infrastructure.gametest.GameTestGroup;
 
+import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.nbt.NbtUtils;
@@ -28,7 +29,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.RedstoneLampBlock;
 
 @GameTestGroup(path = "misc")
-public class TestMisc {
+public class TestMisc implements FabricGameTest {
 	@GameTest(template = "schematicannon", timeoutTicks = FIFTEEN_SECONDS)
 	public static void schematicannon(CreateGameTestHelper helper) {
 		// load the structure

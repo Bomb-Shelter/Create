@@ -9,15 +9,14 @@ import com.simibubi.create.foundation.mixin.accessor.ItemModelGeneratorsAccessor
 import com.tterrag.registrate.providers.DataGenContext;
 import com.tterrag.registrate.providers.RegistrateItemModelProvider;
 
+import io.github.fabricators_of_create.porting_lib.models.generators.ItemModelBuilder;
+import io.github.fabricators_of_create.porting_lib.models.generators.ModelBuilder;
 import net.minecraft.data.models.ItemModelGenerators;
 import net.minecraft.data.models.model.ModelLocationUtils;
 import net.minecraft.data.models.model.TextureMapping;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
-
-import net.neoforged.neoforge.client.model.generators.ItemModelBuilder;
-import net.neoforged.neoforge.client.model.generators.ModelBuilder;
 
 public class TrimmableArmorModelGenerator {
 	public static final VarHandle TEXTURES_HANDLE;

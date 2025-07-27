@@ -8,6 +8,10 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.AllShapes;
 import com.simibubi.create.foundation.utility.BlockHelper;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -23,13 +27,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-
 @ParametersAreNonnullByDefault
-@EventBusSubscriber
 public class ValveHandleBlock extends HandCrankBlock {
 
 	public final DyeColor color;
@@ -52,7 +50,7 @@ public class ValveHandleBlock extends HandCrankBlock {
 		return AllShapes.VALVE_HANDLE.get(pState.getValue(FACING));
 	}
 
-	@SubscribeEvent(priority = EventPriority.LOW)
+	//@SubscribeEvent(priority = EventPriority.LOW)
 	public static void onBlockActivated(PlayerInteractEvent.RightClickBlock event) {
 		BlockPos pos = event.getPos();
 		Level level = event.getLevel();
@@ -72,6 +70,10 @@ public class ValveHandleBlock extends HandCrankBlock {
 		}
 	}
 
+	static {
+		RightClickBlock.EVENT.register(ValveHandleBlock::onBlockActivated);
+	}
+
 	@Override
 	public void onRemove(BlockState pState, Level pLevel, BlockPos pPos, BlockState pNewState, boolean pIsMoving) {
 		if (!(pNewState.getBlock() instanceof ValveHandleBlock))
@@ -80,7 +82,7 @@ public class ValveHandleBlock extends HandCrankBlock {
 
 	public boolean clicked(Level level, BlockPos pos, BlockState blockState, Player player, InteractionHand hand) {
 		ItemStack heldItem = player.getItemInHand(hand);
-		DyeColor color = DyeColor.getColor(heldItem);
+		DyeColor color = CreateFabricUtil.getColor(heldItem);
 
 		if (color != null && color != this.color) {
 			if (!level.isClientSide)

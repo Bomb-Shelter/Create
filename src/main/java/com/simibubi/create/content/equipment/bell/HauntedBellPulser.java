@@ -3,6 +3,9 @@ package com.simibubi.create.content.equipment.bell;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.simibubi.create.AllBlocks;
+
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.PlayerTickEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.PlayerTickEvent.Post;
 import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.data.IntAttached;
 import net.minecraft.core.BlockPos;
@@ -10,15 +13,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.ChunkPos;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-@EventBusSubscriber
 public class HauntedBellPulser {
 
 	public static final int DISTANCE = 3;
@@ -29,7 +28,10 @@ public class HauntedBellPulser {
 		.expireAfterAccess(250, TimeUnit.MILLISECONDS)
 		.build();
 
-	@SubscribeEvent
+	public static void init() {
+		Post.EVENT.register(HauntedBellPulser::hauntedBellCreatesPulse);
+	}
+
 	public static void hauntedBellCreatesPulse(PlayerTickEvent.Post event) {
 		Player player = event.getEntity();
 

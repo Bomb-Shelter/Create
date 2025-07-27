@@ -21,7 +21,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.common.NeoForge;
 
 public class TrackPropagator {
 
@@ -141,7 +140,7 @@ public class TrackPropagator {
 				if (graph == null)
 					graph = other;
 				else {
-					NeoForge.EVENT_BUS.post(new TrackGraphMergeEvent(other, graph));
+					new TrackGraphMergeEvent(other, graph).sendEvent();
 					other.transferAll(graph);
 					manager.removeGraphAndGroup(other);
 					sync.graphRemoved(other);

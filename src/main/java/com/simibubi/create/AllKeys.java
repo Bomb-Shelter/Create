@@ -2,6 +2,10 @@ package com.simibubi.create;
 
 import java.util.function.BiConsumer;
 
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+
+import net.fabricmc.fabric.mixin.client.keybinding.KeyBindingAccessor;
+
 import org.lwjgl.glfw.GLFW;
 
 import com.mojang.blaze3d.platform.InputConstants;
@@ -10,12 +14,8 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.fabricmc.api.EnvType;
 
-@EventBusSubscriber(value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
 public enum AllKeys {
 
 	TOOL_MENU("toolmenu", GLFW.GLFW_KEY_LEFT_ALT, "Focus Schematic Overlay"),
@@ -48,14 +48,13 @@ public enum AllKeys {
 				consumer.accept(key.description, key.translation);
 	}
 
-	@SubscribeEvent
-	public static void register(RegisterKeyMappingsEvent event) {
+	public static void register() {
 		for (AllKeys key : values()) {
 			key.keybind = new KeyMapping(key.description, key.key, Create.NAME);
 			if (!key.modifiable)
 				continue;
 
-			event.register(key.keybind);
+			KeyBindingHelper.registerKeyBinding(key.keybind);
 		}
 	}
 
@@ -76,7 +75,7 @@ public enum AllKeys {
 	}
 
 	public int getBoundCode() {
-		return keybind.getKey()
+		return ((KeyBindingAccessor) keybind).fabric_getBoundKey()
 			.getValue();
 	}
 

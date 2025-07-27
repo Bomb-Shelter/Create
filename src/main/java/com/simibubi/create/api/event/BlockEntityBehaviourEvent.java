@@ -7,8 +7,10 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 
+import io.github.fabricators_of_create.porting_lib.core.event.BaseEvent;
+import net.fabricmc.fabric.api.event.Event;
+import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.world.level.block.entity.BlockEntityType;
-import net.neoforged.bus.api.Event;
 
 /**
  * Event that is fired just before a SmartBlockEntity is being deserialized<br>
@@ -32,7 +34,13 @@ import net.neoforged.bus.api.Event;
  * 		});
  * } <pre>
  */
-public class BlockEntityBehaviourEvent extends Event {
+public class BlockEntityBehaviourEvent extends BaseEvent {
+	public static final Event<BlockEntityBehaviourCallback> EVENT = EventFactory.createArrayBacked(BlockEntityBehaviourCallback.class, events -> event -> {
+		for (BlockEntityBehaviourCallback callback : events) {
+			callback.onBlockEntityBehaviour(event);
+		}
+	});
+
 	private final SmartBlockEntity smartBlockEntity;
 	private final Map<BehaviourType<?>, BlockEntityBehaviour> behaviours;
 
@@ -55,4 +63,13 @@ public class BlockEntityBehaviourEvent extends Event {
 		return behaviours.remove(type);
 	}
 
+	@Override
+	public void sendEvent() {
+		EVENT.invoker().onBlockEntityBehaviour(this);
+	}
+
+	@FunctionalInterface
+	public interface BlockEntityBehaviourCallback {
+		void onBlockEntityBehaviour(BlockEntityBehaviourEvent event);
+	}
 }

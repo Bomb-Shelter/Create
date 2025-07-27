@@ -12,7 +12,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.lighting.LevelLightEngine;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
-import net.neoforged.neoforge.client.model.data.ModelData;
+
+import org.jetbrains.annotations.Nullable;
 
 public class FilteredBlockAndTintGetter implements BlockAndTintGetter {
 
@@ -63,10 +64,10 @@ public class FilteredBlockAndTintGetter implements BlockAndTintGetter {
 	public int getBlockTint(BlockPos pBlockPos, ColorResolver pColorResolver) {
 		return wrapped.getBlockTint(pBlockPos, pColorResolver);
 	}
-	
+
 	@Override
-	public ModelData getModelData(BlockPos pPos) {
-		return filter.test(pPos) ? wrapped.getModelData(pPos) : ModelData.EMPTY;
+	public @Nullable Object getBlockEntityRenderData(BlockPos pos) {
+		return filter.test(pos) ? wrapped.getBlockEntityRenderData(pos) : null;
 	}
 
 }

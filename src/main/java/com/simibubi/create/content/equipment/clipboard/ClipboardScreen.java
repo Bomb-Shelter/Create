@@ -53,8 +53,8 @@ import net.minecraft.util.Mth;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class ClipboardScreen extends AbstractSimiScreen {
 
@@ -364,7 +364,7 @@ public class ClipboardScreen extends AbstractSimiScreen {
 	private void send() {
 		ClipboardEntry.saveAll(pages, item);
 		ClipboardOverrides.switchTo(ClipboardType.WRITTEN, item);
-		
+
 		if (pages.isEmpty()) {
 			item.remove(AllDataComponents.CLIPBOARD_PAGES);
 			item.remove(AllDataComponents.CLIPBOARD_PREVIOUSLY_OPENED_PAGE);
@@ -372,7 +372,7 @@ public class ClipboardScreen extends AbstractSimiScreen {
 			item.remove(AllDataComponents.CLIPBOARD_TYPE);
 			item.remove(AllDataComponents.CLIPBOARD_COPIED_VALUES);
 		}
-		
+
 		CatnipServices.NETWORK.sendToServer(new ClipboardEditPacket(targetSlot, item.getComponentsPatch(), targetedBlock));
 	}
 
@@ -548,7 +548,7 @@ public class ClipboardScreen extends AbstractSimiScreen {
 		if (!pIsEndOfText) {
 			graphics.fill(pCursorPos.x, pCursorPos.y - 1, pCursorPos.x + 1, pCursorPos.y + 9, -16777216);
 		} else {
-			graphics.drawString(font, "_", (float) pCursorPos.x, (float) pCursorPos.y, 0, false);
+			graphics.drawString(font, "_", pCursorPos.x, pCursorPos.y, 0, false);
 		}
 	}
 
@@ -798,7 +798,7 @@ public class ClipboardScreen extends AbstractSimiScreen {
 		return new Rect2i(i, k, j - i, l - k);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	static class DisplayCache {
 		static final DisplayCache EMPTY = new DisplayCache("", new Pos2i(0, 0), true, new int[] { 0 },
 			new LineInfo[] { new LineInfo(Style.EMPTY, "", 0, 0) }, new Rect2i[0]);
@@ -856,7 +856,7 @@ public class ClipboardScreen extends AbstractSimiScreen {
 		}
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	static class LineInfo {
 		final Style style;
 		final String contents;
@@ -874,7 +874,7 @@ public class ClipboardScreen extends AbstractSimiScreen {
 		}
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	static class Pos2i {
 		public final int x;
 		public final int y;

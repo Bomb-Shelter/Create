@@ -11,8 +11,10 @@ import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.WrenchableDirectionalBlock;
 import com.simibubi.create.foundation.utility.CreateLang;
 
-import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
-import net.neoforged.neoforge.common.util.FakePlayer;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.NeighborChangeListeningBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.WeakPowerCheckingBlock;
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import net.fabricmc.fabric.api.entity.FakePlayer;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -35,7 +37,7 @@ import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.BlockHitResult;
 
-public class PackagerBlock extends WrenchableDirectionalBlock implements IBE<PackagerBlockEntity>, IWrenchable {
+public class PackagerBlock extends WrenchableDirectionalBlock implements IBE<PackagerBlockEntity>, IWrenchable, NeighborChangeListeningBlock, WeakPowerCheckingBlock {
 
 	public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
 	public static final BooleanProperty LINKED = BooleanProperty.create("linked");
@@ -63,7 +65,7 @@ public class PackagerBlock extends WrenchableDirectionalBlock implements IBE<Pac
 					.relative(face));
 			if (be instanceof PackagerBlockEntity)
 				continue;
-			if (be != null && be.hasLevel() &&be.getLevel().getCapability(ItemHandler.BLOCK, be.getBlockPos(), null) != null) {
+			if (be != null && be.hasLevel() &&TransferUtil.getItemStorage(be.getLevel(), be.getBlockPos(), be, null) != null) {
 				preferredFacing = face.getOpposite();
 				break;
 			}
@@ -144,7 +146,7 @@ public class PackagerBlock extends WrenchableDirectionalBlock implements IBE<Pac
 
 	@Override
 	public void onNeighborChange(BlockState state, LevelReader level, BlockPos pos, BlockPos neighbor) {
-		super.onNeighborChange(state, level, pos, neighbor);
+		//NeighborChangeListeningBlock.super.onNeighborChange(state, level, pos, neighbor);
 		if (neighbor.relative(state.getOptionalValue(FACING)
 				.orElse(Direction.UP))
 			.equals(pos))

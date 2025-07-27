@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
+import io.github.fabricators_of_create.porting_lib.entity.IEntityWithComplexSpawn;
 
 import org.jetbrains.annotations.NotNull;
 

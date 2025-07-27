@@ -15,6 +15,9 @@ import com.simibubi.create.content.schematics.requirement.ItemRequirement;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement.ItemUseType;
 import com.simibubi.create.foundation.block.IBE;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.ConnectableRedstoneBlock;
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -48,7 +51,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class NixieTubeBlock extends DoubleFaceAttachedBlock
-	implements IBE<NixieTubeBlockEntity>, IWrenchable, SimpleWaterloggedBlock, SpecialBlockItemRequirement {
+	implements IBE<NixieTubeBlockEntity>, IWrenchable, SimpleWaterloggedBlock, SpecialBlockItemRequirement, ConnectableRedstoneBlock {
 
 	protected final DyeColor color;
 
@@ -78,7 +81,7 @@ public class NixieTubeBlock extends DoubleFaceAttachedBlock
 
 		boolean display =
 			stack.getItem() == Items.NAME_TAG && stack.has(DataComponents.CUSTOM_NAME) || AllBlocks.CLIPBOARD.isIn(stack);
-		DyeColor dye = DyeColor.getColor(stack);
+		DyeColor dye = CreateFabricUtil.getColor(stack);
 
 		if (!display && dye == null)
 			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
@@ -176,15 +179,6 @@ public class NixieTubeBlock extends DoubleFaceAttachedBlock
 		default:
 			return AllShapes.NIXIE_TUBE_WALL.get(facing);
 		}
-	}
-
-	@Override
-	public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos,
-									   Player player) {
-		if (color != DyeColor.ORANGE)
-			return AllBlocks.ORANGE_NIXIE_TUBE.get()
-				.getCloneItemStack(state, target, level, pos, player);
-		return super.getCloneItemStack(state, target, level, pos, player);
 	}
 
 	@Override

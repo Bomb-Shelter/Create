@@ -4,6 +4,9 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import com.simibubi.create.infrastructure.fabric.transfer.IInventoryStorage;
+import com.simibubi.create.infrastructure.fabric.transfer.InventoryStorage;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.simibubi.create.AllBlocks;
@@ -44,8 +47,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.items.wrapper.InvWrapper;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class FilteringBehaviour extends BlockEntityBehaviour implements ValueSettingsBehaviour {
 
@@ -290,7 +292,7 @@ public class FilteringBehaviour extends BlockEntityBehaviour implements ValueSet
 
 		if (getFilter(side).getItem() instanceof FilterItem) {
 			if (!player.isCreative() || ItemHelper
-				.extract(new InvWrapper(player.getInventory()),
+				.extract(InventoryStorage.of(player.getInventory(), null),
 					stack -> ItemStack.isSameItemSameComponents(stack, getFilter(side)), true)
 				.isEmpty())
 				player.getInventory()
@@ -379,11 +381,11 @@ public class FilteringBehaviour extends BlockEntityBehaviour implements ValueSet
 		ItemStack copied = ItemStack.parseOptional(registries, tag.getCompound("Filter"));
 
 		if (copied.getItem() instanceof FilterItem filterType && !player.isCreative()) {
-			InvWrapper inv = new InvWrapper(player.getInventory());
+			IInventoryStorage inv = InventoryStorage.of(player.getInventory(), null);
 
 			for (boolean preferStacksWithoutData : Iterate.trueAndFalse) {
 				if (refund.getItem() != filterType && ItemHelper
-					.extract(inv, stack -> stack.getItem() == filterType && preferStacksWithoutData == stack.isComponentsPatchEmpty(),
+					.extract(inv, stack -> stack.getItem() == filterType && preferStacksWithoutData == stack.getComponentsPatch().isEmpty(),
 						1, false)
 					.isEmpty())
 					continue;

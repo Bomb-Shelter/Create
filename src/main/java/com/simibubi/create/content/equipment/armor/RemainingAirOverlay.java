@@ -14,6 +14,7 @@ import net.minecraft.client.gui.LayeredDraw;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
@@ -32,13 +33,15 @@ public class RemainingAirOverlay implements LayeredDraw.Layer {
 			return;
 		if (player.isCreative())
 			return;
-		if (!player.getPersistentData()
+		if (!player.getCustomData()
 			.contains("VisualBacktankAir"))
 			return;
-		if (!player.canDrownInFluidType(player.getEyeInFluidType()) && !player.isInLava())
+		// Fabric TODO: this is NOT great tbh
+		//if (!player.canDrownInFluidType(player.getEyeInFluidType()) && !player.isInLava())
+		if (!player.isEyeInFluid(FluidTags.WATER) && !player.isInLava())
 			return;
 
-		int timeLeft = player.getPersistentData()
+		int timeLeft = player.getCustomData()
 			.getInt("VisualBacktankAir");
 
 		PoseStack poseStack = guiGraphics.pose();

@@ -29,7 +29,10 @@ import com.simibubi.create.content.logistics.tunnel.BrassTunnelBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.VersionedInventoryTrackerBehaviour;
 
+import io.github.fabricators_of_create.porting_lib.models.data.ModelData;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -48,10 +51,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.client.model.data.ModelData;
-import net.neoforged.neoforge.items.IItemHandler;
+import org.jetbrains.annotations.Nullable;
 
 public class BeltBlockEntity extends KineticBlockEntity {
 	public Map<Entity, TransportedEntityInfo> passengers;
@@ -64,7 +64,7 @@ public class BeltBlockEntity extends KineticBlockEntity {
 
 	protected BlockPos controller;
 	protected BeltInventory inventory;
-	protected IItemHandler itemHandler;
+	protected SlottedStackStorage itemHandler;
 	public VersionedInventoryTrackerBehaviour invVersionTracker;
 
 	public CompoundTag trackerUpdateTag;
@@ -81,18 +81,14 @@ public class BeltBlockEntity extends KineticBlockEntity {
 		color = Optional.empty();
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.BELT.get(),
-				(be, context) -> {
-						if (!BeltBlock.canTransportObjects(be.getBlockState()))
-							return null;
-						if (!be.isRemoved() && be.itemHandler == null)
-							be.initializeItemHandler();
-						return be.itemHandler;
-				}
-		);
+	public static void registerCapabilities() {
+		ItemStorage.SIDED.registerForBlockEntity((be, context) -> {
+			if (!BeltBlock.canTransportObjects(be.getBlockState()))
+				return null;
+			if (!be.isRemoved() && be.itemHandler == null)
+				be.initializeItemHandler();
+			return be.itemHandler;
+		}, AllBlockEntityTypes.BELT.get());
 	}
 
 	@Override
@@ -178,7 +174,7 @@ public class BeltBlockEntity extends KineticBlockEntity {
 		if (inventory == null)
 			return;
 		itemHandler = new ItemHandlerBeltSegment(inventory, index);
-		invalidateCapabilities();
+		//invalidateCapabilities();
 	}
 
 	@Override
@@ -191,7 +187,7 @@ public class BeltBlockEntity extends KineticBlockEntity {
 	@Override
 	public void invalidate() {
 		super.invalidate();
-		invalidateCapabilities();
+		//invalidateCapabilities();
 	}
 
 	@Override
@@ -242,8 +238,8 @@ public class BeltBlockEntity extends KineticBlockEntity {
 
 		if (casingBefore == casing && coverBefore == covered)
 			return;
-		if (!isVirtual())
-			requestModelDataUpdate();
+		//if (!isVirtual())
+			//requestModelDataUpdate();
 		if (hasLevel())
 			level.sendBlockUpdated(getBlockPos(), getBlockState(), getBlockState(), 16);
 	}
@@ -420,7 +416,7 @@ public class BeltBlockEntity extends KineticBlockEntity {
 		if (level.isClientSide) {
 			casing = type;
 			level.setBlock(worldPosition, blockState.setValue(BeltBlock.CASING, shouldBlockHaveCasing), 0);
-			requestModelDataUpdate();
+			//requestModelDataUpdate();
 			level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 16);
 			return;
 		}
@@ -533,11 +529,8 @@ public class BeltBlockEntity extends KineticBlockEntity {
 	}
 
 	@Override
-	public ModelData getModelData() {
-		return ModelData.builder()
-			.with(BeltModel.CASING_PROPERTY, casing)
-			.with(BeltModel.COVER_PROPERTY, covered)
-			.build();
+	public @Nullable Object getRenderData() {
+		return new RenderData(casing, covered);
 	}
 
 	@Override
@@ -555,7 +548,7 @@ public class BeltBlockEntity extends KineticBlockEntity {
 	}
 
 	public void invalidateItemHandler() {
-		invalidateCapabilities();
+		//invalidateCapabilities();
 		itemHandler = null;
 	}
 
@@ -571,5 +564,8 @@ public class BeltBlockEntity extends KineticBlockEntity {
 			return;
 		covered = blockCoveringBelt;
 		notifyUpdate();
+	}
+
+	public record RenderData(CasingType casingType, boolean covered) {
 	}
 }

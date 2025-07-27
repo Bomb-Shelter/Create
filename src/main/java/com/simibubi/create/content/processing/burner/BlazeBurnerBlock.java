@@ -16,6 +16,7 @@ import com.simibubi.create.content.processing.basin.BasinBlockEntity;
 import com.simibubi.create.foundation.block.IBE;
 
 import net.createmod.catnip.lang.Lang;
+import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.advancements.critereon.StatePropertiesPredicate;
 import net.minecraft.core.BlockPos;
@@ -55,9 +56,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.common.util.FakePlayer;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
@@ -185,7 +185,7 @@ public class BlazeBurnerBlock extends HorizontalDirectionalBlock implements IBE<
 			return InteractionResultHolder.fail(ItemStack.EMPTY);
 
 		if (!doNotConsume) {
-			ItemStack container = stack.hasCraftingRemainingItem() ? stack.getCraftingRemainingItem() : ItemStack.EMPTY;
+			ItemStack container = stack.getItem().hasCraftingRemainingItem() ? stack.getItem().getCraftingRemainingItem().getDefaultInstance() : ItemStack.EMPTY;
 			if (!world.isClientSide) {
 				stack.shrink(1);
 			}
@@ -238,7 +238,7 @@ public class BlazeBurnerBlock extends HorizontalDirectionalBlock implements IBE<
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void animateTick(BlockState state, Level world, BlockPos pos, RandomSource random) {
 		if (random.nextInt(10) != 0)
 			return;

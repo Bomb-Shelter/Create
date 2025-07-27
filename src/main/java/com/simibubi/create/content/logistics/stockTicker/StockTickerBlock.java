@@ -10,6 +10,8 @@ import com.simibubi.create.content.logistics.packagerLink.LogisticallyLinkedBloc
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -32,8 +34,8 @@ import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class StockTickerBlock extends HorizontalDirectionalBlock implements IBE<StockTickerBlockEntity>, IWrenchable {
 
@@ -67,10 +69,10 @@ public class StockTickerBlock extends HorizontalDirectionalBlock implements IBE<
 				return ItemInteractionResult.SUCCESS;
 
 			if (!level.isClientSide() && !stbe.receivedPayments.isEmpty()) {
-				for (int i = 0; i < stbe.receivedPayments.getSlots(); i++)
+				for (int i = 0; i < stbe.receivedPayments.getSlotCount(); i++)
 					player.getInventory()
 						.placeItemBackInInventory(
-							stbe.receivedPayments.extractItem(i, stbe.receivedPayments.getStackInSlot(i)
+							CreateTransferUtil.extractItem(stbe.receivedPayments, i, stbe.receivedPayments.getStackInSlot(i)
 								.getCount(), false));
 				AllSoundEvents.playItemPickup(player);
 				return ItemInteractionResult.SUCCESS;
@@ -78,7 +80,7 @@ public class StockTickerBlock extends HorizontalDirectionalBlock implements IBE<
 
 			if (player instanceof ServerPlayer sp) {
 				if (stbe.isKeeperPresent())
-					sp.openMenu(stbe.new CategoryMenuProvider(), stbe.getBlockPos());
+					sp.openMenu(stbe.new CategoryMenuProvider());
 				else
 					CreateLang.translate("stock_ticker.keeper_missing")
 						.sendStatus(player);
@@ -93,7 +95,7 @@ public class StockTickerBlock extends HorizontalDirectionalBlock implements IBE<
 		return AllShapes.STOCK_TICKER;
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public PartialModel getHat(LevelAccessor level, BlockPos pos, LivingEntity keeper) {
 		return AllPartialModels.LOGISTICS_HAT;
 	}

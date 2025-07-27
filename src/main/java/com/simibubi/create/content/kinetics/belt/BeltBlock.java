@@ -6,6 +6,19 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.FlammableBlock;
+
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.simibubi.create.AllBlockEntityTypes;
@@ -50,10 +63,8 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.BlockGetter;
@@ -77,12 +88,10 @@ import net.minecraft.world.level.levelgen.DebugLevelSource;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.pathfinder.PathComputationType;
-import net.minecraft.world.level.pathfinder.PathType;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.EntityCollisionContext;
@@ -90,12 +99,8 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.common.Tags;
-import net.neoforged.neoforge.items.IItemHandler;
-
 public class BeltBlock extends HorizontalKineticBlock
-	implements IBE<BeltBlockEntity>, SpecialBlockItemRequirement, TransformableBlock, ProperWaterloggedBlock {
+	implements IBE<BeltBlockEntity>, SpecialBlockItemRequirement, TransformableBlock, ProperWaterloggedBlock, FlammableBlock, MultiPosDestructionHandler {
 
 	public static final Property<BeltSlope> SLOPE = EnumProperty.create("slope", BeltSlope.class);
 	public static final Property<BeltPart> PART = EnumProperty.create("part", BeltPart.class);
@@ -133,8 +138,7 @@ public class BeltBlock extends HorizontalKineticBlock
 	}
 
 	@Override
-	public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos,
-									   Player player) {
+	public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
 		return AllItems.BELT_CONNECTOR.asStack();
 	}
 
@@ -210,10 +214,10 @@ public class BeltBlock extends HorizontalKineticBlock
 			if (BeltTunnelInteractionHandler.getTunnelOnPosition(worldIn, pos) != null)
 				return;
 			withBlockEntityDo(worldIn, pos, be -> {
-				IItemHandler handler = worldIn.getCapability(Capabilities.ItemHandler.BLOCK, pos, state, be, null);
+				Storage<ItemVariant> handler = ItemStorage.SIDED.find(worldIn, pos, state, be, null);
 				if (handler == null)
 					return;
-				ItemStack remainder = handler.insertItem(0, asItem, false);
+				ItemStack remainder = CreateTransferUtil.insertItem(handler, asItem, false);
 				if (remainder.isEmpty())
 					entityIn.discard();
 				else if (entityIn instanceof ItemEntity itemEntity && remainder.getCount() != itemEntity.getItem().getCount())
@@ -258,7 +262,7 @@ public class BeltBlock extends HorizontalKineticBlock
 
 		if (isDye || hasWater)
 			return onBlockEntityUseItemOn(level, pos,
-				be -> be.applyColor(DyeColor.getColor(stack)) ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION);
+				be -> be.applyColor(CreateFabricUtil.getColor(stack)) ? ItemInteractionResult.SUCCESS : ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION);
 
 		if (isConnector)
 			return BeltSlicer.useConnector(state, level, pos, player, hand, hitResult, new Feedback());
@@ -271,10 +275,10 @@ public class BeltBlock extends HorizontalKineticBlock
 
 		if (PackageItem.isPackage(stack)) {
 			ItemStack toInsert = stack.copy();
-			IItemHandler handler = level.getCapability(Capabilities.ItemHandler.BLOCK, belt.getBlockPos(), null);
+			Storage<ItemVariant> handler = TransferUtil.getItemStorage(level, belt.getBlockPos(), belt, null);
 			if (handler == null)
 				return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-			ItemStack remainder = handler.insertItem(0, toInsert, false);
+			ItemStack remainder = CreateTransferUtil.insertItem(handler, toInsert, false);
 			if (remainder.isEmpty()) {
 				stack.shrink(1);
 				return ItemInteractionResult.SUCCESS;
@@ -315,8 +319,8 @@ public class BeltBlock extends HorizontalKineticBlock
 			withBlockEntityDo(level, pos, be -> be.setCasingType(CasingType.BRASS));
 			updateCoverProperty(level, pos, level.getBlockState(pos));
 
-			SoundType soundType = AllBlocks.BRASS_CASING.getDefaultState()
-				.getSoundType(level, pos, player);
+			SoundType soundType = CreateFabricUtil.getSoundType(AllBlocks.BRASS_CASING.getDefaultState(),
+				level, pos, player);
 			level.playSound(null, pos, soundType.getPlaceSound(), SoundSource.BLOCKS,
 				(soundType.getVolume() + 1.0F) / 2.0F, soundType.getPitch() * 0.8F);
 
@@ -327,8 +331,8 @@ public class BeltBlock extends HorizontalKineticBlock
 			withBlockEntityDo(level, pos, be -> be.setCasingType(CasingType.ANDESITE));
 			updateCoverProperty(level, pos, level.getBlockState(pos));
 
-			SoundType soundType = AllBlocks.ANDESITE_CASING.getDefaultState()
-				.getSoundType(level, pos, player);
+			SoundType soundType = CreateFabricUtil.getSoundType(AllBlocks.ANDESITE_CASING.getDefaultState(),
+				level, pos, player);
 			level.playSound(null, pos, soundType.getPlaceSound(), SoundSource.BLOCKS,
 				(soundType.getVolume() + 1.0F) / 2.0F, soundType.getPitch() * 0.8F);
 
@@ -370,10 +374,11 @@ public class BeltBlock extends HorizontalKineticBlock
 		super.createBlockStateDefinition(builder);
 	}
 
-	@Override
+	// Fabric TODO: impl
+	/*@Override
 	public PathType getBlockPathType(BlockState state, BlockGetter world, BlockPos pos, Mob entity) {
 		return PathType.RAIL;
-	}
+	}*/
 
 	@Override
 	public VoxelShape getShape(BlockState state, BlockGetter worldIn, BlockPos pos, CollisionContext context) {
@@ -732,6 +737,16 @@ public class BeltBlock extends HorizontalKineticBlock
 	@Override
 	public FluidState getFluidState(BlockState pState) {
 		return fluidState(pState);
+	}
+
+	@Environment(EnvType.CLIENT)
+	@Override
+	public Set<BlockPos> getExtraPositions(ClientLevel level, BlockPos pos, BlockState blockState, int progress) {
+		BlockEntity blockEntity = level.getBlockEntity(pos);
+		if (blockEntity instanceof BeltBlockEntity belt) {
+			return new HashSet<>(BeltBlock.getBeltChain(level, belt.getController()));
+		}
+		return null;
 	}
 
 	public static class RenderProperties extends ReducedDestroyEffects implements MultiPosDestructionHandler {

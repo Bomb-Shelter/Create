@@ -6,6 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.ChunkUnloadListeningBlockEntity;
+
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.simibubi.create.api.event.BlockEntityBehaviourEvent;
@@ -28,10 +34,8 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.neoforge.common.NeoForge;
-
 public abstract class SmartBlockEntity extends CachedRenderBBBlockEntity
-	implements PartialSafeNBT, IInteractionChecker, SpecialBlockEntityItemRequirement, VirtualBlockEntity {
+	implements PartialSafeNBT, IInteractionChecker, SpecialBlockEntityItemRequirement, VirtualBlockEntity, ChunkUnloadListeningBlockEntity {
 
 	private final Map<BehaviourType<?>, BlockEntityBehaviour> behaviours = new Reference2ObjectArrayMap<>();
 	private boolean initialized = false;
@@ -64,7 +68,7 @@ public abstract class SmartBlockEntity extends CachedRenderBBBlockEntity
 	public void initialize() {
 		if (firstNbtRead) {
 			firstNbtRead = false;
-			NeoForge.EVENT_BUS.post(new BlockEntityBehaviourEvent(this, behaviours));
+			new BlockEntityBehaviourEvent(this, behaviours).sendEvent();
 		}
 
 		forEachBehaviour(BlockEntityBehaviour::initialize);
@@ -113,7 +117,7 @@ public abstract class SmartBlockEntity extends CachedRenderBBBlockEntity
 			ArrayList<BlockEntityBehaviour> list = new ArrayList<>();
 			addBehavioursDeferred(list);
 			list.forEach(b -> behaviours.put(b.getType(), b));
-			NeoForge.EVENT_BUS.post(new BlockEntityBehaviourEvent(this, behaviours));
+			new BlockEntityBehaviourEvent(this, behaviours).sendEvent();
 		}
 		super.loadAdditional(tag, registries);
 		forEachBehaviour(tb -> tb.read(tag, registries, clientPacket));
@@ -126,7 +130,7 @@ public abstract class SmartBlockEntity extends CachedRenderBBBlockEntity
 
 	@Override
 	public void onChunkUnloaded() {
-		super.onChunkUnloaded();
+		ChunkUnloadListeningBlockEntity.super.onChunkUnloaded();
 		chunkUnloaded = true;
 	}
 
@@ -261,4 +265,11 @@ public abstract class SmartBlockEntity extends CachedRenderBBBlockEntity
 			behaviour.awardPlayerIfNear(advancement, range);
 	}
 
+	public record SmartBlockData(BlockPos pos, CompoundTag nbt) {
+		public static final StreamCodec<RegistryFriendlyByteBuf, SmartBlockData> STREAM_CODEC = StreamCodec.composite(
+			BlockPos.STREAM_CODEC, SmartBlockData::pos,
+			ByteBufCodecs.COMPOUND_TAG, SmartBlockData::nbt,
+			SmartBlockData::new
+		);
+	}
 }

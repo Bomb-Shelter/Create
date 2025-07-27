@@ -8,6 +8,19 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import com.mojang.serialization.DataResult;
+
+import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+
+import io.github.fabricators_of_create.porting_lib.blocks.util.MinecartAndRailUtil;
+import io.github.fabricators_of_create.porting_lib.core.util.INBTSerializable;
+
+import net.minecraft.core.HolderLookup.Provider;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.world.level.block.Blocks;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,10 +52,6 @@ import net.minecraft.world.level.block.PoweredRailBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.attachment.IAttachmentHolder;
-import net.neoforged.neoforge.attachment.IAttachmentSerializer;
-import net.neoforged.neoforge.common.util.INBTSerializable;
-
 /**
  * Extended code for Minecarts, this allows for handling stalled carts and
  * coupled trains
@@ -50,7 +59,7 @@ import net.neoforged.neoforge.common.util.INBTSerializable;
 public class MinecartController implements INBTSerializable<CompoundTag> {
 	public static final MinecartController EMPTY = new MinecartController.Empty();
 
-	public static final IAttachmentSerializer<CompoundTag, MinecartController> SERIALIZER = Type.SERIALIZER;
+	//public static final IAttachmentSerializer<CompoundTag, MinecartController> SERIALIZER = Type.SERIALIZER;
 
 	private boolean needsEntryRefresh;
 	private WeakReference<AbstractMinecart> weakRef;
@@ -71,6 +80,13 @@ public class MinecartController implements INBTSerializable<CompoundTag> {
 		weakRef = new WeakReference<>(minecart);
 		stallData = Couple.create(Optional::empty);
 		couplings = Couple.create(Optional::empty);
+		needsEntryRefresh = true;
+	}
+
+	public MinecartController(Optional<StallData> internalSD, Optional<StallData> externalSD, Optional<CouplingData> mainCD, Optional<CouplingData> connectedCD) {
+		weakRef = new WeakReference<>(null);
+		stallData = Couple.create(internalSD, externalSD);
+		couplings = Couple.create(mainCD, connectedCD);
 		needsEntryRefresh = true;
 	}
 
@@ -130,10 +146,9 @@ public class MinecartController implements INBTSerializable<CompoundTag> {
 		}
 		BlockPos blockpos = new BlockPos(i, j, k);
 		BlockState blockstate = world.getBlockState(blockpos);
-		if (cart.canUseRail() && blockstate.is(BlockTags.RAILS)
+		if (/*cart.canUseRail() &&*/ blockstate.is(BlockTags.RAILS)
 			&& blockstate.getBlock() instanceof PoweredRailBlock
-			&& ((PoweredRailBlock) blockstate.getBlock())
-			.isActivatorRail()) {
+			&& MinecartAndRailUtil.isActivatorRail(blockstate.getBlock())) {
 			if (cart.isVehicle()) {
 				cart.ejectPassengers();
 			}
@@ -366,6 +381,22 @@ public class MinecartController implements INBTSerializable<CompoundTag> {
 	}
 
 	private static class CouplingData {
+		public static final Codec<CouplingData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+			UUIDUtil.CODEC
+				.fieldOf("Main")
+				.forGetter(e -> e.mainCartID),
+			UUIDUtil.CODEC
+				.fieldOf("Connected")
+				.forGetter(e -> e.connectedCartID),
+			Codec.FLOAT
+				.fieldOf("Length")
+				.forGetter(e -> e.length),
+			Codec.BOOL
+				.fieldOf("Contraption")
+				.forGetter(e -> e.contraption)
+			)
+				.apply(instance, CouplingData::new)
+		);
 
 		private UUID mainCartID;
 		private UUID connectedCartID;
@@ -409,11 +440,36 @@ public class MinecartController implements INBTSerializable<CompoundTag> {
 	}
 
 	private static class StallData {
+		public static final Codec<StallData> CODEC = RecordCodecBuilder.create(instance ->
+			instance.group(
+				Vec3.CODEC
+					.fieldOf("Pos")
+					.forGetter(e -> e.position),
+				Vec3.CODEC
+					.fieldOf("Motion")
+					.forGetter(e -> e.motion),
+				Codec.FLOAT
+					.fieldOf("Yaw")
+					.forGetter(e -> e.yaw),
+				Codec.FLOAT
+					.fieldOf("Pitch")
+					.forGetter(e -> e.pitch)
+			)
+				.apply(instance, StallData::new)
+		);
+
 		Vec3 position;
 		Vec3 motion;
 		float yaw, pitch;
 
 		private StallData() {
+		}
+
+		public StallData(Vec3 position, Vec3 motion, float yaw, float pitch) {
+			this.position = position;
+			this.motion = motion;
+			this.yaw = yaw;
+			this.pitch = pitch;
 		}
 
 		StallData(AbstractMinecart entity) {
@@ -579,58 +635,38 @@ public class MinecartController implements INBTSerializable<CompoundTag> {
 		}
 	}
 
+	public static final Codec<MinecartController> CODEC = Type.CODEC
+		.dispatch("Type", MinecartController::getType, Type::getCodec);
+
 	protected enum Type implements StringRepresentable {
-		EMPTY(new IAttachmentSerializer<>() {
-			@Override
-			public @NotNull MinecartController read(@NotNull IAttachmentHolder holder, @NotNull CompoundTag tag, @NotNull HolderLookup.Provider provider) {
-				return MinecartController.EMPTY;
-			}
-
-			@Override
-			public CompoundTag write(@NotNull MinecartController attachment, @NotNull HolderLookup.Provider provider) {
-				return attachment.serializeNBT(provider);
-			}
-		}),
-		NORMAL(new IAttachmentSerializer<>() {
-			@Override
-			public @NotNull MinecartController read(@NotNull IAttachmentHolder holder, @NotNull CompoundTag tag, @NotNull HolderLookup.Provider provider) {
-				MinecartController controller = new MinecartController(null);
-				controller.deserializeNBT(provider, tag);
-				return controller;
-			}
-
-			@Override
-			public @Nullable CompoundTag write(@NotNull MinecartController attachment, @NotNull HolderLookup.Provider provider) {
-				return attachment.serializeNBT(provider);
-			}
-		});
+		EMPTY(MapCodec.unit(MinecartController.EMPTY)),
+		NORMAL(RecordCodecBuilder.mapCodec(instance -> instance.group(
+			StallData.CODEC
+				.optionalFieldOf("InternalStallData")
+				.forGetter(e -> e.stallData.getFirst()),
+			StallData.CODEC
+				.optionalFieldOf("StallData")
+				.forGetter(e -> e.stallData.getSecond()),
+			CouplingData.CODEC
+				.optionalFieldOf("MainCoupling")
+				.forGetter(e -> e.couplings.getFirst()),
+			CouplingData.CODEC
+				.optionalFieldOf("ConnectedCoupling")
+				.forGetter(e -> e.couplings.getSecond())
+		)
+			.apply(instance, MinecartController::new)
+		));
 
 		public static final Codec<Type> CODEC = StringRepresentable.fromValues(Type::values);
 
-		private final IAttachmentSerializer<CompoundTag, MinecartController> serializer;
+		private final MapCodec<MinecartController> codec;
 
-		private static final IAttachmentSerializer<CompoundTag, MinecartController> SERIALIZER = new IAttachmentSerializer<>() {
-			@Override
-			public @NotNull MinecartController read(@NotNull IAttachmentHolder holder, @NotNull CompoundTag tag, @NotNull HolderLookup.Provider provider) {
-				return Type.valueOf(tag.getString("Type")).getSerializer().read(holder, tag, provider);
-			}
-
-			@Override
-			public @Nullable CompoundTag write(MinecartController attachment, @NotNull HolderLookup.Provider provider) {
-				CompoundTag tag = attachment.serializeNBT(provider);
-				if (tag != null) {
-					tag.putString("Type", attachment.getType().name());
-				}
-				return tag;
-			}
-		};
-
-		Type(IAttachmentSerializer<CompoundTag, MinecartController> serializer) {
-			this.serializer = serializer;
+		Type(MapCodec<MinecartController> codec) {
+			this.codec = codec;
 		}
 
-		public IAttachmentSerializer<CompoundTag, MinecartController> getSerializer() {
-			return serializer;
+		public MapCodec<MinecartController> getCodec() {
+			return codec;
 		}
 
 		@Override

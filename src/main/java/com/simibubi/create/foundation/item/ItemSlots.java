@@ -9,6 +9,7 @@ import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.foundation.codec.CreateCodecs;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -16,9 +17,6 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.item.ItemStack;
-
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
 
 /**
  * Utility class representing non-empty slots in an item inventory.
@@ -73,16 +71,16 @@ public class ItemSlots {
 		return this.map.keySet().intStream().max().orElse(-1);
 	}
 
-	public <T extends IItemHandlerModifiable> T toHandler(IntFunction<T> factory) {
+	public <T extends SlottedStackStorage> T toHandler(IntFunction<T> factory) {
 		T handler = factory.apply(this.size);
 		this.forEach(handler::setStackInSlot);
 		return handler;
 	}
 
-	public static ItemSlots fromHandler(IItemHandler handler) {
+	public static ItemSlots fromHandler(SlottedStackStorage handler) {
 		ItemSlots slots = new ItemSlots();
-		slots.setSize(handler.getSlots());
-		for (int i = 0; i < handler.getSlots(); i++) {
+		slots.setSize(handler.getSlotCount());
+		for (int i = 0; i < handler.getSlotCount(); i++) {
 			ItemStack stack = handler.getStackInSlot(i);
 			if (!stack.isEmpty()) {
 				slots.set(i, stack.copy());

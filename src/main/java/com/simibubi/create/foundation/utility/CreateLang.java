@@ -5,14 +5,16 @@ import java.util.List;
 
 import com.simibubi.create.Create;
 
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 import net.createmod.catnip.lang.Lang;
 import net.createmod.catnip.lang.LangBuilder;
 import net.createmod.catnip.lang.LangNumberFormat;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.fluids.FluidStack;
 
 public class CreateLang extends Lang {
 
@@ -52,6 +54,14 @@ public class CreateLang extends Lang {
 	public static LangBuilder fluidName(FluidStack stack) {
 		return builder().add(stack.getHoverName()
 				.copy());
+	}
+
+	public static LangBuilder fluidName(FluidVariant variant) {
+		if (variant.getFluid().getFluidType() == null)
+			return builder().text(variant.getRegistryEntry().unwrapKey().orElseThrow().location().toString());
+
+		return builder().add(variant.getFluid().getFluidType().getDescription()
+			.copy());
 	}
 
 	public static LangBuilder number(double d) {

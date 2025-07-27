@@ -3,14 +3,18 @@ package com.simibubi.create.content.schematics.table;
 import java.util.List;
 
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
+import com.simibubi.create.foundation.blockEntity.SmartBlockEntity.SmartBlockData;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.foundation.utility.IInteractionChecker;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -18,9 +22,8 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
-public class SchematicTableBlockEntity extends SmartBlockEntity implements MenuProvider, IInteractionChecker {
+public class SchematicTableBlockEntity extends SmartBlockEntity implements ExtendedScreenHandlerFactory<SmartBlockData>, IInteractionChecker {
 
 	public SchematicTableInventory inventory;
 	public boolean isUploading;
@@ -121,4 +124,8 @@ public class SchematicTableBlockEntity extends SmartBlockEntity implements MenuP
 	@Override
 	public void addBehaviours(List<BlockEntityBehaviour> behaviours) {}
 
+	@Override
+	public SmartBlockData getScreenOpeningData(ServerPlayer player) {
+		return new SmartBlockData(this.getBlockPos(), this.getUpdateTag(player.registryAccess()));
+	}
 }

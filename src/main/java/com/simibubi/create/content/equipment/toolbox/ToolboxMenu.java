@@ -3,6 +3,7 @@ package com.simibubi.create.content.equipment.toolbox;
 import static com.simibubi.create.content.equipment.toolbox.ToolboxInventory.STACKS_PER_COMPARTMENT;
 
 import com.simibubi.create.AllMenuTypes;
+import com.simibubi.create.foundation.blockEntity.SmartBlockEntity.SmartBlockData;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.animatedContainer.AnimatedContainerBehaviour;
 import com.simibubi.create.foundation.gui.menu.MenuBase;
@@ -20,10 +21,10 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-public class ToolboxMenu extends MenuBase<ToolboxBlockEntity> {
+public class ToolboxMenu extends MenuBase<ToolboxBlockEntity, SmartBlockData> {
 
-	public ToolboxMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
-		super(type, id, inv, extraData);
+	public ToolboxMenu(MenuType<?> type, int id, Inventory inv, SmartBlockData extraData) {
+		super(type, id, inv, extraData, true);
 	}
 
 	public ToolboxMenu(MenuType<?> type, int id, Inventory inv, ToolboxBlockEntity be) {
@@ -37,14 +38,14 @@ public class ToolboxMenu extends MenuBase<ToolboxBlockEntity> {
 	}
 
 	@Override
-	protected ToolboxBlockEntity createOnClient(RegistryFriendlyByteBuf extraData) {
-		BlockPos readBlockPos = extraData.readBlockPos();
-		CompoundTag readNbt = extraData.readNbt();
+	protected ToolboxBlockEntity createOnClient(SmartBlockData extraData) {
+		BlockPos readBlockPos = extraData.pos();
+		CompoundTag readNbt = extraData.nbt();
 
 		ClientLevel world = Minecraft.getInstance().level;
 		BlockEntity blockEntity = world.getBlockEntity(readBlockPos);
 		if (blockEntity instanceof ToolboxBlockEntity toolbox) {
-			toolbox.readClient(readNbt, extraData.registryAccess());
+			toolbox.readClient(readNbt, world.registryAccess());
 			return toolbox;
 		}
 
@@ -58,7 +59,7 @@ public class ToolboxMenu extends MenuBase<ToolboxBlockEntity> {
 			return ItemStack.EMPTY;
 
 		ItemStack stack = clickedSlot.getItem();
-		int size = contentHolder.inventory.getSlots();
+		int size = contentHolder.inventory.getSlotCount();
 		boolean success;
 		if (index < size) {
 			success = !moveItemStackTo(stack, size, slots.size(), false);
@@ -77,7 +78,7 @@ public class ToolboxMenu extends MenuBase<ToolboxBlockEntity> {
 
 	@Override
 	public void clicked(int index, int flags, ClickType type, Player player) {
-		int size = contentHolder.inventory.getSlots();
+		int size = contentHolder.inventory.getSlotCount();
 
 		if (index >= 0 && index < size) {
 			ItemStack itemInClickedSlot = getSlot(index).getItem();
@@ -104,7 +105,7 @@ public class ToolboxMenu extends MenuBase<ToolboxBlockEntity> {
 
 	@Override
 	public boolean canDragTo(Slot slot) {
-		return slot.index > contentHolder.inventory.getSlots() && super.canDragTo(slot);
+		return slot.index > contentHolder.inventory.getSlotCount() && super.canDragTo(slot);
 	}
 
 	public ItemStack getFilter(int compartment) {

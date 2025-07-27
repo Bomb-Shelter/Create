@@ -11,6 +11,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.content.contraptions.actors.psi.PortableFluidInterfaceBlockEntity.InterfaceFluidHandler;
@@ -25,9 +32,7 @@ import net.createmod.catnip.data.Pair;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class FluidNetwork {
 
@@ -36,8 +41,8 @@ public class FluidNetwork {
 	Level world;
 	BlockFace start;
 
-	Supplier<@Nullable ICapabilityProvider<IFluidHandler>> sourceSupplier;
-	@Nullable ICapabilityProvider<IFluidHandler> source = null;
+	Supplier<@Nullable ICapabilityProvider<Storage<FluidVariant>>> sourceSupplier;
+	@Nullable ICapabilityProvider<Storage<FluidVariant>> source = null;
 	int transferSpeed;
 
 	int pauseBeforePropagation;
@@ -48,7 +53,7 @@ public class FluidNetwork {
 	List<Pair<BlockFace, FlowSource>> targets;
 	Map<BlockPos, WeakReference<FluidTransportBehaviour>> cache;
 
-	public FluidNetwork(Level world, BlockFace location, Supplier<@Nullable ICapabilityProvider<IFluidHandler>> sourceSupplier) {
+	public FluidNetwork(Level world, BlockFace location, Supplier<@Nullable ICapabilityProvider<Storage<FluidVariant>>> sourceSupplier) {
 		this.world = world;
 		this.start = location;
 		this.sourceSupplier = sourceSupplier;
@@ -180,31 +185,29 @@ public class FluidNetwork {
 			});
 		}
 
-		int flowSpeed = transferSpeed;
-		Map<IFluidHandler, Integer> accumulatedFill = new IdentityHashMap<>();
+		long flowSpeed = transferSpeed;
+		Map<Storage<FluidVariant>, Long> accumulatedFill = new IdentityHashMap<>();
 
 		for (boolean simulate : Iterate.trueAndFalse) {
-			FluidAction action = simulate ? FluidAction.SIMULATE : FluidAction.EXECUTE;
-
 			if (source == null)
 				return;
-			IFluidHandler sourceCap = source.getCapability();
+			Storage<FluidVariant> sourceCap = source.getCapability();
 			if (sourceCap == null)
 				return;
 
 			FluidStack transfer = FluidStack.EMPTY;
-			for (int i = 0; i < sourceCap.getTanks(); i++) {
-				FluidStack contained = sourceCap.getFluidInTank(i);
+			for (StorageView<FluidVariant> view : sourceCap) {
+				FluidStack contained = new FluidStack(view);
 				if (contained.isEmpty())
 					continue;
 				if (!FluidStack.isSameFluidSameComponents(contained, fluid))
 					continue;
 				FluidStack toExtract = FluidHelper.copyStackWithAmount(contained, flowSpeed);
-				transfer = sourceCap.drain(toExtract, action);
+				transfer = CreateTransferUtil.extractFluid(view, toExtract, simulate);
 			}
 
 			if (transfer.isEmpty()) {
-				FluidStack genericExtract = sourceCap.drain(flowSpeed, action);
+				FluidStack genericExtract = CreateTransferUtil.extractAnyFluid(sourceCap, flowSpeed, simulate);
 				if (!genericExtract.isEmpty() && FluidStack.isSameFluidSameComponents(genericExtract, fluid))
 					transfer = genericExtract;
 			}
@@ -216,12 +219,12 @@ public class FluidNetwork {
 
 			List<Pair<BlockFace, FlowSource>> availableOutputs = new ArrayList<>(targets);
 			while (!availableOutputs.isEmpty() && transfer.getAmount() > 0) {
-				int dividedTransfer = transfer.getAmount() / availableOutputs.size();
-				int remainder = transfer.getAmount() % availableOutputs.size();
+				long dividedTransfer = transfer.getAmount() / availableOutputs.size();
+				long remainder = transfer.getAmount() % availableOutputs.size();
 
 				for (Iterator<Pair<BlockFace, FlowSource>> iterator = availableOutputs.iterator(); iterator.hasNext();) {
 					Pair<BlockFace, FlowSource> pair = iterator.next();
-					int toTransfer = dividedTransfer;
+					long toTransfer = dividedTransfer;
 					if (remainder > 0) {
 						toTransfer++;
 						remainder--;
@@ -229,27 +232,27 @@ public class FluidNetwork {
 
 					if (transfer.isEmpty())
 						break;
-					@Nullable ICapabilityProvider<IFluidHandler> targetHandlerProvider = pair.getSecond().provideHandler();
+					@Nullable ICapabilityProvider<Storage<FluidVariant>> targetHandlerProvider = pair.getSecond().provideHandler();
 					if (targetHandlerProvider == null) {
 						iterator.remove();
 						continue;
 					}
-					IFluidHandler targetHandler = targetHandlerProvider.getCapability();
+					Storage<FluidVariant> targetHandler = targetHandlerProvider.getCapability();
 					if (targetHandler == null) {
 						iterator.remove();
 						continue;
 					}
 
-					int simulatedTransfer = toTransfer;
+					long simulatedTransfer = toTransfer;
 					if (simulate)
-						simulatedTransfer += accumulatedFill.getOrDefault(targetHandler, 0);
+						simulatedTransfer += accumulatedFill.getOrDefault(targetHandler, 0L);
 
 					FluidStack divided = transfer.copy();
 					divided.setAmount(simulatedTransfer);
-					int fill = targetHandler.fill(divided, action);
+					long fill = CreateTransferUtil.insertFluid(targetHandler, divided, simulate);
 
 					if (simulate) {
-						accumulatedFill.put(targetHandler, Integer.valueOf(fill));
+						accumulatedFill.put(targetHandler, fill);
 						fill -= simulatedTransfer - toTransfer;
 					}
 

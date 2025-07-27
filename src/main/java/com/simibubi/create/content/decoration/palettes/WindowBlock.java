@@ -2,8 +2,8 @@ package com.simibubi.create.content.decoration.palettes;
 
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class WindowBlock extends ConnectedGlassBlock {
 
@@ -19,7 +19,7 @@ public class WindowBlock extends ConnectedGlassBlock {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public boolean skipRendering(BlockState state, BlockState adjacentBlockState, Direction side) {
 		if (state.getBlock() == adjacentBlockState.getBlock()) {
 			return true;

@@ -14,6 +14,7 @@ import com.simibubi.create.infrastructure.gametest.CreateGameTestHelper;
 import com.simibubi.create.infrastructure.gametest.GameTestGroup;
 
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
+import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.world.entity.EntityType;
@@ -26,10 +27,10 @@ import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.LeverBlock;
 import net.minecraft.world.level.block.RedstoneLampBlock;
 
-import net.neoforged.neoforge.fluids.FluidStack;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 @GameTestGroup(path = "contraptions")
-public class TestContraptions {
+public class TestContraptions implements FabricGameTest {
 	@GameTest(template = "arrow_dispenser", timeoutTicks = CreateGameTestHelper.TEN_SECONDS)
 	public static void arrowDispenser(CreateGameTestHelper helper) {
 		BlockPos lever = new BlockPos(2, 3, 1);

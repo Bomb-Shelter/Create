@@ -22,8 +22,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public abstract class TrainEditPacket implements CustomPacketPayload {
 	protected final UUID id;
@@ -47,7 +47,7 @@ public abstract class TrainEditPacket implements CustomPacketPayload {
 				factory
 		);
 	}
-	
+
 	public void handleSided(Player sender) {
 		Level level = sender == null ? null : sender.level();
 		Train train = Create.RAILWAYS.sided(level).trains.get(id);
@@ -88,7 +88,7 @@ public abstract class TrainEditPacket implements CustomPacketPayload {
 		}
 
 		@Override
-		@OnlyIn(Dist.CLIENT)
+		@Environment(EnvType.CLIENT)
 		public void handle(LocalPlayer player) {
 			handleSided(null);
 		}

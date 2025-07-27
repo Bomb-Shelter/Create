@@ -10,6 +10,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import io.github.fabricators_of_create.porting_lib.fluids.BaseFlowingFluid;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidType;
+import io.github.fabricators_of_create.porting_lib.registry.DeferredHolder;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.CreateClient;
@@ -53,13 +57,8 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
-import net.neoforged.neoforge.fluids.BaseFlowingFluid;
-import net.neoforged.neoforge.fluids.FluidType;
-import net.neoforged.neoforge.registries.DeferredHolder;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 	private static final Map<RegistryEntry<?, ?>, DeferredHolder<CreativeModeTab, CreativeModeTab>> TAB_LOOKUP = Collections.synchronizedMap(new IdentityHashMap<>());
@@ -100,10 +99,10 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 		return currentTab;
 	}
 
-	@Override
+	/*@Override
 	public CreateRegistrate registerEventListeners(IEventBus bus) {
 		return super.registerEventListeners(bus);
-	}
+	}*/
 
 	@Override
 	protected <R, T extends R> RegistryEntry<R, T> accept(String name, ResourceKey<? extends Registry<R>> type, Builder<R, T, ?, ?> builder, NonNullSupplier<? extends T> creator, NonNullFunction<DeferredHolder<R, T>, ? extends RegistryEntry<R, T>> entryFactory) {
@@ -254,8 +253,9 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 
 	public static FluidType defaultFluidType(FluidType.Properties properties, ResourceLocation stillTexture,
 											 ResourceLocation flowingTexture) {
-		return new FluidType(properties) {
-			@Override
+		var fluidType = new FluidType(properties) {
+			// Fabric TODO: figure this out
+			/*@Override
 			public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {
 				consumer.accept(new IClientFluidTypeExtensions() {
 					@Override
@@ -268,8 +268,10 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 						return flowingTexture;
 					}
 				});
-			}
+			}*/
 		};
+
+		return fluidType;
 	}
 
 	/* Util */
@@ -294,27 +296,27 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 		return entry -> CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> registerCTBehviour(entry, behavior));
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private static <T extends Block> void registerCasingConnectivity(T entry,
 																	 BiConsumer<T, CasingConnectivity> consumer) {
 		consumer.accept(entry, CreateClient.CASING_CONNECTIVITY);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private static void registerBlockModel(Block entry,
 										   Supplier<NonNullFunction<BakedModel, ? extends BakedModel>> func) {
 		CreateClient.MODEL_SWAPPER.getCustomBlockModels()
 			.register(RegisteredObjectsHelper.getKeyOrThrow(entry), func.get());
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private static void registerItemModel(Item entry,
 										  Supplier<NonNullFunction<BakedModel, ? extends BakedModel>> func) {
 		CreateClient.MODEL_SWAPPER.getCustomItemModels()
 			.register(RegisteredObjectsHelper.getKeyOrThrow(entry), func.get());
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private static void registerCTBehviour(Block entry, Supplier<ConnectedTextureBehaviour> behaviorSupplier) {
 		ConnectedTextureBehaviour behavior = behaviorSupplier.get();
 		CreateClient.MODEL_SWAPPER.getCustomBlockModels()

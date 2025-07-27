@@ -3,6 +3,7 @@ package com.simibubi.create.content.equipment.armor;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.Create;
 
+import io.github.fabricators_of_create.porting_lib.client_events.event.client.RenderArmEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.PlayerModel;
 import net.minecraft.client.model.geom.ModelPart;
@@ -16,13 +17,9 @@ import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.HumanoidArm;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderArmEvent;
+import net.fabricmc.api.EnvType;
 
-@EventBusSubscriber(value = Dist.CLIENT)
+//@EventBusSubscriber(value = Dist.CLIENT)
 public class NetheriteBacktankFirstPersonRenderer {
 
 	private static final ResourceLocation BACKTANK_ARMOR_LOCATION =
@@ -36,7 +33,11 @@ public class NetheriteBacktankFirstPersonRenderer {
 			mc.player != null && AllItems.NETHERITE_BACKTANK.isIn(mc.player.getItemBySlot(EquipmentSlot.CHEST));
 	}
 
-	@SubscribeEvent(priority = EventPriority.LOWEST)
+	static {
+		RenderArmEvent.EVENT.register(NetheriteBacktankFirstPersonRenderer::onRenderPlayerHand);
+	}
+
+	//@SubscribeEvent(priority = EventPriority.LOWEST)
 	public static void onRenderPlayerHand(RenderArmEvent event) {
 		if (!rendererActive)
 			return;

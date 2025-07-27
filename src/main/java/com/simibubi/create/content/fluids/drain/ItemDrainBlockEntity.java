@@ -15,9 +15,16 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.blockEntity.behaviour.fluid.SmartFluidTankBehaviour;
 import com.simibubi.create.foundation.utility.BlockHelper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.data.Pair;
 import net.createmod.catnip.math.VecHelper;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -29,13 +36,11 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
-public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
+import org.jetbrains.annotations.Nullable;
+
+public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity {
 
 	public static final int FILLING_TIME = 20;
 
@@ -52,26 +57,21 @@ public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggl
 		}
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.ITEM_DRAIN.get(),
-				(be, context) -> {
-					if (context != null && context.getAxis().isHorizontal())
-						return be.itemHandlers.get(context);
-					return null;
-				}
-		);
+	public static void registerCapabilities() {
+	}
 
-		event.registerBlockEntity(
-				Capabilities.FluidHandler.BLOCK,
-				AllBlockEntityTypes.ITEM_DRAIN.get(),
-				(be, context) -> {
-					if (context != Direction.UP)
-						return be.internalTank.getCapability();
-					return null;
-				}
-		);
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		if (side != null && side.getAxis().isHorizontal())
+			return this.itemHandlers.get(side);
+		return null;
+	}
+
+	@Override
+	public @Nullable Storage<FluidVariant> getFluidStorage(@Nullable Direction side) {
+		if (side != Direction.UP)
+			return this.internalTank.getCapability();
+		return null;
 	}
 
 	@Override
@@ -243,8 +243,8 @@ public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggl
 
 		if (processingTicks > 5) {
 			internalTank.allowInsertion();
-			if (internalTank.getPrimaryHandler()
-				.fill(fluidFromItem, FluidAction.SIMULATE) != fluidFromItem.getAmount()) {
+			if (CreateTransferUtil
+				.simulateInsertFluid(internalTank.getPrimaryHandler(), fluidFromItem) != fluidFromItem.getAmount()) {
 				internalTank.forbidInsertion();
 				processingTicks = FILLING_TIME;
 				return true;
@@ -263,8 +263,7 @@ public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggl
 		else
 			heldItem = null;
 		internalTank.allowInsertion();
-		internalTank.getPrimaryHandler()
-			.fill(fluidFromItem, FluidAction.EXECUTE);
+		TransferUtil.insertFluid(internalTank.getPrimaryHandler(), fluidFromItem);
 		internalTank.forbidInsertion();
 		notifyUpdate();
 		return true;
@@ -277,7 +276,7 @@ public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggl
 	@Override
 	public void invalidate() {
 		super.invalidate();
-		invalidateCapabilities();
+		//invalidateCapabilities();
 	}
 
 	public void setHeldItem(TransportedItemStack heldItem, Direction insertedFrom) {
@@ -304,7 +303,7 @@ public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggl
 
 	@Override
 	public boolean addToGoggleTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
-		return containedFluidTooltip(tooltip, isPlayerSneaking, level.getCapability(Capabilities.FluidHandler.BLOCK, worldPosition, null));
+		return containedFluidTooltip(tooltip, isPlayerSneaking, TransferUtil.getFluidStorage(this.getLevel(), this.getBlockPos(), this, null));
 	}
 
 }

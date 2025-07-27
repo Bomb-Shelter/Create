@@ -8,8 +8,8 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public abstract class ShootGadgetPacket implements ClientboundPacketPayload {
 	protected final Vec3 location;
@@ -22,14 +22,14 @@ public abstract class ShootGadgetPacket implements ClientboundPacketPayload {
 		this.self = self;
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	protected abstract void handleAdditional();
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	protected abstract ShootableGadgetRenderHandler getHandler();
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void handle(LocalPlayer player) {
 		Entity renderViewEntity = Minecraft.getInstance()
 				.getCameraEntity();

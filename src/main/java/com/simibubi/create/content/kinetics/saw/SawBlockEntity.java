@@ -29,7 +29,15 @@ import com.simibubi.create.foundation.recipe.RecipeFinder;
 import com.simibubi.create.foundation.utility.AbstractBlockBreakQueue;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import net.createmod.catnip.math.VecHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -66,15 +74,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
+import org.jetbrains.annotations.Nullable;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class SawBlockEntity extends BlockBreakingKineticBlockEntity {
+public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements SidedStorageBlockEntity {
 
 	private static final Object cuttingRecipesKey = new Object();
 	public static final Supplier<RecipeType<?>> woodcuttingRecipeType =
@@ -94,16 +101,14 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity {
 		playEvent = ItemStack.EMPTY;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.SAW.get(),
-				(be, context) -> {
-					if (context != Direction.DOWN)
-						return be.inventory;
-					return null;
-				}
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		if (side != Direction.DOWN)
+			return inventory;
+		return null;
 	}
 
 	@Override
@@ -142,7 +147,7 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void tickAudio() {
 		super.tickAudio();
 		if (getSpeed() == 0)
@@ -153,7 +158,7 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity {
 			Item item = playEvent.getItem();
 			if (item instanceof BlockItem) {
 				Block block = ((BlockItem) item).getBlock();
-				isWood = block.getSoundType(block.defaultBlockState(), level, worldPosition, null) == SoundType.WOOD;
+				isWood = CreateFabricUtil.getSoundType(block.defaultBlockState(), level, worldPosition, null) == SoundType.WOOD;
 			}
 			spawnEventParticles(playEvent);
 			playEvent = ItemStack.EMPTY;
@@ -205,7 +210,7 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity {
 			return;
 		inventory.remainingTime = 0;
 
-		for (int slot = 0; slot < inventory.getSlots(); slot++) {
+		for (int slot = 0; slot < inventory.getSlotCount(); slot++) {
 			ItemStack stack = inventory.getStackInSlot(slot);
 			if (stack.isEmpty())
 				continue;
@@ -230,7 +235,7 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity {
 				return;
 			if (level.isClientSide && !isVirtual())
 				return;
-			for (int slot = 0; slot < inventory.getSlots(); slot++) {
+			for (int slot = 0; slot < inventory.getSlotCount(); slot++) {
 				ItemStack stack = inventory.getStackInSlot(slot);
 				if (stack.isEmpty())
 					continue;
@@ -253,7 +258,7 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity {
 				.add(0, .5, 0));
 		Vec3 outMotion = itemMovement.scale(.0625)
 			.add(0, .125, 0);
-		for (int slot = 0; slot < inventory.getSlots(); slot++) {
+		for (int slot = 0; slot < inventory.getSlotCount(); slot++) {
 			ItemStack stack = inventory.getStackInSlot(slot);
 			if (stack.isEmpty())
 				continue;
@@ -270,7 +275,7 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity {
 	@Override
 	public void invalidate() {
 		super.invalidate();
-		invalidateCapabilities();
+		//invalidateCapabilities();
 	}
 
 	@Override
@@ -337,12 +342,12 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity {
 		if (PackageItem.isPackage(input)) {
 			inventory.clear();
 			ItemStackHandler results = PackageItem.getContents(input);
-			for (int i = 0; i < results.getSlots(); i++) {
+			for (int i = 0; i < results.getSlotCount(); i++) {
 				ItemStack stack = results.getStackInSlot(i);
 				if (!stack.isEmpty())
 					ItemHelper.addToList(stack, list);
 			}
-			for (int slot = 0; slot < list.size() && slot + 1 < inventory.getSlots(); slot++)
+			for (int slot = 0; slot < list.size() && slot + 1 < inventory.getSlotCount(); slot++)
 				inventory.setStackInSlot(slot + 1, list.get(slot));
 			return;
 		}
@@ -371,7 +376,7 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity {
 			}
 		}
 
-		for (int slot = 0; slot < list.size() && slot + 1 < inventory.getSlots(); slot++)
+		for (int slot = 0; slot < list.size() && slot + 1 < inventory.getSlotCount(); slot++)
 			inventory.setStackInSlot(slot + 1, list.get(slot));
 
 		award(AllAdvancements.SAW_PROCESSING);
@@ -406,7 +411,7 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity {
 			return;
 
 		inventory.clear();
-		ItemStack remainder = inventory.insertItem(0, entity.getItem()
+		ItemStack remainder = CreateTransferUtil.insertItem(inventory.getSlot(0), entity.getItem()
 			.copy(), false);
 		if (remainder.isEmpty())
 			entity.discard();

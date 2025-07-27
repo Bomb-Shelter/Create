@@ -9,7 +9,7 @@ import com.simibubi.create.api.data.recipe.ItemApplicationRecipeGen;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 
-import net.neoforged.neoforge.common.Tags;
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
 
 /**
  * Create's own Data Generation for Item Application recipes

@@ -5,6 +5,10 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
+
+import io.github.fabricators_of_create.porting_lib.models.data.ModelProperty;
+import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,9 +31,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.client.model.data.ModelData;
-import net.neoforged.neoforge.client.model.data.ModelData.Builder;
-import net.neoforged.neoforge.client.model.data.ModelProperty;
 
 public class TableClothModel extends BakedModelWrapperWithData {
 
@@ -50,7 +51,7 @@ public class TableClothModel extends BakedModelWrapperWithData {
 		return false;
 	}
 
-	private List<BakedQuad> getCorner(TableClothBlock block, int corner, @NotNull RandomSource rand,
+	/*private List<BakedQuad> getCorner(TableClothBlock block, int corner, @NotNull RandomSource rand,
 		@Nullable RenderType renderType) {
 		if (!CORNERS.containsKey(block)) {
 			TextureAtlasSprite targetSprite = getParticleIcon(ModelData.EMPTY);
@@ -101,6 +102,11 @@ public class TableClothModel extends BakedModelWrapperWithData {
 	}
 
 	@Override
+	public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context) {
+		super.emitBlockQuads(blockView, state, pos, randomSupplier, context);
+	}
+
+	@Override
 	public @NotNull List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side,
 											 @NotNull RandomSource rand, @NotNull ModelData extraData, @Nullable RenderType renderType) {
 		@NotNull
@@ -118,7 +124,7 @@ public class TableClothModel extends BakedModelWrapperWithData {
 		List<BakedQuad> copyOf = new ArrayList<>(mainQuads);
 		copyOf.addAll(getCorner(dcb, side.get2DDataValue(), rand, renderType));
 		return copyOf;
-	}
+	}*/
 
 	private static record CullData(EnumSet<Direction> culled) {
 	}

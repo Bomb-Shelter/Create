@@ -7,9 +7,12 @@ import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickBlock;
 import io.netty.buffer.ByteBuf;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.outliner.Outliner;
+import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -32,20 +35,18 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.common.util.TriState;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-@EventBusSubscriber
 public abstract class ClickToLinkBlockItem extends BlockItem {
 	public ClickToLinkBlockItem(Block pBlock, Properties pProperties) {
 		super(pBlock, pProperties);
 	}
 
-	@SubscribeEvent
+	static {
+		RightClickBlock.EVENT.register(ClickToLinkBlockItem::linkableItemAlwaysPlacesWhenUsed);
+	}
+
 	public static void linkableItemAlwaysPlacesWhenUsed(PlayerInteractEvent.RightClickBlock event) {
 		ItemStack usedItem = event.getItemStack();
 		if (!(usedItem.getItem() instanceof ClickToLinkBlockItem blockItem))
@@ -146,7 +147,7 @@ public abstract class ClickToLinkBlockItem extends BlockItem {
 	private static BlockPos lastShownPos = null;
 	private static AABB lastShownAABB = null;
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public static void clientTick() {
 		Player player = Minecraft.getInstance().player;
 		if (player == null)
@@ -182,7 +183,7 @@ public abstract class ClickToLinkBlockItem extends BlockItem {
 		return true;
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public AABB getSelectionBounds(BlockPos pos) {
 		Level world = Minecraft.getInstance().level;
 		BlockState state = world.getBlockState(pos);

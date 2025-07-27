@@ -1,0 +1,101 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "java",
+      "request": "launch",
+      "name": "Client",
+      "presentation": {
+        "group": "Mod Development - Create",
+        "order": 0
+      },
+      "projectName": "Create",
+      "mainClass": "net.neoforged.devlaunch.Main",
+      "args": [
+        "@K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\build\\moddev\\clientRunProgramArgs.txt"
+      ],
+      "vmArgs": [
+        "@K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\build\\moddev\\clientRunVmArgs.txt",
+        "-Dfml.modFolders\u003dcreate%%K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\bin\\main"
+      ],
+      "cwd": "${workspaceFolder}\\run",
+      "env": {
+        "MOD_CLASSES": "create%%K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\bin\\main"
+      },
+      "console": "internalConsole",
+      "shortenCommandLine": "none"
+    },
+    {
+      "type": "java",
+      "request": "launch",
+      "name": "Data",
+      "presentation": {
+        "group": "Mod Development - Create",
+        "order": 1
+      },
+      "projectName": "Create",
+      "mainClass": "net.neoforged.devlaunch.Main",
+      "args": [
+        "@K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\build\\moddev\\dataRunProgramArgs.txt"
+      ],
+      "vmArgs": [
+        "@K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\build\\moddev\\dataRunVmArgs.txt",
+        "-Dfml.modFolders\u003dcreate%%K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\bin\\main"
+      ],
+      "cwd": "${workspaceFolder}\\run",
+      "env": {
+        "MOD_CLASSES": "create%%K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\bin\\main"
+      },
+      "console": "internalConsole",
+      "shortenCommandLine": "none"
+    },
+    {
+      "type": "java",
+      "request": "launch",
+      "name": "GameTestServer",
+      "presentation": {
+        "group": "Mod Development - Create",
+        "order": 2
+      },
+      "projectName": "Create",
+      "mainClass": "net.neoforged.devlaunch.Main",
+      "args": [
+        "@K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\build\\moddev\\gameTestServerRunProgramArgs.txt"
+      ],
+      "vmArgs": [
+        "@K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\build\\moddev\\gameTestServerRunVmArgs.txt",
+        "-Dfml.modFolders\u003dcreate%%K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\bin\\main"
+      ],
+      "cwd": "${workspaceFolder}\\run\\gametest",
+      "env": {
+        "MOD_CLASSES": "create%%K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\bin\\main"
+      },
+      "console": "internalConsole",
+      "shortenCommandLine": "none"
+    },
+    {
+      "type": "java",
+      "request": "launch",
+      "name": "Server",
+      "presentation": {
+        "group": "Mod Development - Create",
+        "order": 3
+      },
+      "projectName": "Create",
+      "mainClass": "net.neoforged.devlaunch.Main",
+      "args": [
+        "@K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\build\\moddev\\serverRunProgramArgs.txt"
+      ],
+      "vmArgs": [
+        "@K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\build\\moddev\\serverRunVmArgs.txt",
+        "-Dfml.modFolders\u003dcreate%%K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\bin\\main"
+      ],
+      "cwd": "${workspaceFolder}\\run\\server",
+      "env": {
+        "MOD_CLASSES": "create%%K:\\BluSpringStudios\\Dev\\Not Mine\\Create6\\bin\\main"
+      },
+      "console": "internalConsole",
+      "shortenCommandLine": "none"
+    }
+  ]
+}

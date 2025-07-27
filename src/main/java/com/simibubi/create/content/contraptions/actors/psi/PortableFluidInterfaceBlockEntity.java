@@ -3,30 +3,41 @@ package com.simibubi.create.content.contraptions.actors.psi;
 import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.content.contraptions.Contraption;
 
+import com.simibubi.create.infrastructure.fabric.transfer.FinalCommitSnapshot;
+
+import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
-public class PortableFluidInterfaceBlockEntity extends PortableStorageInterfaceBlockEntity {
+import org.jetbrains.annotations.Nullable;
 
-	protected IFluidHandler capability;
+import java.util.Iterator;
+
+public class PortableFluidInterfaceBlockEntity extends PortableStorageInterfaceBlockEntity implements SidedStorageBlockEntity {
+
+	protected Storage<FluidVariant> capability;
 
 	public PortableFluidInterfaceBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
 		capability = createEmptyHandler();
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.FluidHandler.BLOCK,
-				AllBlockEntityTypes.PORTABLE_FLUID_INTERFACE.get(),
-				(be, context) -> be.capability
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<FluidVariant> getFluidStorage(@Nullable Direction side) {
+		return capability;
 	}
 
 	@Override
@@ -38,7 +49,7 @@ public class PortableFluidInterfaceBlockEntity extends PortableStorageInterfaceB
 
 	@Override
 	protected void invalidateCapability() {
-		invalidateCapabilities();
+		//invalidateCapabilities();
 	}
 
 	@Override
@@ -48,66 +59,56 @@ public class PortableFluidInterfaceBlockEntity extends PortableStorageInterfaceB
 		super.stopTransferring();
 	}
 
-	private IFluidHandler createEmptyHandler() {
+	private Storage<FluidVariant> createEmptyHandler() {
 		return new InterfaceFluidHandler(new FluidTank(0));
 	}
 
-	public class InterfaceFluidHandler implements IFluidHandler {
+	public class InterfaceFluidHandler implements SlottedStorage<FluidVariant> {
 
-		private IFluidHandler wrapped;
+		private SlottedStorage<FluidVariant> wrapped;
 
-		public InterfaceFluidHandler(IFluidHandler wrapped) {
+		public InterfaceFluidHandler(SlottedStorage<FluidVariant> wrapped) {
 			this.wrapped = wrapped;
 		}
 
 		@Override
-		public int getTanks() {
-			return wrapped.getTanks();
+		public int getSlotCount() {
+			return wrapped.getSlotCount();
 		}
 
 		@Override
-		public FluidStack getFluidInTank(int tank) {
-			return wrapped.getFluidInTank(tank);
+		public SingleSlotStorage<FluidVariant> getSlot(int slot) {
+			return wrapped.getSlot(slot);
 		}
 
 		@Override
-		public int getTankCapacity(int tank) {
-			return wrapped.getTankCapacity(tank);
-		}
-
-		@Override
-		public boolean isFluidValid(int tank, FluidStack stack) {
-			return wrapped.isFluidValid(tank, stack);
-		}
-
-		@Override
-		public int fill(FluidStack resource, FluidAction action) {
+		public long insert(FluidVariant resource, long maxAmount, TransactionContext transaction) {
 			if (!isConnected())
 				return 0;
-			int fill = wrapped.fill(resource, action);
-			if (fill > 0 && action.execute())
-				keepAlive();
+			long fill = wrapped.insert(resource, maxAmount, transaction);
+			(new FinalCommitSnapshot(maxAmount, () -> {
+				if (fill > 0)
+					keepAlive();
+			})).updateSnapshots(transaction);
 			return fill;
 		}
 
 		@Override
-		public FluidStack drain(FluidStack resource, FluidAction action) {
+		public long extract(FluidVariant resource, long maxAmount, TransactionContext transaction) {
 			if (!canTransfer())
-				return FluidStack.EMPTY;
-			FluidStack drain = wrapped.drain(resource, action);
-			if (!drain.isEmpty() && action.execute())
-				keepAlive();
+				return 0;
+
+			var drain = wrapped.extract(resource, maxAmount, transaction);
+			(new FinalCommitSnapshot(maxAmount, () -> {
+				if (drain > 0)
+					keepAlive();
+			})).updateSnapshots(transaction);
 			return drain;
 		}
 
 		@Override
-		public FluidStack drain(int maxDrain, FluidAction action) {
-			if (!canTransfer())
-				return FluidStack.EMPTY;
-			FluidStack drain = wrapped.drain(maxDrain, action);
-			if (!drain.isEmpty() && action.execute())
-				keepAlive();
-			return drain;
+		public Iterator<StorageView<FluidVariant>> iterator() {
+			return wrapped.iterator();
 		}
 
 		public void keepAlive() {

@@ -4,6 +4,8 @@ import com.simibubi.create.content.kinetics.belt.BeltHelper;
 import com.simibubi.create.content.kinetics.crusher.CrushingWheelControllerBlock;
 import com.simibubi.create.content.kinetics.crusher.CrushingWheelControllerBlockEntity;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -11,8 +13,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-
-import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 public class BeltCrusherInteractionHandler {
 
@@ -52,7 +52,7 @@ public class BeltCrusherInteractionHandler {
 
 			ItemStack toInsert = currentItem.stack.copy();
 
-			ItemStack remainder = ItemHandlerHelper.insertItemStacked(crusherBE.inventory, toInsert, false);
+			ItemStack remainder = CreateTransferUtil.insertItemStacked(crusherBE.inventory, toInsert, false);
 			if (ItemStack.matches(toInsert, remainder))
 				return true;
 

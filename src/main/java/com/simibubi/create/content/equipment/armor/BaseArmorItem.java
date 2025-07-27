@@ -1,5 +1,6 @@
 package com.simibubi.create.content.equipment.armor;
 
+import io.github.fabricators_of_create.porting_lib.item.extensions.ArmorTextureItem;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
@@ -12,7 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Locale;
 
-public class BaseArmorItem extends ArmorItem {
+public class BaseArmorItem extends ArmorItem implements ArmorTextureItem {
 	protected final ResourceLocation textureLoc;
 
 	public BaseArmorItem(Holder<ArmorMaterial> armorMaterial, ArmorItem.Type type, Properties properties, ResourceLocation textureLoc) {

@@ -2,20 +2,17 @@ package com.simibubi.create.foundation.item.render;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
+import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry.DynamicItemRenderer;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
-public abstract class CustomRenderedItemModelRenderer extends BlockEntityWithoutLevelRenderer {
-
-	public CustomRenderedItemModelRenderer() {
-		super(null, null);
-	}
+public abstract class CustomRenderedItemModelRenderer implements DynamicItemRenderer {
 
 	@Override
-	public void renderByItem(ItemStack stack, ItemDisplayContext transformType, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
+	public void render(ItemStack stack, ItemDisplayContext transformType, PoseStack ms, MultiBufferSource buffer, int light, int overlay) {
 		CustomRenderedItemModel mainModel = (CustomRenderedItemModel) Minecraft.getInstance()
 			.getItemRenderer()
 			.getModel(stack, null, null, 0);

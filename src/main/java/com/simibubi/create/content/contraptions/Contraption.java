@@ -22,6 +22,9 @@ import java.util.function.Function;
 
 import javax.annotation.Nullable;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomUpdateTagHandlingBlockEntity;
 import net.minecraft.core.HolderLookup;
 
 import net.minecraft.core.Vec3i;
@@ -129,9 +132,6 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import net.neoforged.neoforge.client.model.data.ModelData;
-import net.neoforged.neoforge.registries.GameData;
-
 public abstract class Contraption {
 
 	public Optional<List<AABB>> simplifiedEntityColliders;
@@ -163,7 +163,7 @@ public abstract class Contraption {
 	private CompletableFuture<Void> simplifiedEntityColliderProvider;
 
 	// Client
-	public Map<BlockPos, ModelData> modelData;
+	public Map<BlockPos, Object> modelData;
 	public Map<BlockPos, BlockEntity> presentBlockEntities;
 	public List<BlockEntity> renderedBlockEntities;
 
@@ -414,7 +414,7 @@ public abstract class Contraption {
 			boolean blockAttachedTowardsFace =
 				BlockMovementChecks.isBlockAttachedTowards(blockState, world, offsetPos, offset.getOpposite());
 			boolean brittle = BlockMovementChecks.isBrittle(blockState);
-			boolean canStick = !brittle && state.canStickTo(blockState) && blockState.canStickTo(state);
+			boolean canStick = !brittle && CreateFabricUtil.canStickTo(state, blockState) && CreateFabricUtil.canStickTo(blockState, state);
 			if (canStick) {
 				if (state.getPistonPushReaction() == PushReaction.PUSH_ONLY
 					|| blockState.getPistonPushReaction() == PushReaction.PUSH_ONLY) {
@@ -908,7 +908,7 @@ public abstract class Contraption {
 
 	private CompoundTag writeBlocksCompound(boolean spawnPacket) {
 		CompoundTag compound = new CompoundTag();
-		HashMapPalette<BlockState> palette = new HashMapPalette<>(GameData.getBlockStateIDMap(), 16, (i, s) -> {
+		HashMapPalette<BlockState> palette = new HashMapPalette<>(Block.BLOCK_STATE_REGISTRY, 16, (i, s) -> {
 			throw new IllegalStateException("Palette Map index exceeded maximum");
 		});
 		ListTag blockList = new ListTag();
@@ -960,7 +960,7 @@ public abstract class Contraption {
 		ListTag blockList;
 		if (usePalettedDeserialization) {
 			CompoundTag c = ((CompoundTag) compound);
-			palette = new HashMapPalette<>(GameData.getBlockStateIDMap(), 16, (i, s) -> {
+			palette = new HashMapPalette<>(Block.BLOCK_STATE_REGISTRY, 16, (i, s) -> {
 				throw new IllegalStateException("Palette Map index exceeded maximum");
 			});
 
@@ -998,7 +998,7 @@ public abstract class Contraption {
 				return;
 
 			presentBlockEntities.put(info.pos(), be);
-			modelData.put(info.pos(), be.getModelData());
+			modelData.put(info.pos(), be.getRenderData());
 
 			MovementBehaviour movementBehaviour = MovementBehaviour.REGISTRY.get(info.state());
 			if (movementBehaviour == null || !movementBehaviour.disableBlockEntityRendering()) {
@@ -1033,7 +1033,10 @@ public abstract class Contraption {
 		BlockEntity be = entityBlock.newBlockEntity(pos, state);
 		postprocessReadBlockEntity(level, be);
 		if (be != null && nbt != null) {
-			be.handleUpdateTag(nbt, level.registryAccess());
+			if (be instanceof CustomUpdateTagHandlingBlockEntity updateTagBlockEntity)
+				updateTagBlockEntity.handleUpdateTag(nbt, level.registryAccess());
+			else
+				be.loadCustomOnly(nbt, level.registryAccess());
 		}
 
 		return be;
@@ -1147,7 +1150,7 @@ public abstract class Contraption {
 						});
 				});
 
-			world.markAndNotifyBlock(add, world.getChunkAt(add), block.state(), Blocks.AIR.defaultBlockState(), flags,
+			world.port_lib$markAndNotifyBlock(add, world.getChunkAt(add), block.state(), Blocks.AIR.defaultBlockState(), flags,
 				512);
 			block.state().updateIndirectNeighbourShapes(world, add, flags & -2);
 		}
@@ -1257,7 +1260,7 @@ public abstract class Contraption {
 			if (!shouldUpdateAfterMovement(block))
 				continue;
 			BlockPos targetPos = transform.apply(block.pos());
-			world.markAndNotifyBlock(targetPos, world.getChunkAt(targetPos), block.state(), block.state(),
+			world.port_lib$markAndNotifyBlock(targetPos, world.getChunkAt(targetPos), block.state(), block.state(),
 				Block.UPDATE_MOVE_BY_PISTON | Block.UPDATE_ALL, 512);
 		}
 

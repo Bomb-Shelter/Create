@@ -5,9 +5,16 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import net.neoforged.neoforge.common.NeoForgeMod;
-import net.neoforged.neoforge.common.Tags;
-import net.neoforged.neoforge.fluids.BaseFlowingFluid;
+import io.github.fabricators_of_create.porting_lib.fluids.BaseFlowingFluid;
+
+import io.github.fabricators_of_create.porting_lib.fluids.FluidInteractionRegistry;
+
+import io.github.fabricators_of_create.porting_lib.fluids.FluidInteractionRegistry.InteractionInformation;
+
+import io.github.fabricators_of_create.porting_lib.fluids.FluidType;
+import io.github.fabricators_of_create.porting_lib.fluids.PortingLibFluids;
+
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
 
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
@@ -36,11 +43,7 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.MapColor;
 
-import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
-import net.neoforged.neoforge.fluids.FluidInteractionRegistry;
-import net.neoforged.neoforge.fluids.FluidInteractionRegistry.InteractionInformation;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.FluidType;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class AllFluids {
 	private static final CreateRegistrate REGISTRATE = Create.registrate();
@@ -103,7 +106,7 @@ public class AllFluids {
 	}
 
 	public static void registerFluidInteractions() {
-		FluidInteractionRegistry.addInteraction(NeoForgeMod.LAVA_TYPE.value(), new InteractionInformation(
+		FluidInteractionRegistry.addInteraction(PortingLibFluids.LAVA_TYPE, new InteractionInformation(
 			HONEY.get().getFluidType(),
 			fluidState -> {
 				if (fluidState.isSource()) {
@@ -116,7 +119,7 @@ public class AllFluids {
 			}
 		));
 
-		FluidInteractionRegistry.addInteraction(NeoForgeMod.LAVA_TYPE.value(), new InteractionInformation(
+		FluidInteractionRegistry.addInteraction(PortingLibFluids.LAVA_TYPE, new InteractionInformation(
 			CHOCOLATE.get().getFluidType(),
 			fluidState -> {
 				if (fluidState.isSource()) {
@@ -156,7 +159,8 @@ public class AllFluids {
 			this.flowingTexture = flowingTexture;
 		}
 
-		@Override
+		// Fabric TODO: how
+		/*@Override
 		public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {
 			consumer.accept(new IClientFluidTypeExtensions() {
 
@@ -200,7 +204,7 @@ public class AllFluids {
 				}
 
 			});
-		}
+		}*/
 
 		protected abstract int getTintColor(FluidStack stack);
 

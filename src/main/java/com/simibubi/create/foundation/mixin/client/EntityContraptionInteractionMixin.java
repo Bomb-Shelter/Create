@@ -5,6 +5,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.logging.log4j.util.TriConsumer;
 import org.spongepowered.asm.mixin.Final;
@@ -140,7 +142,7 @@ public abstract class EntityContraptionInteractionMixin {
 			return;
 
 		self.setOnGround(true);
-		self.getPersistentData()
+		self.getCustomData()
 			.putBoolean("ContraptionGrounded", true);
 	}
 
@@ -151,11 +153,11 @@ public abstract class EntityContraptionInteractionMixin {
 		BlockPos particlePos = BlockPos.containing(worldPos); // pos where particles are spawned
 
 		create$forCollision(worldPos, (contraption, state, pos) -> {
-			if (!state.addRunningEffects(level, pos, self)
+			if (!CreateFabricUtil.addRunningEffects(state, level, pos, self)
 				&& state.getRenderShape() != RenderShape.INVISIBLE) {
 				Vec3 speed = self.getDeltaMovement();
 				level.addParticle(
-					new BlockParticleOption(ParticleTypes.BLOCK, state).setPos(particlePos),
+					new BlockParticleOption(ParticleTypes.BLOCK, state).setSourcePos(particlePos),
 					self.getX() + ((double) random.nextFloat() - 0.5D) * (double) dimensions.width(),
 					self.getY() + 0.1D,
 					self.getZ() + ((double) random.nextFloat() - 0.5D) * (double) dimensions.height(),

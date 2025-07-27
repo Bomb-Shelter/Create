@@ -2,9 +2,14 @@ package com.simibubi.create.content.equipment.symmetryWand;
 
 import java.util.Random;
 
-import net.neoforged.fml.common.EventBusSubscriber;
+import io.github.fabricators_of_create.porting_lib.level.events.BlockEvent.BreakEvent;
+import io.github.fabricators_of_create.porting_lib.level.events.BlockEvent.EntityPlaceEvent;
 
-import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.createmod.catnip.platform.CatnipServices;
+
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 
 import org.joml.Vector3f;
 
@@ -32,22 +37,23 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent.Stage;
-import net.neoforged.neoforge.client.model.data.ModelData;
-import net.neoforged.neoforge.event.level.BlockEvent.BreakEvent;
-import net.neoforged.neoforge.event.level.BlockEvent.EntityPlaceEvent;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-@EventBusSubscriber
 public class SymmetryHandler {
 
 	private static int tickCounter = 0;
 
-	@SubscribeEvent(priority = EventPriority.LOWEST)
+	public static void init() {
+		EntityPlaceEvent.EVENT.register(SymmetryHandler::onBlockPlaced);
+		BreakEvent.EVENT.register(event -> {
+			onBlockDestroyed((BreakEvent) event);
+		});
+
+		CatnipServices.PLATFORM.executeOnClientOnly(() -> SymmetryHandler::onClientInit);
+	}
+
+	//@SubscribeEvent(priority = EventPriority.LOWEST)
 	public static void onBlockPlaced(EntityPlaceEvent event) {
 		if (event.getLevel()
 			.isClientSide())
@@ -61,7 +67,7 @@ public class SymmetryHandler {
 				SymmetryWandItem.apply(player.level(), inv.getItem(i), player, event.getPos(), event.getPlacedBlock());
 	}
 
-	@SubscribeEvent(priority = EventPriority.LOWEST)
+	//@SubscribeEvent(priority = EventPriority.LOWEST)
 	public static void onBlockDestroyed(BreakEvent event) {
 		if (event.getLevel()
 			.isClientSide())
@@ -74,12 +80,15 @@ public class SymmetryHandler {
 				SymmetryWandItem.remove(player.level(), inv.getItem(i), player, event.getPos());
 	}
 
-	@OnlyIn(Dist.CLIENT)
-	@SubscribeEvent
-	public static void onRenderWorld(RenderLevelStageEvent event) {
-		if (event.getStage() != Stage.AFTER_PARTICLES)
-			return;
+	@Environment(EnvType.CLIENT)
+	public static void onClientInit() {
+		WorldRenderEvents.AFTER_TRANSLUCENT.register(SymmetryHandler::onRenderWorld);
+		ClientTickEvents.END_CLIENT_TICK.register(client -> onClientTick());
+	}
 
+	@Environment(EnvType.CLIENT)
+	//@SubscribeEvent
+	public static void onRenderWorld(WorldRenderContext context) {
 		Minecraft mc = Minecraft.getInstance();
 		LocalPlayer player = mc.player;
 		RandomSource random = RandomSource.create();
@@ -106,7 +115,7 @@ public class SymmetryHandler {
 			Camera info = mc.gameRenderer.getMainCamera();
 			Vec3 view = info.getPosition();
 
-			PoseStack ms = event.getPoseStack();
+			PoseStack ms = context.matrixStack();
 			ms.pushPose();
 			ms.translate(pos.getX() - view.x(), pos.getY() - view.y(), pos.getZ() - view.z());
 			ms.translate(0, yShift + .2f, 0);
@@ -118,16 +127,16 @@ public class SymmetryHandler {
 			mc.getBlockRenderer()
 				.getModelRenderer()
 				.tesselateBlock(player.level(), model, Blocks.AIR.defaultBlockState(), pos, ms, builder, true,
-					random, Mth.getSeed(pos), OverlayTexture.NO_OVERLAY, ModelData.EMPTY, RenderType.solid());
+					random, Mth.getSeed(pos), OverlayTexture.NO_OVERLAY/*, ModelData.EMPTY, RenderType.solid()*/);
 
 			ms.popPose();
 			buffer.endBatch();
 		}
 	}
 
-	@OnlyIn(Dist.CLIENT)
-	@SubscribeEvent
-	public static void onClientTick(ClientTickEvent.Post event) {
+	@Environment(EnvType.CLIENT)
+	//@SubscribeEvent
+	public static void onClientTick() {
 		Minecraft mc = Minecraft.getInstance();
 		LocalPlayer player = mc.player;
 

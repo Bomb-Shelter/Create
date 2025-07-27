@@ -1,5 +1,9 @@
 package com.simibubi.create.content.equipment.clipboard;
 
+import io.github.fabricators_of_create.porting_lib.models.generators.ItemModelBuilder;
+
+import io.github.fabricators_of_create.porting_lib.models.generators.ModelFile.UncheckedModelFile;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.mojang.serialization.Codec;
@@ -18,10 +22,8 @@ import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.model.generators.ItemModelBuilder;
-import net.neoforged.neoforge.client.model.generators.ModelFile.UncheckedModelFile;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class ClipboardOverrides {
 
@@ -48,7 +50,7 @@ public class ClipboardOverrides {
 		clipboardItem.set(AllDataComponents.CLIPBOARD_TYPE, type);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public static void registerModelOverridesClient(ClipboardBlockItem item) {
 		ItemProperties.register(item, ClipboardType.ID, (pStack, pLevel, pEntity, pSeed) ->
 				pStack.getOrDefault(AllDataComponents.CLIPBOARD_TYPE, ClipboardType.EMPTY).ordinal()
@@ -56,7 +58,7 @@ public class ClipboardOverrides {
 	}
 
 	public static ItemModelBuilder addOverrideModels(DataGenContext<Item, ClipboardBlockItem> c,
-		RegistrateItemModelProvider p) {
+													 RegistrateItemModelProvider p) {
 		ItemModelBuilder builder = p.generated(c::get);
 		for (ClipboardType type : ClipboardType.values()) {
 			int i = type.ordinal();

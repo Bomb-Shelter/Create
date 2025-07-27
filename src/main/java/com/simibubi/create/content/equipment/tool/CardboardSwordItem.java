@@ -2,6 +2,18 @@ package com.simibubi.create.content.equipment.tool;
 
 import java.util.function.Consumer;
 
+import io.github.fabricators_of_create.porting_lib.enchant.CustomEnchantingBehaviorItem;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.AttackEntityEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.LeftClickBlock;
+
+import io.github.fabricators_of_create.porting_lib.item.extensions.CustomSupportsEnchantItem;
+import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
+import net.fabricmc.fabric.api.registry.FuelRegistry;
+
+import net.fabricmc.loader.api.FabricLoader;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllItems;
@@ -30,58 +42,52 @@ import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.LogicalSide;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
-import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-@EventBusSubscriber
-public class CardboardSwordItem extends SwordItem {
+public class CardboardSwordItem extends SwordItem implements CustomEnchantingBehaviorItem, CustomSupportsEnchantItem {
 
 	public CardboardSwordItem(Properties pProperties) {
 		super(AllToolMaterials.CARDBOARD, pProperties);
-	}
+		FuelRegistry.INSTANCE.add(this, 1000);
 
-	@Override
-	public int getBurnTime(ItemStack itemStack, @Nullable RecipeType<?> recipeType) {
-		return 1000;
+		CatnipServices.PLATFORM.executeOnClientOnly(() -> this::initializeClient);
 	}
 
 	@Override
 	public boolean supportsEnchantment(ItemStack stack, Holder<Enchantment> enchantment) {
-		return enchantment.getKey() == Enchantments.KNOCKBACK;
+		return enchantment.unwrapKey().orElseThrow() == Enchantments.KNOCKBACK;
 	}
 
 	@Override
 	public boolean isBookEnchantable(ItemStack stack, ItemStack book) {
 		ItemEnchantments enchants = book.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
 		for (Holder<Enchantment> enchantment : enchants.keySet()) {
-			if (enchantment.getKey() != Enchantments.KNOCKBACK)
+			if (enchantment.unwrapKey().orElseThrow() != Enchantments.KNOCKBACK)
 				return false;
 		}
 		return true;
 	}
 
-	@SubscribeEvent
+	static {
+		LeftClickBlock.EVENT.register(CardboardSwordItem::cardboardSwordsMakeNoiseOnClick);
+		AttackEntityEvent.EVENT.register(CardboardSwordItem::cardboardSwordsCannotHurtYou);
+	}
+
 	public static void cardboardSwordsMakeNoiseOnClick(PlayerInteractEvent.LeftClickBlock event) {
 		ItemStack itemStack = event.getItemStack();
 		if (!AllItems.CARDBOARD_SWORD.isIn(itemStack))
 			return;
 		if (event.getAction() != PlayerInteractEvent.LeftClickBlock.Action.START)
 			return;
-		if (event.getSide() == LogicalSide.CLIENT)
+		if (event.getSide() == EnvType.CLIENT)
 			AllSoundEvents.CARDBOARD_SWORD.playAt(event.getLevel(), event.getPos(), 0.5f, 1.85f, false);
 		else
 			AllSoundEvents.CARDBOARD_SWORD.play(event.getLevel(), event.getEntity(), event.getPos(), 0.5f, 1.85f);
 	}
 
 	// We set priority to highest just so we catch this before anyone does anything else
-	@SubscribeEvent(priority = EventPriority.HIGHEST)
+	//@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public static void cardboardSwordsCannotHurtYou(AttackEntityEvent event) {
 		Player attacker = event.getEntity();
 		if (!(event.getTarget() instanceof LivingEntity target) || target.getType().is(EntityTypeTags.ARTHROPOD))
@@ -110,7 +116,7 @@ public class CardboardSwordItem extends SwordItem {
 		knockback(target, knockbackStrength, yRot);
 
 		boolean targetIsPlayer = target instanceof Player;
-		MobCategory targetType = target.getClassification(false);
+		MobCategory targetType = target.getType().getCategory();
 
 		if (target instanceof ServerPlayer sp)
 			CatnipServices.NETWORK.sendToClient(sp, new KnockbackPacket(yRot, (float) knockbackStrength));
@@ -128,9 +134,8 @@ public class CardboardSwordItem extends SwordItem {
 		target.knockback(knockbackStrength * 0.5F, Mth.sin(yRot * Mth.DEG_TO_RAD), -Mth.cos(yRot * Mth.DEG_TO_RAD));
 	}
 
-	@Override
-	@OnlyIn(Dist.CLIENT)
-	public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-		consumer.accept(SimpleCustomRenderer.create(this, new CardboardSwordItemRenderer()));
+	@Environment(EnvType.CLIENT)
+	private void initializeClient() {
+		BuiltinItemRendererRegistry.INSTANCE.register(this, SimpleCustomRenderer.create(this, new CardboardSwordItemRenderer()));
 	}
 }

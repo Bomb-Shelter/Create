@@ -12,8 +12,8 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -59,7 +59,7 @@ public class AirParticleData implements ParticleOptions, ICustomParticleDataWith
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public SpriteParticleRegistration<AirParticleData> getMetaFactory() {
 		return AirParticle.Factory::new;
 	}

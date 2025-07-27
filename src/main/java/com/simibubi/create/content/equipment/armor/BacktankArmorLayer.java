@@ -4,10 +4,14 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.simibubi.create.foundation.mixin.accessor.EntityRenderDispatcherAccessor;
 
+import dev.architectury.registry.client.level.entity.EntityModelLayerRegistry;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.render.CachedBuffers;
 import net.createmod.catnip.render.SuperByteBuffer;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback.RegistrationHelper;
+import net.fabricmc.fabric.mixin.client.rendering.LivingEntityRendererAccessor;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -18,10 +22,13 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.core.Direction;
+import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
+
+import java.util.Map;
 
 public class BacktankArmorLayer<T extends LivingEntity, M extends EntityModel<T>> extends RenderLayer<T, M> {
 
@@ -79,21 +86,14 @@ public class BacktankArmorLayer<T extends LivingEntity, M extends EntityModel<T>
 		ms.popPose();
 	}
 
-	public static void registerOnAll(EntityRenderDispatcher renderManager) {
-		for (EntityRenderer<? extends Player> renderer : renderManager.getSkinMap().values())
-			registerOn(renderer);
-		for (EntityRenderer<?> renderer : ((EntityRenderDispatcherAccessor) renderManager).create$getRenderers().values())
-			registerOn(renderer);
-	}
-
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	public static void registerOn(EntityRenderer<?> entityRenderer) {
+	public static void registerOn(EntityRenderer<?> entityRenderer, RegistrationHelper registrationHelper) {
 		if (!(entityRenderer instanceof LivingEntityRenderer<?, ?> livingRenderer))
 			return;
 		if (!(livingRenderer.getModel() instanceof HumanoidModel))
 			return;
 		BacktankArmorLayer<?, ?> layer = new BacktankArmorLayer<>(livingRenderer);
-		livingRenderer.addLayer((BacktankArmorLayer) layer);
+		registrationHelper.register(layer);
 	}
 
 }

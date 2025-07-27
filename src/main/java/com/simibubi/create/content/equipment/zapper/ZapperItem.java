@@ -4,6 +4,9 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import io.github.fabricators_of_create.porting_lib.item.extensions.EntitySwingListenerItem;
+import io.github.fabricators_of_create.porting_lib.item.extensions.ReequipAnimationItem;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllDataComponents;
@@ -43,17 +46,17 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public abstract class ZapperItem extends Item implements CustomArmPoseItem {
+public abstract class ZapperItem extends Item implements CustomArmPoseItem, ReequipAnimationItem, EntitySwingListenerItem {
 
 	public ZapperItem(Properties properties) {
 		super(properties.stacksTo(1));
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flagIn) {
 		if (stack.has(AllDataComponents.SHAPER_BLOCK_USED)) {
 			MutableComponent usedBlock = stack.get(AllDataComponents.SHAPER_BLOCK_USED).getBlock().getName();
@@ -176,7 +179,7 @@ public abstract class ZapperItem extends Item implements CustomArmPoseItem {
 	protected abstract boolean activate(Level world, Player player, ItemStack item, BlockState stateToUse,
 		BlockHitResult raytrace, CompoundTag data);
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	protected abstract void openHandgunGUI(ItemStack item, InteractionHand hand);
 
 	protected abstract int getCooldownDelay(ItemStack item);

@@ -24,6 +24,7 @@ import com.simibubi.create.content.schematics.SchematicPrinter;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement;
 import com.simibubi.create.content.schematics.requirement.ItemRequirement.ItemUseType;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
+import com.simibubi.create.foundation.blockEntity.SmartBlockEntity.SmartBlockData;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.foundation.item.ItemHelper.ExtractionCountMode;
@@ -32,9 +33,21 @@ import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.simibubi.create.infrastructure.config.CSchematics;
 
+import com.simibubi.create.infrastructure.fabric.transfer.EmptyItemHandler;
+
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomRenderBoundingBoxBlockEntity;
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import io.netty.buffer.ByteBuf;
 import net.createmod.catnip.codecs.CatnipCodecUtils;
 import net.createmod.catnip.data.Iterate;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -47,6 +60,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
@@ -66,14 +80,10 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.AABB;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.neoforged.neoforge.items.wrapper.EmptyItemHandler;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuProvider {
+public class SchematicannonBlockEntity extends SmartBlockEntity implements ExtendedScreenHandlerFactory<SmartBlockData> {
 
 	public static final int NEIGHBOUR_CHECKING = 100;
 	public static final int MAX_ANCHOR_DISTANCE = 256;
@@ -96,7 +106,7 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuP
 	private boolean blockSkipped;
 
 	public BlockPos previousTarget;
-	public LinkedHashSet<IItemHandler> attachedInventories;
+	public LinkedHashSet<SlottedStorage<ItemVariant>> attachedInventories;
 	public List<LaunchedItem> flyingBlocks;
 	public MaterialChecklist checklist;
 
@@ -144,10 +154,10 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuP
 
 			BlockEntity blockEntity = level.getBlockEntity(worldPosition.relative(facing));
 			if (blockEntity != null) {
-				IItemHandler capability =
-					level.getCapability(Capabilities.ItemHandler.BLOCK, blockEntity.getBlockPos(), facing.getOpposite());
-				if (capability != null) {
-					attachedInventories.add(capability);
+				Storage<ItemVariant> capability =
+					ItemStorage.SIDED.find(level, blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity, facing.getOpposite());
+				if (capability instanceof SlottedStorage<ItemVariant> storage) {
+					attachedInventories.add(storage);
 				}
 			}
 		}
@@ -511,29 +521,34 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuP
 
 		// Find and apply damage
 		if (usage == ItemUseType.DAMAGE) {
-			for (IItemHandler cap : attachedInventories) {
+			for (SlottedStorage<ItemVariant> cap : attachedInventories) {
 				if (cap == null)
 					cap = EmptyItemHandler.INSTANCE;
-				for (int slot = 0; slot < cap.getSlots(); slot++) {
-					ItemStack extractItem = cap.extractItem(slot, 1, true);
-					if (!required.matches(extractItem))
-						continue;
-					if (!extractItem.isDamageableItem())
-						continue;
+				for (int slot = 0; slot < cap.getSlotCount(); slot++) {
+					try (Transaction transaction = TransferUtil.getTransaction()) {
+						SingleSlotStorage<ItemVariant> slotStorage = cap.getSlot(slot);
+						long extracted = slotStorage.extract(slotStorage.getResource(), 1, transaction);
+						if (extracted <= 0)
+							continue;
+						if (!slotStorage.getResource().toStack().isDamageableItem())
+							continue;
 
-					if (!simulate) {
-						ItemStack stack = cap.extractItem(slot, 1, false);
-						stack.setDamageValue(stack.getDamageValue() + 1);
-						if (stack.getDamageValue() <= stack.getMaxDamage()) {
-							if (cap.getStackInSlot(slot)
-								.isEmpty())
-								cap.insertItem(slot, stack, false);
-							else
-								ItemHandlerHelper.insertItem(cap, stack, false);
+						if (!simulate) {
+							ItemStack stack = slotStorage.getResource().toStack(1);
+							transaction.commit();
+							stack.setDamageValue(stack.getDamageValue() + 1);
+							if (stack.getDamageValue() <= stack.getMaxDamage()) {
+								if (slotStorage.getAmount() <= 0) {
+									cap.insert(ItemVariant.of(stack), stack.getCount(), transaction);
+									transaction.commit();
+								} else {
+									TransferUtil.insertItem(cap, stack);
+								}
+							}
 						}
-					}
 
-					return true;
+						return true;
+					}
 				}
 			}
 
@@ -543,7 +558,7 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuP
 		// Find and remove
 		boolean success = false;
 		int amountFound = 0;
-		for (IItemHandler cap : attachedInventories) {
+		for (SlottedStorage<ItemVariant> cap : attachedInventories) {
 			if (cap == null)
 				cap = EmptyItemHandler.INSTANCE;
 			amountFound += ItemHelper
@@ -560,7 +575,7 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuP
 
 		if (!simulate && success) {
 			amountFound = 0;
-			for (IItemHandler cap : attachedInventories) {
+			for (SlottedStorage<ItemVariant> cap : attachedInventories) {
 				if (cap == null)
 					cap = EmptyItemHandler.INSTANCE;
 				amountFound += ItemHelper
@@ -677,13 +692,13 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuP
 				.shrink(1);
 		else {
 			boolean externalGunpowderFound = false;
-			for (IItemHandler cap : attachedInventories) {
-				IItemHandler itemHandler = cap;
+			for (SlottedStorage<ItemVariant> cap : attachedInventories) {
+				SlottedStorage<ItemVariant> itemHandler = cap;
 
 				if (itemHandler == null)
 					itemHandler = EmptyItemHandler.INSTANCE;
 
-				if (ItemHelper.extract(itemHandler, stack -> inventory.isItemValid(4, stack), 1, false)
+				if (ItemHelper.extract(itemHandler, stack -> inventory.isItemValid(4, ItemVariant.of(stack), stack.getCount()), 1, false)
 					.isEmpty())
 					continue;
 				externalGunpowderFound = true;
@@ -707,42 +722,47 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuP
 		int BookOutput = 3;
 
 		ItemStack blueprint = inventory.getStackInSlot(0);
-		ItemStack paper = inventory.extractItem(BookInput, 1, true);
-		boolean outputFull = inventory.getStackInSlot(BookOutput)
-			.getCount() == inventory.getSlotLimit(BookOutput);
+		try (Transaction transaction = TransferUtil.getTransaction()) {
+			SingleSlotStorage<ItemVariant> bookInputSlot = inventory.getSlot(BookInput);
 
-		if (printer.isErrored())
-			return;
+			long paper = bookInputSlot.extract(bookInputSlot.getResource(), 1, transaction);
+			boolean outputFull = inventory.getStackInSlot(BookOutput)
+				.getCount() == inventory.getSlotLimit(BookOutput);
 
-		if (!printer.isLoaded()) {
-			if (!blueprint.isEmpty())
-				initializePrinter(blueprint);
-			return;
-		}
+			if (printer.isErrored())
+				return;
 
-		if (paper.isEmpty() || outputFull) {
-			if (bookPrintingProgress != 0)
+			if (!printer.isLoaded()) {
+				if (!blueprint.isEmpty())
+					initializePrinter(blueprint);
+				return;
+			}
+
+			if (paper <= 0 || outputFull) {
+				if (bookPrintingProgress != 0)
+					sendUpdate = true;
+				bookPrintingProgress = 0;
+				dontUpdateChecklist = false;
+				return;
+			}
+
+			if (bookPrintingProgress >= 1) {
+				bookPrintingProgress = 0;
+
+				if (!dontUpdateChecklist)
+					updateChecklist();
+
+				dontUpdateChecklist = true;
+				ItemStack extractItem = bookInputSlot.getResource().toStack(1);
+				ItemStack stack = AllBlocks.CLIPBOARD.isIn(extractItem) ? checklist.createWrittenClipboard()
+					: checklist.createWrittenBook();
+				stack.setCount(inventory.getStackInSlot(BookOutput)
+					.getCount() + 1);
+				transaction.commit();
+				inventory.setStackInSlot(BookOutput, stack);
 				sendUpdate = true;
-			bookPrintingProgress = 0;
-			dontUpdateChecklist = false;
-			return;
-		}
-
-		if (bookPrintingProgress >= 1) {
-			bookPrintingProgress = 0;
-
-			if (!dontUpdateChecklist)
-				updateChecklist();
-
-			dontUpdateChecklist = true;
-			ItemStack extractItem = inventory.extractItem(BookInput, 1, false);
-			ItemStack stack = AllBlocks.CLIPBOARD.isIn(extractItem) ? checklist.createWrittenClipboard()
-				: checklist.createWrittenBook();
-			stack.setCount(inventory.getStackInSlot(BookOutput)
-				.getCount() + 1);
-			inventory.setStackInSlot(BookOutput, stack);
-			sendUpdate = true;
-			return;
+				return;
+			}
 		}
 
 		bookPrintingProgress += 0.05f;
@@ -857,15 +877,16 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuP
 
 		checklist.gathered.clear();
 		findInventories();
-		for (IItemHandler cap : attachedInventories) {
+		for (SlottedStorage<ItemVariant> cap : attachedInventories) {
 			if (cap == null)
 				continue;
-			for (int slot = 0; slot < cap.getSlots(); slot++) {
-				ItemStack stackInSlot = cap.getStackInSlot(slot);
-				if (cap.extractItem(slot, 1, true)
-					.isEmpty())
-					continue;
-				checklist.collect(stackInSlot);
+			for (int slot = 0; slot < cap.getSlotCount(); slot++) {
+				SingleSlotStorage<ItemVariant> slotStorage = cap.getSlot(slot);
+				try (Transaction transaction = TransferUtil.getTransaction()) {
+					if (slotStorage.extract(slotStorage.getResource(), 1, transaction) <= 0)
+						continue;
+				}
+				checklist.collect(slotStorage.getResource().toStack(1));
 			}
 		}
 		sendUpdate = true;
@@ -881,9 +902,9 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuP
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public AABB getRenderBoundingBox() {
-		return AABB.INFINITE;
+		return CustomRenderBoundingBoxBlockEntity.INFINITE_EXTENT_AABB;
 	}
 
 	@Override
@@ -899,6 +920,11 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements MenuP
 	protected void collectImplicitComponents(Builder components) {
 		components.set(AllDataComponents.SCHEMATICANNON_OPTIONS,
 			new SchematicannonOptions(replaceMode, skipMissing, replaceBlockEntities));
+	}
+
+	@Override
+	public SmartBlockData getScreenOpeningData(ServerPlayer player) {
+		return new SmartBlockData(this.getBlockPos(), getUpdateTag(player.registryAccess()));
 	}
 
 	public enum State {

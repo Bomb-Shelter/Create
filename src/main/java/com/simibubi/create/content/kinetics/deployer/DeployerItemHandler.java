@@ -3,10 +3,11 @@ package com.simibubi.create.content.kinetics.deployer;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 import com.simibubi.create.foundation.item.ItemHelper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.wrapper.IItemHandlerModifiable;
+
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
 
 public class DeployerItemHandler implements IItemHandlerModifiable {
 
@@ -19,7 +20,7 @@ public class DeployerItemHandler implements IItemHandlerModifiable {
 	}
 
 	@Override
-	public int getSlots() {
+	public int getSlotCount() {
 		return 1 + be.overflowItems.size();
 	}
 

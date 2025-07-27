@@ -6,10 +6,14 @@ import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
+import com.simibubi.create.foundation.block.render.ReducedDestroyEffects;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.InvManipulationBehaviour;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomDestroyEffectsBlock;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -30,7 +34,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 
 public abstract class AbstractFunnelBlock extends Block
-	implements IBE<FunnelBlockEntity>, IWrenchable, ProperWaterloggedBlock {
+	implements IBE<FunnelBlockEntity>, IWrenchable, ProperWaterloggedBlock, CustomDestroyEffectsBlock {
 
 	public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
 
@@ -148,4 +152,8 @@ public abstract class AbstractFunnelBlock extends Block
 
 	;
 
+	@Override
+	public boolean addDestroyEffects(BlockState state, ClientLevel level, BlockPos pos, ParticleEngine engine) {
+		return ReducedDestroyEffects.addDestroyEffects(state, level, pos, engine);
+	}
 }

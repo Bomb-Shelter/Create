@@ -5,6 +5,13 @@ import java.util.List;
 
 import javax.annotation.Nonnull;
 
+import io.github.fabricators_of_create.porting_lib.event.client.RenderTooltipBorderColorCallback;
+import io.github.fabricators_of_create.porting_lib.gui.GuiHooks;
+import io.github.fabricators_of_create.porting_lib.gui.extensions.GuiGraphicsExtension;
+
+import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.TooltipComponentCallback;
+
 import org.joml.Matrix4f;
 
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -18,10 +25,6 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.Style;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.client.ClientHooks;
-import net.neoforged.neoforge.client.event.RenderTooltipEvent;
-import net.neoforged.neoforge.client.extensions.IGuiGraphicsExtension;
-import net.neoforged.neoforge.common.NeoForge;
 
 public class RemovedGuiUtils {
 	@Nonnull
@@ -38,7 +41,7 @@ public class RemovedGuiUtils {
 	public static void drawHoveringText(GuiGraphics graphics, List<? extends FormattedText> textLines, int mouseX,
 		int mouseY, int screenWidth, int screenHeight, int maxTextWidth, Font font) {
 		drawHoveringText(graphics, textLines, mouseX, mouseY, screenWidth, screenHeight, maxTextWidth,
-			IGuiGraphicsExtension.DEFAULT_BACKGROUND_COLOR, IGuiGraphicsExtension.DEFAULT_BORDER_COLOR_START, IGuiGraphicsExtension.DEFAULT_BORDER_COLOR_END,
+			GuiGraphicsExtension.DEFAULT_BACKGROUND_COLOR, GuiGraphicsExtension.DEFAULT_BORDER_COLOR_START, GuiGraphicsExtension.DEFAULT_BORDER_COLOR_END,
 			font);
 	}
 
@@ -53,7 +56,7 @@ public class RemovedGuiUtils {
 		List<? extends FormattedText> textLines, int mouseX, int mouseY, int screenWidth, int screenHeight,
 		int maxTextWidth, Font font) {
 		drawHoveringText(stack, graphics, textLines, mouseX, mouseY, screenWidth, screenHeight, maxTextWidth,
-			IGuiGraphicsExtension.DEFAULT_BACKGROUND_COLOR, IGuiGraphicsExtension.DEFAULT_BORDER_COLOR_START, IGuiGraphicsExtension.DEFAULT_BORDER_COLOR_END,
+			GuiGraphicsExtension.DEFAULT_BACKGROUND_COLOR, GuiGraphicsExtension.DEFAULT_BORDER_COLOR_START, GuiGraphicsExtension.DEFAULT_BORDER_COLOR_END,
 			font);
 	}
 
@@ -63,20 +66,20 @@ public class RemovedGuiUtils {
 		if (textLines.isEmpty())
 			return;
 
-		List<ClientTooltipComponent> list = ClientHooks.gatherTooltipComponents(stack, textLines,
+		List<ClientTooltipComponent> list = GuiHooks.gatherTooltipComponents(stack, textLines,
 			stack.getTooltipImage(), mouseX, screenWidth, screenHeight, font);
-		RenderTooltipEvent.Pre event =
+		/*RenderTooltipEvent.Pre event =
 			new RenderTooltipEvent.Pre(stack, graphics, mouseX, mouseY, screenWidth, screenHeight, font, list, null);
 		if (NeoForge.EVENT_BUS.post(event).isCanceled())
-			return;
+			return;*/
 
 		PoseStack pStack = graphics.pose();
 
-		mouseX = event.getX();
+		/*mouseX = event.getX();
 		mouseY = event.getY();
 		screenWidth = event.getScreenWidth();
 		screenHeight = event.getScreenHeight();
-		font = event.getFont();
+		font = event.getFont();*/
 
 		// RenderSystem.disableRescaleNormal();
 		RenderSystem.disableDepthTest();
@@ -150,12 +153,9 @@ public class RemovedGuiUtils {
 			tooltipY = screenHeight - tooltipHeight - 4;
 
 		final int zLevel = 400;
-		RenderTooltipEvent.Color colorEvent = new RenderTooltipEvent.Color(stack, graphics, tooltipX, tooltipY,
-			font, backgroundColor, borderColorStart, borderColorEnd, list);
-		NeoForge.EVENT_BUS.post(colorEvent);
-		backgroundColor = colorEvent.getBackgroundStart();
-		borderColorStart = colorEvent.getBorderStart();
-		borderColorEnd = colorEvent.getBorderEnd();
+		var newBorder = RenderTooltipBorderColorCallback.EVENT.invoker().onTooltipBorderColor(stack, borderColorStart, borderColorEnd);
+		borderColorStart = newBorder.getBorderColorStart();
+		borderColorEnd = newBorder.getBorderColorEnd();
 
 		pStack.pushPose();
 		Matrix4f mat = pStack.last()

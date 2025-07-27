@@ -4,6 +4,12 @@ import java.util.Optional;
 
 import javax.annotation.Nullable;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+import com.simibubi.create.infrastructure.fabric.transfer.InventoryStorage;
+
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
@@ -59,10 +65,6 @@ import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.Vec3;
-
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.neoforged.neoforge.items.wrapper.SidedInvWrapper;
 
 public class AllArmInteractionPointTypes {
 	static {
@@ -556,13 +558,13 @@ public class AllArmInteractionPointTypes {
 		public void updateCachedState() {
 			BlockState oldState = cachedState;
 			super.updateCachedState();
-			if (cachedHandler != null && oldState != cachedState)
-				level.invalidateCapabilities(cachedHandler.pos());
+			//if (cachedHandler != null && oldState != cachedState)
+				//level.invalidateCapabilities(cachedHandler.pos());
 		}
 
 		@Nullable
 		@Override
-		protected IItemHandler getHandler(ArmBlockEntity armBlockEntity) {
+		protected Storage<ItemVariant> getHandler(ArmBlockEntity armBlockEntity) {
 			return null;
 		}
 
@@ -573,14 +575,14 @@ public class AllArmInteractionPointTypes {
 
 		@Override
 		public ItemStack insert(ArmBlockEntity armBlockEntity, ItemStack stack, boolean simulate) {
-			IItemHandler handler = new SidedInvWrapper(getContainer(), Direction.UP);
-			return ItemHandlerHelper.insertItem(handler, stack, simulate);
+			Storage<ItemVariant> handler = InventoryStorage.of(getContainer(), Direction.UP);
+			return CreateTransferUtil.insertItem(handler, stack, simulate);
 		}
 
 		@Override
 		public ItemStack extract(ArmBlockEntity armBlockEntity, int slot, int amount, boolean simulate) {
-			IItemHandler handler = new SidedInvWrapper(getContainer(), Direction.DOWN);
-			return handler.extractItem(slot, amount, simulate);
+			Storage<ItemVariant> handler = InventoryStorage.of(getContainer(), Direction.DOWN);
+			return CreateTransferUtil.extractItem(handler, slot, amount, simulate);
 		}
 
 		@Override

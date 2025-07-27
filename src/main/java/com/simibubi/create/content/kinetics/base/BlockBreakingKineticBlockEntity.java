@@ -144,8 +144,8 @@ public abstract class BlockBreakingKineticBlockEntity extends KineticBlockEntity
 			if (!level.getGameRules()
 				.getBoolean(GameRules.RULE_DOBLOCKDROPS))
 				return;
-			if (level.restoringBlockSnapshots)
-				return;
+			//if (level.restoringBlockSnapshots)
+				//return;
 
 			ItemEntity itementity = new ItemEntity(level, vec.x, vec.y, vec.z, stack);
 			itementity.setDefaultPickUpDelay();

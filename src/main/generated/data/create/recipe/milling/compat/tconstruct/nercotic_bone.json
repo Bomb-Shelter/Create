@@ -1,0 +1,35 @@
+{
+  "type": "create:milling",
+  "ingredients": [
+    {
+      "fabric:type": "create:simple_datagen",
+      "ingredients": [
+        {
+          "item": "tconstruct:necrotic_bone"
+        }
+      ]
+    }
+  ],
+  "porting_lib:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "tconstruct"
+    }
+  ],
+  "processing_time": 100,
+  "results": [
+    {
+      "count": 3,
+      "id": "minecraft:bone_meal"
+    },
+    {
+      "chance": 0.25,
+      "id": "minecraft:black_dye"
+    },
+    {
+      "chance": 0.25,
+      "count": 3,
+      "id": "minecraft:bone_meal"
+    }
+  ]
+}

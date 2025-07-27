@@ -20,11 +20,13 @@ import com.simibubi.create.compat.jei.EmptyBackground;
 import com.simibubi.create.compat.jei.ItemIcon;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
 
+import mezz.jei.api.fabric.constants.FabricTypes;
+import mezz.jei.api.fabric.ingredients.fluids.IJeiFluidIngredient;
+import mezz.jei.api.fabric.ingredients.fluids.JeiFluidIngredient;
 import mezz.jei.api.gui.builder.IRecipeLayoutBuilder;
 import mezz.jei.api.gui.builder.IRecipeSlotBuilder;
 import mezz.jei.api.gui.ingredient.IRecipeSlotView;
 import mezz.jei.api.gui.ingredient.IRecipeSlotsView;
-import mezz.jei.api.neoforge.NeoForgeTypes;
 import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 
@@ -58,7 +60,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 
-import net.neoforged.neoforge.fluids.FluidStack;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 import static mezz.jei.api.recipe.RecipeType.createRecipeHolderType;
 
@@ -170,10 +172,10 @@ public abstract class CreateRecipeCategory<T extends Recipe<?>> implements IReci
 
 	@SuppressWarnings("removal") // see below
 	public static IRecipeSlotBuilder addFluidSlot(IRecipeLayoutBuilder builder, int x, int y, FluidIngredient ingredient) {
-		int amount = ingredient.getRequiredAmount();
+		long amount = ingredient.getRequiredAmount();
 		return builder.addSlot(RecipeIngredientRole.INPUT, x, y)
 			.setBackground(getRenderedSlot(), -1, -1)
-			.addIngredients(NeoForgeTypes.FLUID_STACK, ingredient.getMatchingFluidStacks())
+			.addIngredients(FabricTypes.FLUID_STACK, ingredient.getMatchingFluidStacks().stream().map(CreateRecipeCategory::jeiFromFabric).toList())
 			.setFluidRenderer(amount, false, 16, 16) // make fluid take up the full slot
 			.addTooltipCallback(CreateRecipeCategory::addPotionTooltip);
 	}
@@ -182,20 +184,28 @@ public abstract class CreateRecipeCategory<T extends Recipe<?>> implements IReci
 	public static IRecipeSlotBuilder addFluidSlot(IRecipeLayoutBuilder builder, int x, int y, FluidStack stack) {
 		return builder.addSlot(RecipeIngredientRole.OUTPUT, x, y)
 			.setBackground(getRenderedSlot(), -1, -1)
-			.addIngredient(NeoForgeTypes.FLUID_STACK, stack)
+			.addIngredient(FabricTypes.FLUID_STACK, jeiFromFabric(stack))
 			.setFluidRenderer(stack.getAmount(), false, 16, 16) // make fluid take up the full slot
 			.addTooltipCallback(CreateRecipeCategory::addPotionTooltip);
+	}
+
+	public static IJeiFluidIngredient jeiFromFabric(FluidStack stack) {
+		return new JeiFluidIngredient(stack.getVariant(), stack.getAmount());
+	}
+
+	public static List<IJeiFluidIngredient> jeiFromFabric(List<FluidStack> stacks) {
+		return stacks.stream().map(CreateRecipeCategory::jeiFromFabric).toList();
 	}
 
 	// IRecipeSlotTooltipCallback is deprecated, but the replacement requires that all tooltip lines
 	// get added to the bottom. This looks terrible for potion fluids, and doesn't match how potion items look.
 	// https://github.com/mezz/JustEnoughItems/issues/3931
 	private static void addPotionTooltip(IRecipeSlotView view, List<Component> tooltip) {
-		Optional<FluidStack> displayed = view.getDisplayedIngredient(NeoForgeTypes.FLUID_STACK);
+		Optional<IJeiFluidIngredient> displayed = view.getDisplayedIngredient(FabricTypes.FLUID_STACK);
 		if (displayed.isEmpty())
 			return;
 
-		FluidStack fluidStack = displayed.get();
+		FluidStack fluidStack = new FluidStack(displayed.get().getFluidVariant(), displayed.get().getAmount());
 
 		if (fluidStack.getFluid().isSame(AllFluids.POTION.get())) {
 			List<Component> potionTooltip = new ArrayList<>();

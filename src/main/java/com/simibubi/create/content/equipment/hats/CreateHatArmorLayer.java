@@ -12,6 +12,7 @@ import com.simibubi.create.foundation.mixin.accessor.EntityRenderDispatcherAcces
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import dev.engine_room.flywheel.lib.transform.TransformStack;
 import net.createmod.catnip.render.CachedBuffers;
+import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback.RegistrationHelper;
 import net.minecraft.client.model.AgeableListModel;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.model.HierarchicalModel;
@@ -91,15 +92,10 @@ public class CreateHatArmorLayer<T extends LivingEntity, M extends EntityModel<T
 	}
 
 	public static void registerOnAll(EntityRenderDispatcher renderManager) {
-		for (EntityRenderer<? extends Player> renderer : renderManager.getSkinMap()
-			.values())
-			registerOn(renderer);
-		for (EntityRenderer<?> renderer : ((EntityRenderDispatcherAccessor) renderManager).create$getRenderers().values())
-			registerOn(renderer);
 	}
 
 	@SuppressWarnings({"rawtypes", "unchecked"})
-	public static void registerOn(EntityRenderer<?> entityRenderer) {
+	public static void registerOn(EntityRenderer<?> entityRenderer, RegistrationHelper registrationHelper) {
 		if (!(entityRenderer instanceof LivingEntityRenderer<?, ?> livingRenderer))
 			return;
 
@@ -109,7 +105,7 @@ public class CreateHatArmorLayer<T extends LivingEntity, M extends EntityModel<T
 			return;
 
 		CreateHatArmorLayer<?, ?> layer = new CreateHatArmorLayer<>(livingRenderer);
-		livingRenderer.addLayer((CreateHatArmorLayer) layer);
+		registrationHelper.register(layer);
 	}
 
 	private static ModelPart getHeadPart(AgeableListModel<?> model) {

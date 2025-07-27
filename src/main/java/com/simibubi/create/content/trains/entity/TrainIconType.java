@@ -9,8 +9,8 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import io.netty.buffer.ByteBuf;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class TrainIconType {
 	public static final StreamCodec<ByteBuf, TrainIconType> STREAM_CODEC = ResourceLocation.STREAM_CODEC.map(
@@ -56,7 +56,7 @@ public class TrainIconType {
 	public static final int ENGINE = -1;
 	public static final int FLIPPED_ENGINE = -2;
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public int render(int lengthOrEngine, GuiGraphics graphics, int x, int y) {
 		int offset = getIconOffset(lengthOrEngine);
 		int width = getIconWidth(lengthOrEngine);

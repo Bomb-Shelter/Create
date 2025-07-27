@@ -14,8 +14,8 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class NixieTubeDisplayTarget extends SingleLineDisplayTarget {
 
@@ -38,7 +38,7 @@ public class NixieTubeDisplayTarget extends SingleLineDisplayTarget {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public AABB getMultiblockBounds(LevelAccessor level, BlockPos pos) {
 		MutableObject<BlockPos> start = new MutableObject<>(null);
 		MutableObject<BlockPos> end = new MutableObject<>(null);

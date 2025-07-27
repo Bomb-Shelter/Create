@@ -13,10 +13,16 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.EmptySingleFluidSlotStorage;
+
+import com.simibubi.create.infrastructure.fabric.transfer.SingleSlotStorageImpl;
+
 import it.unimi.dsi.fastutil.PriorityQueue;
 import it.unimi.dsi.fastutil.objects.ObjectHeapPriorityQueue;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.BBHelper;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -31,7 +37,7 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.shapes.CollisionContext;
 
-import net.neoforged.neoforge.fluids.FluidStack;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class FluidDrainingBehaviour extends FluidManipulationBehaviour {
 
@@ -362,6 +368,11 @@ public class FluidDrainingBehaviour extends FluidManipulationBehaviour {
 	public FluidStack getDrainableFluid(BlockPos rootPos) {
 		return fluid == null || isSearching() || !pullNext(rootPos, true) ? FluidStack.EMPTY
 			: new FluidStack(fluid, 1000);
+	}
+
+	public SingleSlotStorage<FluidVariant> getDrainableFluidView(BlockPos rootPos) {
+		return fluid == null || isSearching() || !pullNext(rootPos, true) ? EmptySingleFluidSlotStorage.INSTANCE
+			: new SingleSlotStorageImpl(FluidVariant.of(fluid), 1000, 1000);
 	}
 
 }

@@ -14,9 +14,9 @@ import com.simibubi.create.content.logistics.packager.InventorySummary;
 import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts.CraftingEntry;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class PackageRepackageHelper {
 
@@ -59,7 +59,7 @@ public class PackageRepackageHelper {
 			}
 
 			ItemStackHandler contents = PackageItem.getContents(box);
-			for (int slot = 0; slot < contents.getSlots(); slot++)
+			for (int slot = 0; slot < contents.getSlotCount(); slot++)
 				summary.add(contents.getStackInSlot(slot));
 		}
 
@@ -67,7 +67,7 @@ public class PackageRepackageHelper {
 		if (orderContext != null) {
 			List<BigItemStack> packagesSplitByRecipe = repackBasedOnRecipes(summary, orderContext, address, r);
 			exportingPackages.addAll(packagesSplitByRecipe);
-			
+
 			if (packagesSplitByRecipe.isEmpty())
 				for (BigItemStack stack : orderContext.stacks())
 					orderedStacks.add(new BigItemStack(stack.stack, stack.count));
@@ -126,7 +126,7 @@ public class PackageRepackageHelper {
 			currentSlot = 0;
 		}
 
-		for (int slot = 0; slot < target.getSlots(); slot++)
+		for (int slot = 0; slot < target.getSlotCount(); slot++)
 			if (!target.getStackInSlot(slot)
 				.isEmpty()) {
 				exportingPackages.add(new BigItemStack(PackageItem.containing(target), 1));
@@ -175,7 +175,7 @@ public class PackageRepackageHelper {
 	protected List<BigItemStack> repackBasedOnRecipes(InventorySummary summary, PackageOrderWithCrafts order, String address, RandomSource r) {
 		if (order.orderedCrafts().isEmpty())
 			return List.of();
-		
+
 		List<BigItemStack> packages = new ArrayList<>();
 		for (CraftingEntry craftingEntry : order.orderedCrafts()) {
 			int packagesToCreate = 0;
@@ -189,19 +189,19 @@ public class PackageRepackageHelper {
 				}
 				packagesToCreate++;
 			}
-			
+
 			ItemStackHandler target = new ItemStackHandler(PackageItem.SLOTS);
 			List<BigItemStack> stacks = craftingEntry.pattern().stacks();
-			for (int currentSlot = 0; currentSlot < Math.min(stacks.size(), target.getSlots()); currentSlot++)
+			for (int currentSlot = 0; currentSlot < Math.min(stacks.size(), target.getSlotCount()); currentSlot++)
 				target.setStackInSlot(currentSlot, stacks.get(currentSlot).stack.copyWithCount(1));
-			
+
 			ItemStack box = PackageItem.containing(target);
 			PackageItem.setOrder(box, r.nextInt(), 0, true, 0, true,
 				PackageOrderWithCrafts.singleRecipe(craftingEntry.pattern()
 					.stacks()));
 			packages.add(new BigItemStack(box, packagesToCreate));
 		}
-		
+
 		return packages;
 	}
 

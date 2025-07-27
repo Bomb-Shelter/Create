@@ -5,6 +5,11 @@ import java.util.UUID;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityEvents;
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityEvents.Size;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingEvents.LivingVisibilityEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.EntityTickEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.tick.EntityTickEvent.Pre;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
@@ -17,19 +22,16 @@ import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.entity.ai.goal.target.TargetGoal;
 import net.minecraft.world.entity.player.Player;
 
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.EntityEvent;
-import net.neoforged.neoforge.event.entity.living.LivingEvent;
-import net.neoforged.neoforge.event.tick.EntityTickEvent;
-
-@EventBusSubscriber
 public class CardboardArmorHandler {
+	public static void init() {
+		Size.EVENT.register(CardboardArmorHandler::playerHitboxChangesWhenHidingAsBox);
+		LivingVisibilityEvent.EVENT.register(CardboardArmorHandler::playersStealthWhenWearingCardboard);
+		Pre.EVENT.register(CardboardArmorHandler::mobsMayLoseTargetWhenItIsWearingCardboard);
+	}
 
-	@SubscribeEvent
-	public static void playerHitboxChangesWhenHidingAsBox(EntityEvent.Size event) {
+	public static void playerHitboxChangesWhenHidingAsBox(EntityEvents.Size event) {
 		Entity entity = event.getEntity();
-		if (!entity.isAddedToLevel())
+		if (entity.isRemoved())
 			return;
 		if (!testForStealth(entity))
 			return;
@@ -48,15 +50,14 @@ public class CardboardArmorHandler {
 			AllAdvancements.CARDBOARD_ARMOR.awardTo(p);
 	}
 
-	@SubscribeEvent
-	public static void playersStealthWhenWearingCardboard(LivingEvent.LivingVisibilityEvent event) {
+	public static void playersStealthWhenWearingCardboard(LivingVisibilityEvent event) {
 		LivingEntity entity = event.getEntity();
 		if (!testForStealth(entity))
 			return;
 		event.modifyVisibility(0);
 	}
 
-	@SubscribeEvent
+
 	public static void mobsMayLoseTargetWhenItIsWearingCardboard(EntityTickEvent.Pre event) {
 		if (!(event.getEntity() instanceof LivingEntity entity))
 			return;

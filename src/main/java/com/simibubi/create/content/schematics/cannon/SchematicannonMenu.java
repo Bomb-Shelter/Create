@@ -1,8 +1,10 @@
 package com.simibubi.create.content.schematics.cannon;
 
 import com.simibubi.create.AllMenuTypes;
+import com.simibubi.create.foundation.blockEntity.SmartBlockEntity.SmartBlockData;
 import com.simibubi.create.foundation.gui.menu.MenuBase;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlotItemHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.network.FriendlyByteBuf;
@@ -13,12 +15,11 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.items.SlotItemHandler;
 
-public class SchematicannonMenu extends MenuBase<SchematicannonBlockEntity> {
+public class SchematicannonMenu extends MenuBase<SchematicannonBlockEntity, SmartBlockData> {
 
-	public SchematicannonMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf buffer) {
-		super(type, id, inv, buffer);
+	public SchematicannonMenu(MenuType<?> type, int id, Inventory inv, SmartBlockData buffer) {
+		super(type, id, inv, buffer, true);
 	}
 
 	public SchematicannonMenu(MenuType<?> type, int id, Inventory inv, SchematicannonBlockEntity be) {
@@ -30,11 +31,11 @@ public class SchematicannonMenu extends MenuBase<SchematicannonBlockEntity> {
 	}
 
 	@Override
-	protected SchematicannonBlockEntity createOnClient(RegistryFriendlyByteBuf extraData) {
+	protected SchematicannonBlockEntity createOnClient(SmartBlockData extraData) {
 		ClientLevel world = Minecraft.getInstance().level;
-		BlockEntity blockEntity = world.getBlockEntity(extraData.readBlockPos());
+		BlockEntity blockEntity = world.getBlockEntity(extraData.pos());
 		if (blockEntity instanceof SchematicannonBlockEntity schematicannon) {
-			schematicannon.readClient(extraData.readNbt(), extraData.registryAccess());
+			schematicannon.readClient(extraData.nbt(), world.registryAccess());
 			return schematicannon;
 		}
 		return null;

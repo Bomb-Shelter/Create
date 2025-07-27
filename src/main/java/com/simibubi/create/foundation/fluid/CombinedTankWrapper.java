@@ -1,27 +1,35 @@
 package com.simibubi.create.foundation.fluid;
 
+import com.simibubi.create.infrastructure.fabric.transfer.EmptySingleFluidSlotStorage;
+
 import net.createmod.catnip.data.Iterate;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.templates.EmptyFluidHandler;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+
+import java.util.Iterator;
 
 /**
  * Combines multiple IFluidHandlers into one interface (See CombinedInvWrapper
  * for items)
  */
-public class CombinedTankWrapper implements IFluidHandler {
+public class CombinedTankWrapper implements SlottedStorage<FluidVariant> {
 
-	protected final IFluidHandler[] itemHandler;
+	protected final SlottedStorage<FluidVariant>[] itemHandler;
 	protected final int[] baseIndex;
 	protected final int tankCount;
 	protected boolean enforceVariety;
 
-	public CombinedTankWrapper(IFluidHandler... fluidHandlers) {
+	public CombinedTankWrapper(SlottedStorage<FluidVariant>... fluidHandlers) {
 		this.itemHandler = fluidHandlers;
 		this.baseIndex = new int[fluidHandlers.length];
 		int index = 0;
 		for (int i = 0; i < fluidHandlers.length; i++) {
-			index += fluidHandlers[i].getTanks();
+			index += fluidHandlers[i].getSlotCount();
 			baseIndex[i] = index;
 		}
 		this.tankCount = index;
@@ -33,58 +41,39 @@ public class CombinedTankWrapper implements IFluidHandler {
 	}
 
 	@Override
-	public int getTanks() {
+	public int getSlotCount() {
 		return tankCount;
 	}
 
 	@Override
-	public FluidStack getFluidInTank(int tank) {
+	public SingleSlotStorage<FluidVariant> getSlot(int tank) {
 		int index = getIndexForSlot(tank);
-		IFluidHandler handler = getHandlerFromIndex(index);
+		SlottedStorage<FluidVariant> handler = getHandlerFromIndex(index);
 		tank = getSlotFromIndex(tank, index);
-		return handler.getFluidInTank(tank);
+		return handler.getSlot(tank);
 	}
 
 	@Override
-	public int getTankCapacity(int tank) {
-		int index = getIndexForSlot(tank);
-		IFluidHandler handler = getHandlerFromIndex(index);
-		int localSlot = getSlotFromIndex(tank, index);
-		return handler.getTankCapacity(localSlot);
-	}
-
-	@Override
-	public boolean isFluidValid(int tank, FluidStack stack) {
-		int index = getIndexForSlot(tank);
-		IFluidHandler handler = getHandlerFromIndex(index);
-		int localSlot = getSlotFromIndex(tank, index);
-		return handler.isFluidValid(localSlot, stack);
-	}
-
-	@Override
-	public int fill(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty())
+	public long insert(FluidVariant resource, long maxAmount, TransactionContext transaction) {
+		if (resource.isBlank())
 			return 0;
 
-		int filled = 0;
-		resource = resource.copy();
+		long filled = 0;
 
 		boolean fittingHandlerFound = false;
 		Outer: for (boolean searchPass : Iterate.trueAndFalse) {
-			for (IFluidHandler iFluidHandler : itemHandler) {
-
-				for (int i = 0; i < iFluidHandler.getTanks(); i++)
-					if (searchPass && FluidStack.isSameFluidSameComponents(iFluidHandler.getFluidInTank(i), resource))
+			for (SlottedStorage<FluidVariant> iFluidHandler : itemHandler) {
+				for (int i = 0; i < iFluidHandler.getSlotCount(); i++)
+					if (searchPass && iFluidHandler.getSlot(i).getResource().equals(resource))
 						fittingHandlerFound = true;
 
 				if (searchPass && !fittingHandlerFound)
 					continue;
 
-				int filledIntoCurrent = iFluidHandler.fill(resource, action);
-				resource.shrink(filledIntoCurrent);
+				long filledIntoCurrent = iFluidHandler.insert(resource, maxAmount, transaction);
 				filled += filledIntoCurrent;
 
-				if (resource.isEmpty())
+				if (filled >= maxAmount)
 					break Outer;
 				if (fittingHandlerFound && (enforceVariety || filledIntoCurrent != 0))
 					break Outer;
@@ -95,22 +84,17 @@ public class CombinedTankWrapper implements IFluidHandler {
 	}
 
 	@Override
-	public FluidStack drain(FluidStack resource, FluidAction action) {
-		if (resource.isEmpty())
-			return resource;
+	public long extract(FluidVariant resource, long maxAmount, TransactionContext transaction) {
+		if (resource.isBlank())
+			return 0;
 
-		FluidStack drained = FluidStack.EMPTY;
-		resource = resource.copy();
+		long drained = 0;
 
-		for (IFluidHandler iFluidHandler : itemHandler) {
-			FluidStack drainedFromCurrent = iFluidHandler.drain(resource, action);
-			int amount = drainedFromCurrent.getAmount();
-			resource.shrink(amount);
+		for (SlottedStorage<FluidVariant> view : itemHandler) {
+			long amount = view.extract(resource, maxAmount, transaction);
+			drained += amount;
 
-			if (!drainedFromCurrent.isEmpty() && (drained.isEmpty() || FluidStack.isSameFluidSameComponents(drainedFromCurrent, drained)))
-				drained = new FluidStack(drainedFromCurrent.getFluidHolder(), amount + drained.getAmount(),
-					drainedFromCurrent.getComponentsPatch());
-			if (resource.isEmpty())
+			if (drained >= maxAmount)
 				break;
 		}
 
@@ -118,22 +102,8 @@ public class CombinedTankWrapper implements IFluidHandler {
 	}
 
 	@Override
-	public FluidStack drain(int maxDrain, FluidAction action) {
-		FluidStack drained = FluidStack.EMPTY;
-
-		for (IFluidHandler iFluidHandler : itemHandler) {
-			FluidStack drainedFromCurrent = iFluidHandler.drain(maxDrain, action);
-			int amount = drainedFromCurrent.getAmount();
-			maxDrain -= amount;
-
-			if (!drainedFromCurrent.isEmpty() && (drained.isEmpty() || FluidStack.isSameFluidSameComponents(drainedFromCurrent, drained)))
-				drained = new FluidStack(drainedFromCurrent.getFluidHolder(), amount + drained.getAmount(),
-					drainedFromCurrent.getComponentsPatch());
-			if (maxDrain == 0)
-				break;
-		}
-
-		return drained;
+	public Iterator<StorageView<FluidVariant>> iterator() {
+		return null;
 	}
 
 	protected int getIndexForSlot(int slot) {
@@ -145,9 +115,9 @@ public class CombinedTankWrapper implements IFluidHandler {
 		return -1;
 	}
 
-	protected IFluidHandler getHandlerFromIndex(int index) {
+	protected SlottedStorage<FluidVariant> getHandlerFromIndex(int index) {
 		if (index < 0 || index >= itemHandler.length)
-			return EmptyFluidHandler.INSTANCE;
+			return new EmptySingleFluidSlotStorage(0);
 		return itemHandler[index];
 	}
 

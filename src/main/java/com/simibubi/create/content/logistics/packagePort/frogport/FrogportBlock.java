@@ -33,17 +33,12 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public class FrogportBlock extends Block implements IBE<FrogportBlockEntity>, IWrenchable {
 
 	public FrogportBlock(Properties pProperties) {
-		super(pProperties);
+		super(pProperties.pushReaction(PushReaction.NORMAL));
 	}
 
 	@Override
 	public VoxelShape getShape(BlockState pState, BlockGetter pLevel, BlockPos pPos, CollisionContext pContext) {
 		return AllShapes.PACKAGE_PORT;
-	}
-
-	@Override
-	public @Nullable PushReaction getPistonPushReaction(BlockState state) {
-		return PushReaction.NORMAL;
 	}
 
 	@Override

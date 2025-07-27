@@ -7,6 +7,10 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.github.fabricators_of_create.porting_lib.conditions.PortingLibConditions;
+
+import io.github.fabricators_of_create.porting_lib.conditions.WithConditions;
+
 import org.jetbrains.annotations.ApiStatus;
 
 import com.google.common.collect.HashMultimap;
@@ -35,8 +39,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.ConcretePowderBlock;
-
-import net.neoforged.neoforge.common.conditions.WithConditions;
 
 @ApiStatus.Internal
 public class RuntimeDataGenerator {
@@ -206,7 +208,7 @@ public class RuntimeDataGenerator {
 			ResourceLocation id = ResourceLocation.fromNamespaceAndPath(recipeId.getNamespace(),
 				typeId.getPath() + "/" + recipeId.getPath());
 
-			Optional<JsonElement> serialized = CatnipCodecUtils.encode(Recipe.CONDITIONAL_CODEC, JsonOps.INSTANCE, Optional.of(new WithConditions<>(recipe)));
+			Optional<JsonElement> serialized = CatnipCodecUtils.encode(PortingLibConditions.CONDITIONAL_RECIPES_CODEC, JsonOps.INSTANCE, Optional.of(new WithConditions<>(recipe)));
 			serialized.ifPresent(r -> JSON_FILES.put(id.withPrefix("recipe/"), r));
 			return recipe;
 		}

@@ -8,8 +8,13 @@ import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.logistics.funnel.FunnelBlock;
 import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 
+import com.simibubi.create.foundation.block.render.ReducedDestroyEffects;
+
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomDestroyEffectsBlock;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.lang.Lang;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
@@ -40,7 +45,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.BlockHitResult;
 
-public class ChuteBlock extends AbstractChuteBlock implements ProperWaterloggedBlock {
+public class ChuteBlock extends AbstractChuteBlock implements ProperWaterloggedBlock, CustomDestroyEffectsBlock {
 
 	public static final Property<Shape> SHAPE = EnumProperty.create("shape", Shape.class);
 	public static final DirectionProperty FACING = BlockStateProperties.FACING_HOPPER;
@@ -214,4 +219,8 @@ public class ChuteBlock extends AbstractChuteBlock implements ProperWaterloggedB
 		return AllBlockEntityTypes.CHUTE.get();
 	}
 
+	@Override
+	public boolean addDestroyEffects(BlockState state, ClientLevel level, BlockPos pos, ParticleEngine engine) {
+		return ReducedDestroyEffects.addDestroyEffects(state, level, pos, engine);
+	}
 }

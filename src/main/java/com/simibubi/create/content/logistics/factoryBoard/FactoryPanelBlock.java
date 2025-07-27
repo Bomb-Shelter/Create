@@ -2,6 +2,9 @@ package com.simibubi.create.content.logistics.factoryBoard;
 
 import java.util.UUID;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.PlayerDestroyBlock;
+import io.github.fabricators_of_create.porting_lib.level.events.BlockEvent;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.mojang.serialization.Codec;
@@ -64,11 +67,8 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.level.BlockEvent;
-
 public class FactoryPanelBlock extends FaceAttachedHorizontalDirectionalBlock
-	implements ProperWaterloggedBlock, IBE<FactoryPanelBlockEntity>, IWrenchable, SpecialBlockItemRequirement {
+	implements ProperWaterloggedBlock, IBE<FactoryPanelBlockEntity>, IWrenchable, SpecialBlockItemRequirement, PlayerDestroyBlock {
     public static final MapCodec<FactoryPanelBlock> CODEC = simpleCodec(FactoryPanelBlock::new);
 
 	public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
@@ -181,7 +181,7 @@ public class FactoryPanelBlock extends FaceAttachedHorizontalDirectionalBlock
 				return InteractionResult.SUCCESS;
 
 			BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(world, pos, world.getBlockState(pos), player);
-			NeoForge.EVENT_BUS.post(event);
+			event.sendEvent();
 			if (event.isCanceled())
 				return InteractionResult.SUCCESS;
 
@@ -255,7 +255,7 @@ public class FactoryPanelBlock extends FaceAttachedHorizontalDirectionalBlock
 		FluidState fluid) {
 		if (tryDestroySubPanelFirst(state, level, pos, player))
 			return false;
-		boolean result = super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
+		boolean result = PlayerDestroyBlock.super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
 		return result;
 	}
 

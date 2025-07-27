@@ -11,6 +11,7 @@ import java.util.UUID;
 import com.google.common.base.Strings;
 import com.simibubi.create.AllEntityDataSerializers;
 import com.simibubi.create.AllEntityTypes;
+import com.simibubi.create.AllPackets;
 import com.simibubi.create.Create;
 import com.simibubi.create.CreateClient;
 import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
@@ -31,6 +32,8 @@ import com.simibubi.create.infrastructure.config.AllConfigs;
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.theme.Color;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -53,13 +56,14 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class CarriageContraptionEntity extends OrientedContraptionEntity {
 
-	private static final EntityDataAccessor<CarriageSyncData> CARRIAGE_DATA =
-		SynchedEntityData.defineId(CarriageContraptionEntity.class, AllEntityDataSerializers.CARRIAGE_DATA);
+	// Fabric TODO: hm.
+	//private static final EntityDataAccessor<CarriageSyncData> CARRIAGE_DATA =
+		//SynchedEntityData.defineId(CarriageContraptionEntity.class, AllEntityDataSerializers.CARRIAGE_DATA);
 	private static final EntityDataAccessor<Optional<UUID>> TRACK_GRAPH =
 		SynchedEntityData.defineId(CarriageContraptionEntity.class, EntityDataSerializers.OPTIONAL_UUID);
 	private static final EntityDataAccessor<Boolean> SCHEDULED =
@@ -81,10 +85,12 @@ public class CarriageContraptionEntity extends OrientedContraptionEntity {
 
 	private Vec3 serverPrevPos;
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public CarriageSounds sounds;
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public CarriageParticles particles;
+
+	public CarriageSyncData carriageData = new CarriageSyncData();
 
 	public CarriageContraptionEntity(EntityType<?> type, Level world) {
 		super(type, world);
@@ -103,7 +109,7 @@ public class CarriageContraptionEntity extends OrientedContraptionEntity {
 	@Override
 	protected void defineSynchedData(SynchedEntityData.Builder builder) {
 		super.defineSynchedData(builder);
-		builder.define(CARRIAGE_DATA, new CarriageSyncData());
+		//builder.define(CARRIAGE_DATA, new CarriageSyncData());
 		builder.define(TRACK_GRAPH, Optional.empty());
 		builder.define(SCHEDULED, false);
 	}
@@ -129,18 +135,35 @@ public class CarriageContraptionEntity extends OrientedContraptionEntity {
 		if (TRACK_GRAPH.equals(key))
 			updateTrackGraph();
 
-		if (CARRIAGE_DATA.equals(key)) {
+		// Fabric: moved
+		/*if (CARRIAGE_DATA.equals(key)) {
 			CarriageSyncData carriageData = getCarriageData();
 			if (carriageData == null)
 				return;
 			if (carriage == null)
 				return;
 			carriageData.apply(this, carriage);
+		}*/
+	}
+
+	public void onCarriageDataUpdate(CarriageSyncData newData) {
+		this.carriageData = newData;
+		if (carriage == null)
+			return;
+		carriageData.apply(this, carriage);
+	}
+
+	public void sendCarriageDataUpdate() {
+		var packet = new CarriageDataUpdatePacket(this.getId(), this.getCarriageData());
+
+		for (ServerPlayer player : PlayerLookup.tracking(this)) {
+			ServerPlayNetworking.send(player, packet);
 		}
 	}
 
 	public CarriageSyncData getCarriageData() {
-		return entityData.get(CARRIAGE_DATA);
+		//return entityData.get(CARRIAGE_DATA);
+		return carriageData;
 	}
 
 	public boolean hasSchedule() {
@@ -241,8 +264,9 @@ public class CarriageContraptionEntity extends OrientedContraptionEntity {
 			boolean shouldCarriageSyncThisTick =
 				carriage.train.shouldCarriageSyncThisTick(level().getGameTime(), getType().updateInterval());
 			if (shouldCarriageSyncThisTick && carriageData.isDirty()) {
-				entityData.set(CARRIAGE_DATA, null);
-				entityData.set(CARRIAGE_DATA, carriageData);
+				sendCarriageDataUpdate();
+				//entityData.set(CARRIAGE_DATA, null);
+				//entityData.set(CARRIAGE_DATA, carriageData);
 				carriageData.setDirty(false);
 			}
 
@@ -410,7 +434,7 @@ public class CarriageContraptionEntity extends OrientedContraptionEntity {
 		super.addPassenger(pPassenger);
 		if (!(pPassenger instanceof Player player))
 			return;
-		player.getPersistentData()
+		player.getCustomData()
 			.put("ContraptionMountLocation", VecHelper.writeNBT(player.position()));
 	}
 
@@ -453,7 +477,8 @@ public class CarriageContraptionEntity extends OrientedContraptionEntity {
 	@Override
 	public void onClientRemoval() {
 		super.onClientRemoval();
-		entityData.set(CARRIAGE_DATA, new CarriageSyncData());
+		//entityData.set(CARRIAGE_DATA, new CarriageSyncData());
+		carriageData = new CarriageSyncData();
 		if (carriage != null) {
 			DimensionalCarriageEntity dce = carriage.getDimensional(level());
 			dce.pointsInitialised = false;
@@ -742,16 +767,16 @@ public class CarriageContraptionEntity extends OrientedContraptionEntity {
 	}
 
 	// FIXME: entities should not reference their visual in any way
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private WeakReference<CarriageContraptionVisual> instanceHolder;
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void bindInstance(CarriageContraptionVisual instance) {
 		this.instanceHolder = new WeakReference<>(instance);
 		updateRenderedPortalCutoff();
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void updateRenderedPortalCutoff() {
 		if (carriage == null)
 			return;

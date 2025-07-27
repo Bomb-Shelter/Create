@@ -10,15 +10,23 @@ import com.simibubi.create.content.logistics.packager.PackagerBlockEntity;
 import com.simibubi.create.content.logistics.packager.PackagerItemHandler;
 import com.simibubi.create.content.logistics.packager.PackagingRequest;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.IItemHandler;
 
-public class RepackagerBlockEntity extends PackagerBlockEntity {
+import org.jetbrains.annotations.Nullable;
+
+public class RepackagerBlockEntity extends PackagerBlockEntity implements SidedStorageBlockEntity {
 
 	public PackageRepackageHelper repackageHelper;
 
@@ -31,19 +39,29 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 		if (animationTicks > 0)
 			return false;
 
-		IItemHandler targetInv = targetInventory.getInventory();
+		Storage<ItemVariant> targetInv = targetInventory.getInventory();
 		if (targetInv == null || targetInv instanceof PackagerItemHandler)
 			return false;
 
 		boolean targetIsCreativeCrate = targetInv instanceof BottomlessItemHandler;
 		boolean anySpace = false;
 
-		for (int slot = 0; slot < targetInv.getSlots(); slot++) {
-			ItemStack remainder = targetInv.insertItem(slot, box, simulate);
-			if (!remainder.isEmpty())
-				continue;
-			anySpace = true;
-			break;
+		try (Transaction transaction = TransferUtil.getTransaction()) {
+			for (StorageView<ItemVariant> view : targetInv) {
+				long inserted = targetInv.insert(ItemVariant.of(box), box.getCount(), transaction);
+				if (inserted > 0)
+					continue;
+
+				if (!simulate) {
+					box.shrink((int) inserted);
+				}
+
+				anySpace = true;
+				break;
+			}
+
+			if (!simulate)
+				transaction.commit();
 		}
 
 		if (!targetIsCreativeCrate && !anySpace)
@@ -73,7 +91,7 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 		if (!queuedExitingPackages.isEmpty())
 			return;
 
-		IItemHandler targetInv = targetInventory.getInventory();
+		Storage<ItemVariant> targetInv = targetInventory.getInventory();
 		if (targetInv == null || targetInv instanceof PackagerItemHandler)
 			return;
 
@@ -86,17 +104,19 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 			PackageItem.addAddress(heldBox, signBasedAddress);
 	}
 
-	protected void attemptToRepackage(IItemHandler targetInv) {
+	protected void attemptToRepackage(Storage<ItemVariant> targetInv) {
 		repackageHelper.clear();
 		int completedOrderId = -1;
 
-		for (int slot = 0; slot < targetInv.getSlots(); slot++) {
-			ItemStack extracted = targetInv.extractItem(slot, 1, true);
-			if (extracted.isEmpty() || !PackageItem.isPackage(extracted))
+		for (StorageView<ItemVariant> view : targetInv) {
+			ItemStack extracted = view.getResource().toStack(1);
+			long extractedTotal = CreateTransferUtil.simulateExtractAnyItem(view, 1);
+
+			if (extractedTotal <= 0 || !PackageItem.isPackage(extracted))
 				continue;
 
 			if (!repackageHelper.isFragmented(extracted)) {
-				targetInv.extractItem(slot, 1, false);
+				CreateTransferUtil.extractAnyItem(view, 1);
 				heldBox = extracted.copy();
 				animationInward = false;
 				animationTicks = CYCLE;
@@ -114,13 +134,14 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 
 		List<BigItemStack> boxesToExport = repackageHelper.repack(completedOrderId, level.getRandom());
 
-		for (int slot = 0; slot < targetInv.getSlots(); slot++) {
-			ItemStack extracted = targetInv.extractItem(slot, 1, true);
-			if (extracted.isEmpty() || !PackageItem.isPackage(extracted))
+		for (StorageView<ItemVariant> view : targetInv) {
+			long extractedTotal = CreateTransferUtil.simulateExtractAnyItem(view, 1);
+			ItemStack extracted = view.getResource().toStack(1);
+			if (extractedTotal <= 0 || !PackageItem.isPackage(extracted))
 				continue;
 			if (PackageItem.getOrderId(extracted) != completedOrderId)
 				continue;
-			targetInv.extractItem(slot, 1, false);
+			CreateTransferUtil.extractAnyItem(view, 1);
 		}
 
 		if (boxesToExport.isEmpty())
@@ -129,13 +150,12 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 		queuedExitingPackages.addAll(boxesToExport);
 		notifyUpdate();
 	}
-	
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-			Capabilities.ItemHandler.BLOCK,
-			AllBlockEntityTypes.REPACKAGER.get(),
-			(be, context) -> be.inventory
-		);
+
+	public static void registerCapabilities() {
 	}
 
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		return this.inventory;
+	}
 }

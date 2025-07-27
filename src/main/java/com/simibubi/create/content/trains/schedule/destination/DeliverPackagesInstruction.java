@@ -20,6 +20,7 @@ import com.simibubi.create.content.trains.station.GlobalStation;
 import com.simibubi.create.content.trains.station.GlobalStation.GlobalPackagePort;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.createmod.catnip.data.Pair;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -28,7 +29,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
 
 public class DeliverPackagesInstruction extends ScheduleInstruction {
 
@@ -79,12 +79,12 @@ public class DeliverPackagesInstruction extends ScheduleInstruction {
 		}
 
 		for (Carriage carriage : train.carriages) {
-			IItemHandlerModifiable carriageInventory = carriage.storage.getAllItems();
+			SlottedStackStorage carriageInventory = carriage.storage.getAllItems();
 			if (carriageInventory == null)
 				continue;
 
 			// Export to station
-			for (int slot = 0; slot < carriageInventory.getSlots(); slot++) {
+			for (int slot = 0; slot < carriageInventory.getSlotCount(); slot++) {
 				ItemStack stack = carriageInventory.getStackInSlot(slot);
 				if (!PackageItem.isPackage(stack))
 					continue;

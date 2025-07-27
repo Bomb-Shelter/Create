@@ -26,11 +26,17 @@ import com.simibubi.create.content.trains.track.TrackPlacement.PlacementInfo;
 import com.simibubi.create.foundation.gui.AllGuiTextures;
 import com.simibubi.create.foundation.item.ItemHelper;
 
+import com.simibubi.create.infrastructure.fabric.client.CreateTooltipRenderUtil;
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.models.util.RenderTypeUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.data.Pair;
 import net.createmod.catnip.gui.element.GuiGameElement;
+import net.createmod.ponder.mixin.client.TooltipRenderUtilMixin;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
@@ -55,9 +61,6 @@ import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.HitResult.Type;
 
-
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class BlueprintOverlayRenderer {
 
@@ -222,7 +225,7 @@ public class BlueprintOverlayRenderer {
 		Minecraft mc = Minecraft.getInstance();
 		ItemStackHandler playerInv = new ItemStackHandler(mc.player.getInventory()
 			.getContainerSize());
-		for (int i = 0; i < playerInv.getSlots(); i++)
+		for (int i = 0; i < playerInv.getSlotCount(); i++)
 			playerInv.setStackInSlot(i, mc.player.getInventory()
 				.getItem(i)
 				.copy());
@@ -250,10 +253,10 @@ public class BlueprintOverlayRenderer {
 					continue;
 				}
 
-				for (int slot = 0; slot < playerInv.getSlots(); slot++) {
+				for (int slot = 0; slot < playerInv.getSlotCount(); slot++) {
 					if (!requestedItem.test(mc.level, playerInv.getStackInSlot(slot)))
 						continue;
-					ItemStack currentItem = playerInv.extractItem(slot, 1, false);
+					ItemStack currentItem = CreateTransferUtil.extractItem(playerInv.getSlot(slot), 1, false);
 					craftingGrid.put(i, currentItem);
 					newlyAdded.add(currentItem);
 					continue Search;
@@ -291,8 +294,8 @@ public class BlueprintOverlayRenderer {
 			}
 
 			if (success || firstPass) {
-				newlyAdded.forEach(s -> ItemHandlerHelper.insertItemStacked(availableItems, s, false));
-				newlyMissing.forEach(s -> ItemHandlerHelper.insertItemStacked(missingItems, s, false));
+				newlyAdded.forEach(s -> CreateTransferUtil.insertItemStacked(availableItems, s, false));
+				newlyMissing.forEach(s -> CreateTransferUtil.insertItemStacked(missingItems, s, false));
 			}
 
 			if (!success) {
@@ -347,7 +350,7 @@ public class BlueprintOverlayRenderer {
 		int y = guiGraphics.guiHeight() - 100;
 
 		if (shopContext != null) {
-			TooltipRenderUtil.renderTooltipBackground(guiGraphics, x - 2, y + 1, w + 4, 19, 0, 0x55_000000, 0x55_000000, 0,
+			CreateTooltipRenderUtil.renderTooltipBackground(guiGraphics, x - 2, y + 1, w + 4, 19, 0, 0x55_000000, 0x55_000000, 0,
 				0);
 
 			AllGuiTextures.TRADE_OVERLAY.render(guiGraphics, guiGraphics.guiWidth() / 2 - 48, y - 19);

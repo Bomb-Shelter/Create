@@ -4,6 +4,9 @@ import com.simibubi.create.api.registry.SimpleRegistry;
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 import com.simibubi.create.impl.contraption.dispenser.DispenserBehaviorConverter;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CombinedInventoryStorage;
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -12,9 +15,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.DispenserBlock;
 import net.minecraft.world.phys.Vec3;
-
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
 
 /**
  * A parallel to {@link DispenseItemBehavior}, for use by mounted dispensers.
@@ -65,11 +65,11 @@ public interface MountedDispenseBehavior {
 	static void placeItemInInventory(ItemStack stack, MovementContext context, BlockPos pos) {
 		ItemStack toInsert = stack.copy();
 		// try inserting into own inventory first
-		ItemStack remainder = ItemHandlerHelper.insertItem(context.getItemStorage(), toInsert, false);
+		ItemStack remainder = CreateTransferUtil.insertItem(context.getItemStorage(), toInsert, false);
 		if (!remainder.isEmpty()) {
 			// next, try the whole contraption inventory
-			CombinedInvWrapper contraption = context.contraption.getStorage().getAllItems();
-			ItemStack newRemainder = ItemHandlerHelper.insertItem(contraption, remainder, false);
+			CombinedInventoryStorage contraption = context.contraption.getStorage().getAllItems();
+			ItemStack newRemainder = CreateTransferUtil.insertItem(contraption, remainder, false);
 			if (!newRemainder.isEmpty()) {
 				// if there's *still* something left, dispense into world
 				DefaultMountedDispenseBehavior.INSTANCE.dispense(remainder, context, pos);

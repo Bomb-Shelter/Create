@@ -13,8 +13,19 @@ import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.foundation.sound.SoundScapes;
 import com.simibubi.create.foundation.sound.SoundScapes.AmbienceGroup;
 
+import com.simibubi.create.infrastructure.fabric.CreateRecipeWrapper;
+import com.simibubi.create.infrastructure.fabric.transfer.CombinedInventoryStorage;
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.RecipeWrapper;
 import net.createmod.catnip.math.VecHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.particles.ItemParticleOption;
@@ -26,21 +37,16 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
-import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public class MillstoneBlockEntity extends KineticBlockEntity {
+import org.jetbrains.annotations.Nullable;
+
+public class MillstoneBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity {
 
 	public ItemStackHandler inputInv;
 	public ItemStackHandler outputInv;
-	public IItemHandler capability;
+	public Storage<ItemVariant> capability;
 	public int timer;
 	private MillingRecipe lastRecipe;
 
@@ -51,12 +57,12 @@ public class MillstoneBlockEntity extends KineticBlockEntity {
 		capability = new MillstoneInventoryHandler();
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.MILLSTONE.get(),
-				(be, context) -> be.capability
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		return capability;
 	}
 
 	@Override
@@ -67,7 +73,7 @@ public class MillstoneBlockEntity extends KineticBlockEntity {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void tickAudio() {
 		super.tickAudio();
 
@@ -87,7 +93,7 @@ public class MillstoneBlockEntity extends KineticBlockEntity {
 
 		if (getSpeed() == 0)
 			return;
-		for (int i = 0; i < outputInv.getSlots(); i++)
+		for (int i = 0; i < outputInv.getSlotCount(); i++)
 			if (outputInv.getStackInSlot(i)
 				.getCount() == outputInv.getSlotLimit(i))
 				return;
@@ -108,7 +114,7 @@ public class MillstoneBlockEntity extends KineticBlockEntity {
 			.isEmpty())
 			return;
 
-		RecipeWrapper inventoryIn = new RecipeWrapper(inputInv);
+		CreateRecipeWrapper inventoryIn = new CreateRecipeWrapper(inputInv);
 		if (lastRecipe == null || !lastRecipe.matches(inventoryIn, level)) {
 			Optional<RecipeHolder<MillingRecipe>> recipe = AllRecipeTypes.MILLING.find(inventoryIn, level);
 			if (!recipe.isPresent()) {
@@ -129,7 +135,7 @@ public class MillstoneBlockEntity extends KineticBlockEntity {
 	@Override
 	public void invalidate() {
 		super.invalidate();
-		invalidateCapabilities();
+		//invalidateCapabilities();
 	}
 
 	@Override
@@ -140,7 +146,7 @@ public class MillstoneBlockEntity extends KineticBlockEntity {
 	}
 
 	private void process() {
-		RecipeWrapper inventoryIn = new RecipeWrapper(inputInv);
+		CreateRecipeWrapper inventoryIn = new CreateRecipeWrapper(inputInv);
 
 		if (lastRecipe == null || !lastRecipe.matches(inventoryIn, level)) {
 			Optional<RecipeHolder<MillingRecipe>> recipe = AllRecipeTypes.MILLING.find(inventoryIn, level);
@@ -153,7 +159,7 @@ public class MillstoneBlockEntity extends KineticBlockEntity {
 		stackInSlot.shrink(1);
 		inputInv.setStackInSlot(0, stackInSlot);
 		lastRecipe.rollResults()
-			.forEach(stack -> ItemHandlerHelper.insertItemStacked(outputInv, stack, false));
+			.forEach(stack -> CreateTransferUtil.insertItemStacked(outputInv, stack, false));
 		award(AllAdvancements.MILLSTONE);
 
 		sendData();
@@ -199,7 +205,7 @@ public class MillstoneBlockEntity extends KineticBlockEntity {
 	private boolean canProcess(ItemStack stack) {
 		ItemStackHandler tester = new ItemStackHandler(1);
 		tester.setStackInSlot(0, stack);
-		RecipeWrapper inventoryIn = new RecipeWrapper(tester);
+		CreateRecipeWrapper inventoryIn = new CreateRecipeWrapper(tester);
 
 		if (lastRecipe != null && lastRecipe.matches(inventoryIn, level))
 			return true;
@@ -207,33 +213,44 @@ public class MillstoneBlockEntity extends KineticBlockEntity {
 			.isPresent();
 	}
 
-	private class MillstoneInventoryHandler extends CombinedInvWrapper {
+	private class MillstoneInventoryHandler extends CombinedInventoryStorage {
 
 		public MillstoneInventoryHandler() {
 			super(inputInv, outputInv);
 		}
 
 		@Override
-		public boolean isItemValid(int slot, ItemStack stack) {
+		public boolean isItemValid(int slot, ItemVariant resource, int count) {
 			if (outputInv == getHandlerFromIndex(getIndexForSlot(slot)))
 				return false;
-			return canProcess(stack) && super.isItemValid(slot, stack);
+			ItemStack stack = resource.toStack(count);
+			return canProcess(stack) && super.isItemValid(slot, resource, count);
 		}
 
 		@Override
-		public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+		public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+			return super.insert(resource, maxAmount, transaction);
+		}
+
+		@Override
+		public long insertSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
 			if (outputInv == getHandlerFromIndex(getIndexForSlot(slot)))
-				return stack;
-			if (!isItemValid(slot, stack))
-				return stack;
-			return super.insertItem(slot, stack, simulate);
+				return 0;
+			if (!isItemValid(slot, resource, (int) Math.min(CreateTransferUtil.getMaxStackSize(resource), maxAmount)))
+				return 0;
+			return super.insertSlot(slot, resource, maxAmount, transaction);
 		}
 
 		@Override
-		public ItemStack extractItem(int slot, int amount, boolean simulate) {
+		public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+			return super.extract(resource, maxAmount, transaction);
+		}
+
+		@Override
+		public long extractSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
 			if (inputInv == getHandlerFromIndex(getIndexForSlot(slot)))
-				return ItemStack.EMPTY;
-			return super.extractItem(slot, amount, simulate);
+				return 0;
+			return super.extractSlot(slot, resource, maxAmount, transaction);
 		}
 
 	}

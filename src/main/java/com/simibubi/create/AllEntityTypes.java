@@ -26,16 +26,15 @@ import com.tterrag.registrate.util.nullness.NonNullConsumer;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
 
+import io.github.fabricators_of_create.porting_lib.tags.Tags.EntityTypes;
 import net.createmod.catnip.lang.Lang;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
 import net.minecraft.client.renderer.entity.EntityRenderer;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityType.EntityFactory;
 import net.minecraft.world.entity.MobCategory;
-
-import net.neoforged.neoforge.common.Tags.EntityTypes;
-import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 
 public class AllEntityTypes {
 
@@ -95,9 +94,9 @@ public class AllEntityTypes {
 		String id = Lang.asId(name);
 		return (CreateEntityBuilder<T, ?>) Create.registrate()
 			.entity(id, factory, group)
-			.properties(b -> b.setTrackingRange(range)
-				.setUpdateInterval(updateFrequency)
-				.setShouldReceiveVelocityUpdates(sendVelocity))
+			.properties(b -> b.clientTrackingRange(range)
+				.updateInterval(updateFrequency)
+				/*.setShouldReceiveVelocityUpdates(sendVelocity)*/)
 			.properties(propertyBuilder)
 			.properties(b -> {
 				if (immuneToFire)
@@ -106,9 +105,8 @@ public class AllEntityTypes {
 			.renderer(renderer);
 	}
 
-	public static void registerEntityAttributes(EntityAttributeCreationEvent event) {
-		event.put(PACKAGE.get(), PackageEntity.createPackageAttributes()
-			.build());
+	public static void registerEntityAttributes() {
+		FabricDefaultAttributeRegistry.register(PACKAGE.get(), PackageEntity.createPackageAttributes());
 	}
 
 	public static void register() {

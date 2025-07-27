@@ -4,6 +4,8 @@ import com.simibubi.create.AllAttachmentTypes;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.contraptions.minecart.capability.MinecartController;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.EntityInteract;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.world.InteractionResult;
@@ -14,22 +16,20 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.EntityInteract;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-@EventBusSubscriber
 public class MinecartCouplingItem extends Item {
 
 	public MinecartCouplingItem(Properties p_i48487_1_) {
 		super(p_i48487_1_);
 	}
 
-	@SubscribeEvent(priority = EventPriority.HIGH)
+	static {
+		EntityInteract.EVENT.register(MinecartCouplingItem::handleInteractionWithMinecart);
+	}
+
+	//@SubscribeEvent(priority = EventPriority.HIGH)
 	public static void handleInteractionWithMinecart(PlayerInteractEvent.EntityInteract event) {
 		Entity interacted = event.getTarget();
 		if (!(interacted instanceof AbstractMinecart minecart))
@@ -38,7 +38,7 @@ public class MinecartCouplingItem extends Item {
 		if (player == null)
 			return;
 		MinecartController controller =
-			minecart.getData(AllAttachmentTypes.MINECART_CONTROLLER);
+			minecart.getAttachedOrCreate(AllAttachmentTypes.MINECART_CONTROLLER);
 		if (controller == MinecartController.EMPTY || !controller.isPresent())
 			return;
 
@@ -90,7 +90,7 @@ public class MinecartCouplingItem extends Item {
 		return true;
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private static void cartClicked(Player player, AbstractMinecart interacted) {
 		CouplingHandlerClient.onCartClicked(player, interacted);
 	}

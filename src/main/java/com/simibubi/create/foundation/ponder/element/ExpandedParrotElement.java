@@ -19,7 +19,7 @@ public class ExpandedParrotElement extends ParrotElementImpl {
 	@Override
 	public void reset(PonderScene scene) {
 		super.reset(scene);
-		entity.getPersistentData().remove("TrainHat");
+		entity.getCustomData().remove("TrainHat");
 		deferConductor = false;
 	}
 
@@ -40,7 +40,7 @@ public class ExpandedParrotElement extends ParrotElementImpl {
 			deferConductor = isConductor;
 			return;
 		}
-		CompoundTag data = entity.getPersistentData();
+		CompoundTag data = entity.getCustomData();
 		if (isConductor)
 			data.putBoolean("TrainHat", true);
 		else

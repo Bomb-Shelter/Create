@@ -19,9 +19,9 @@ import net.minecraft.world.item.crafting.SingleRecipeInput;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.fluids.FluidStack;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class FillingRecipe extends StandardProcessingRecipe<SingleRecipeInput> implements IAssemblyRecipe {
 
@@ -65,7 +65,7 @@ public class FillingRecipe extends StandardProcessingRecipe<SingleRecipeInput> i
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public Component getDescriptionForAssembly() {
 		List<FluidStack> matchingFluidStacks = fluidIngredients.get(0)
 			.getMatchingFluidStacks();

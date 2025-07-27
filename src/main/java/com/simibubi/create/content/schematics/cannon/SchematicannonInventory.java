@@ -3,9 +3,10 @@ package com.simibubi.create.content.schematics.cannon;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class SchematicannonInventory extends ItemStackHandler {
 	private final SchematicannonBlockEntity blockEntity;
@@ -22,7 +23,8 @@ public class SchematicannonInventory extends ItemStackHandler {
 	}
 
 	@Override
-	public boolean isItemValid(int slot, ItemStack stack) {
+	public boolean isItemValid(int slot, ItemVariant resource, int count) {
+		ItemStack stack = resource.toStack(count);
 		switch (slot) {
 		case 0: // Blueprint Slot
 			return AllItems.SCHEMATIC.isIn(stack);
@@ -36,7 +38,7 @@ public class SchematicannonInventory extends ItemStackHandler {
 		case 4: // Gunpowder
 			return stack.is(Items.GUNPOWDER);
 		default:
-			return super.isItemValid(slot, stack);
+			return super.isItemValid(slot, resource, count);
 		}
 	}
 }

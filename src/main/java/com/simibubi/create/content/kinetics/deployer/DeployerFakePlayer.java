@@ -6,6 +6,13 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.EntityEvents;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingChangeTargetEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingDropsEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingExperienceDropEvent;
+import io.github.fabricators_of_create.porting_lib.util.UsernameCache;
+import net.fabricmc.fabric.api.entity.FakePlayer;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.mojang.authlib.GameProfile;
@@ -31,19 +38,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.common.UsernameCache;
-import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.event.entity.EntityEvent;
-import net.neoforged.neoforge.event.entity.living.LivingChangeTargetEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
-import net.neoforged.neoforge.event.entity.living.LivingExperienceDropEvent;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-@EventBusSubscriber
 public class DeployerFakePlayer extends FakePlayer {
 
 	public static final UUID fallbackID = UUID.fromString("9e2faded-cafe-4ec2-c314-dad129ae971d");
@@ -69,7 +66,7 @@ public class DeployerFakePlayer extends FakePlayer {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public EntityDimensions getDefaultDimensions(Pose pose) {
 		return super.getDefaultDimensions(pose).withEyeHeight(0);
 	}
@@ -105,13 +102,19 @@ public class DeployerFakePlayer extends FakePlayer {
 		return owner == null ? super.getUUID() : owner;
 	}
 
-	@SubscribeEvent
-	public static void deployerHasEyesOnHisFeet(EntityEvent.Size event) {
+	static {
+		EntityEvents.Size.EVENT.register(DeployerFakePlayer::deployerHasEyesOnHisFeet);
+		LivingDropsEvent.EVENT.register(DeployerFakePlayer::deployerCollectsDropsFromKilledEntities);
+		LivingExperienceDropEvent.EVENT.register(DeployerFakePlayer::deployerKillsDoNotSpawnXP);
+		LivingChangeTargetEvent.EVENT.register(DeployerFakePlayer::entitiesDontRetaliate);
+	}
+
+	public static void deployerHasEyesOnHisFeet(EntityEvents.Size event) {
 		if (event.getEntity() instanceof DeployerFakePlayer)
 			event.setNewSize(event.getNewSize().withEyeHeight(0));
 	}
 
-	@SubscribeEvent(priority = EventPriority.LOWEST)
+	//@SubscribeEvent(priority = EventPriority.LOWEST)
 	public static void deployerCollectsDropsFromKilledEntities(LivingDropsEvent event) {
 		DamageSource source = event.getSource();
 		Entity trueSource = source.getEntity();
@@ -135,15 +138,14 @@ public class DeployerFakePlayer extends FakePlayer {
 		super.remove(p_150097_);
 	}
 
-	@SubscribeEvent
 	public static void deployerKillsDoNotSpawnXP(LivingExperienceDropEvent event) {
 		if (event.getAttackingPlayer() instanceof DeployerFakePlayer)
 			event.setCanceled(true);
 	}
 
-	@SubscribeEvent
+	//@SubscribeEvent
 	public static void entitiesDontRetaliate(LivingChangeTargetEvent event) {
-		if (!(event.getOriginalAboutToBeSetTarget() instanceof DeployerFakePlayer))
+		if (!(event.getOriginalTarget() instanceof DeployerFakePlayer))
 			return;
 		LivingEntity entityLiving = event.getEntity();
 		if (!(entityLiving instanceof Mob mob))

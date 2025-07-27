@@ -8,14 +8,12 @@ import com.simibubi.create.infrastructure.gametest.tests.TestItems;
 import com.simibubi.create.infrastructure.gametest.tests.TestMisc;
 import com.simibubi.create.infrastructure.gametest.tests.TestProcessing;
 
+import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 import net.minecraft.gametest.framework.GameTestGenerator;
 import net.minecraft.gametest.framework.TestFunction;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 
-@EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
-public class CreateGameTests {
+//@EventBusSubscriber(bus = EventBusSubscriber.Bus.MOD)
+public class CreateGameTests implements FabricGameTest {
 	private static final Class<?>[] testHolders = {
 			TestContraptions.class,
 			TestFluids.class,
@@ -23,11 +21,6 @@ public class CreateGameTests {
 			TestMisc.class,
 			TestProcessing.class
 	};
-
-	@SubscribeEvent
-	public static void registerTests(RegisterGameTestsEvent event) {
-	    event.register(CreateGameTests.class);
-	}
 
 	@GameTestGenerator
 	public static Collection<TestFunction> generateTests() {

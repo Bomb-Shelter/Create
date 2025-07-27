@@ -19,13 +19,12 @@ import com.simibubi.create.infrastructure.debugInfo.element.DebugInfoSection;
 import com.simibubi.create.infrastructure.debugInfo.element.InfoElement;
 import com.simibubi.create.infrastructure.debugInfo.element.InfoEntry;
 
-import net.neoforged.fml.ModList;
-import net.neoforged.neoforgespi.language.IModInfo;
-
 import dev.engine_room.flywheel.api.Flywheel;
 import dev.engine_room.flywheel.api.backend.Backend;
 import dev.engine_room.flywheel.api.backend.BackendManager;
 import net.createmod.catnip.platform.CatnipServices;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.SharedConstants;
 import net.minecraft.SystemReport;
 import net.minecraft.Util;
@@ -79,11 +78,11 @@ public class DebugInformation {
 
 		CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> {
 			DebugInfoSection.builder("Graphics")
-				.put("Flywheel Version", ModList.get()
-					.getModContainerById(Flywheel.ID)
-					.map(c -> c.getModInfo()
+				.put("Flywheel Version", FabricLoader.getInstance()
+					.getModContainer(Flywheel.ID)
+					.map(c -> c.getMetadata()
 						.getVersion()
-						.toString())
+						.getFriendlyString())
 					.orElse("None"))
 				.put("Flywheel Backend", () -> Backend.REGISTRY.getIdOrThrow(BackendManager.currentBackend()).toString())
 				.put("OpenGL Renderer", GlUtil::getRenderer)
@@ -109,22 +108,23 @@ public class DebugInformation {
 	}
 
 	public static String getVersionOfMod(String id) {
-		return ModList.get().getModContainerById(id)
-			.map(mod -> mod.getModInfo().getVersion().toString())
+		return FabricLoader.getInstance().getModContainer(id)
+			.map(mod -> mod.getMetadata().getVersion().getFriendlyString())
 			.orElse("None");
 	}
 
 	public static Collection<InfoElement> listAllOtherMods() {
 		List<InfoElement> mods = new ArrayList<>();
-		ModList.get().forEachModContainer((id, mod) -> {
+		FabricLoader.getInstance().getAllMods().forEach((mod) -> {
+			String id = mod.getMetadata().getId();
 			if (!id.equals(Create.ID) &&
-				!id.equals("neoforge") &&
+				!id.equals("fabricloader") &&
 				!id.equals("minecraft") &&
 				!id.equals("flywheel") &&
 				!id.equals("ponder")) {
-				IModInfo info = mod.getModInfo();
-				String name = info.getDisplayName();
-				String version = info.getVersion().toString();
+				ModMetadata info = mod.getMetadata();
+				String name = info.getName();
+				String version = info.getVersion().getFriendlyString();
 				mods.add(new InfoEntry(name, version));
 			}
 		});

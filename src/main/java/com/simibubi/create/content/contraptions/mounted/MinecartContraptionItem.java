@@ -4,6 +4,14 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import com.simibubi.create.infrastructure.fabric.MinecartUtil;
+
+import io.github.fabricators_of_create.porting_lib.blocks.util.MinecartAndRailUtil;
+
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.EntityInteract;
+
 import org.apache.commons.lang3.tuple.MutablePair;
 
 import com.simibubi.create.AllDataComponents;
@@ -49,11 +57,6 @@ import net.minecraft.world.level.block.state.properties.RailShape;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-
-@EventBusSubscriber
 public class MinecartContraptionItem extends Item {
 
 	private final AbstractMinecart.Type minecartType;
@@ -97,7 +100,7 @@ public class MinecartContraptionItem extends Item {
 				.relative(direction);
 			BlockState blockstate = world.getBlockState(blockpos);
 			RailShape railshape = blockstate.getBlock() instanceof BaseRailBlock
-				? ((BaseRailBlock) blockstate.getBlock()).getRailDirection(blockstate, world, blockpos, null)
+				? MinecartAndRailUtil.getDirectionOfRail(blockstate, world, blockpos, null)
 				: RailShape.NORTH_SOUTH;
 			double d3;
 			if (blockstate.is(BlockTags.RAILS)) {
@@ -114,7 +117,7 @@ public class MinecartContraptionItem extends Item {
 
 				BlockState blockstate1 = world.getBlockState(blockpos.below());
 				RailShape railshape1 = blockstate1.getBlock() instanceof BaseRailBlock
-					? ((BaseRailBlock) blockstate1.getBlock()).getRailDirection(blockstate1, world, blockpos.below(),
+					? MinecartAndRailUtil.getDirectionOfRail(blockstate1, world, blockpos.below(),
 					null)
 					: RailShape.NORTH_SOUTH;
 				if (direction != Direction.DOWN && railshape1.isAscending()) {
@@ -154,7 +157,7 @@ public class MinecartContraptionItem extends Item {
 			ItemStack itemstack = context.getItemInHand();
 			if (world instanceof ServerLevel serverlevel) {
 				RailShape railshape = blockstate.getBlock() instanceof BaseRailBlock
-					? ((BaseRailBlock) blockstate.getBlock()).getRailDirection(blockstate, world, blockpos, null)
+					? MinecartAndRailUtil.getDirectionOfRail(blockstate, world, blockpos, null)
 					: RailShape.NORTH_SOUTH;
 				double d0 = 0.0D;
 				if (railshape.isAscending()) {
@@ -201,7 +204,10 @@ public class MinecartContraptionItem extends Item {
 		return "item.create.minecart_contraption";
 	}
 
-	@SubscribeEvent
+	static {
+		EntityInteract.EVENT.register(MinecartContraptionItem::wrenchCanBeUsedToPickUpMinecartContraptions);
+	}
+
 	public static void wrenchCanBeUsedToPickUpMinecartContraptions(PlayerInteractEvent.EntityInteract event) {
 		Entity entity = event.getTarget();
 		Player player = event.getEntity();

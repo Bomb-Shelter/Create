@@ -2,6 +2,10 @@ package com.simibubi.create.api.contraption.storage.fluid;
 
 import java.util.Objects;
 
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.Codec;
@@ -15,9 +19,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-
-public abstract class MountedFluidStorage implements IFluidHandler {
+public abstract class MountedFluidStorage implements SlottedStorage<FluidVariant> {
 	public static final Codec<MountedFluidStorage> CODEC = MountedFluidStorageType.CODEC.dispatch(
 		storage -> storage.type, type -> type.codec
 	);

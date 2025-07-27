@@ -4,6 +4,8 @@ import static com.simibubi.create.content.contraptions.mounted.CartAssemblerBloc
 
 import java.util.Queue;
 
+import com.simibubi.create.infrastructure.fabric.transfer.InventoryStorage;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.simibubi.create.AllBlocks;
@@ -32,8 +34,6 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.RailShape;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.minecraft.world.phys.AABB;
-
-import net.neoforged.neoforge.items.wrapper.InvWrapper;
 
 public class MountedContraption extends Contraption {
 
@@ -156,7 +156,7 @@ public class MountedContraption extends Contraption {
 
 	public void addExtraInventories(Entity cart) {
 		if (cart instanceof Container container)
-			storage.attachExternal(new InvWrapper(container));
+			storage.attachExternal(InventoryStorage.of(container, null));
 	}
 
 

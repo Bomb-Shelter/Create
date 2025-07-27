@@ -16,6 +16,7 @@ import com.simibubi.create.foundation.gui.widget.IconButton;
 import com.simibubi.create.foundation.gui.widget.ScrollInput;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlotItemHandler;
 import net.createmod.catnip.gui.element.GuiGameElement;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.ChatFormatting;
@@ -25,8 +26,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
-
-import net.neoforged.neoforge.items.SlotItemHandler;
 
 public class RedstoneRequesterScreen extends AbstractSimiContainerScreen<RedstoneRequesterMenu> {
 
@@ -66,8 +65,8 @@ public class RedstoneRequesterScreen extends AbstractSimiContainerScreen<Redston
 		setWindowSize(bgWidth, bgHeight + AllGuiTextures.PLAYER_INVENTORY.getHeight());
 		super.init();
 		clearWidgets();
-		int x = getGuiLeft();
-		int y = getGuiTop();
+		int x = leftPos;
+		int y = topPos;
 
 		if (addressBox == null) {
 			addressBox = new AddressEditBox(this, new NoShadowFontWrapper(font), x + 55, y + 68, 110, 10, false);
@@ -105,8 +104,8 @@ public class RedstoneRequesterScreen extends AbstractSimiContainerScreen<Redston
 
 	@Override
 	protected void renderBg(GuiGraphics pGuiGraphics, float pPartialTick, int pMouseX, int pMouseY) {
-		int x = getGuiLeft();
-		int y = getGuiTop();
+		int x = leftPos;
+		int y = topPos;
 		AllGuiTextures.REDSTONE_REQUESTER.render(pGuiGraphics, x + 3, y);
 		renderPlayerInventory(pGuiGraphics, x - 3, y + 124);
 
@@ -124,8 +123,8 @@ public class RedstoneRequesterScreen extends AbstractSimiContainerScreen<Redston
 	@Override
 	protected void renderForeground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
 		super.renderForeground(graphics, mouseX, mouseY, partialTicks);
-		int x = getGuiLeft();
-		int y = getGuiTop();
+		int x = leftPos;
+		int y = topPos;
 
 		for (int i = 0; i < amounts.size(); i++) {
 			int inputX = x + 27 + i * 20;
@@ -172,8 +171,8 @@ public class RedstoneRequesterScreen extends AbstractSimiContainerScreen<Redston
 
 	@Override
 	public boolean mouseScrolled(double mouseX, double mouseY, double scrollX, double scrollY) {
-		int x = getGuiLeft();
-		int y = getGuiTop();
+		int x = leftPos;
+		int y = topPos;
 
 		if (addressBox.mouseScrolled(mouseX, mouseY, scrollX, scrollY))
 			return true;
@@ -200,7 +199,7 @@ public class RedstoneRequesterScreen extends AbstractSimiContainerScreen<Redston
 		if (!(hoveredSlot instanceof SlotItemHandler))
 			return tooltip;
 
-		int slotIndex = this.hoveredSlot.getSlotIndex();
+		int slotIndex = this.hoveredSlot.port_lib$getSlotIndex();
 		if (slotIndex >= amounts.size())
 			return tooltip;
 

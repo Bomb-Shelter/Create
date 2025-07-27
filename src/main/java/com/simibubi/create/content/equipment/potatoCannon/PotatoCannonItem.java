@@ -5,6 +5,13 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import io.github.fabricators_of_create.porting_lib.item.extensions.CustomSupportsEnchantItem;
+import io.github.fabricators_of_create.porting_lib.item.extensions.EntitySwingListenerItem;
+import io.github.fabricators_of_create.porting_lib.item.extensions.ReequipAnimationItem;
+import net.createmod.catnip.platform.CatnipServices;
+import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllEntityTypes;
@@ -51,13 +58,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmPoseItem {
+public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmPoseItem, ReequipAnimationItem, CustomSupportsEnchantItem, EntitySwingListenerItem {
 	public PotatoCannonItem(Properties properties) {
 		super(properties);
+		CatnipServices.PLATFORM.executeOnClientOnly(() -> this::initializeClient);
 	}
 
 	@Nullable
@@ -163,7 +170,7 @@ public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmP
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
 		LocalPlayer player = Minecraft.getInstance().player;
 		if (player == null) {
@@ -184,8 +191,8 @@ public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmP
 			return;
 
 		HolderLookup<Enchantment> lookup = registries.lookupOrThrow(Registries.ENCHANTMENT);
-		int power = stack.getEnchantmentLevel(lookup.getOrThrow(Enchantments.POWER));
-		int punch = stack.getEnchantmentLevel(lookup.getOrThrow(Enchantments.PUNCH));
+		int power = EnchantmentHelper.getItemEnchantmentLevel(lookup.getOrThrow(Enchantments.POWER), stack);
+		int punch = EnchantmentHelper.getItemEnchantmentLevel(lookup.getOrThrow(Enchantments.PUNCH), stack);
 		final float additionalDamageMult = 1 + power * .2f;
 		final float additionalKnockback = punch * .5f;
 
@@ -248,7 +255,7 @@ public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmP
 			return false;
 		if (enchantment.is(Enchantments.LOOTING))
 			return true;
-		return super.supportsEnchantment(stack, enchantment);
+		return CustomSupportsEnchantItem.super.supportsEnchantment(stack, enchantment);
 	}
 
 	@Override
@@ -271,7 +278,7 @@ public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmP
 	}
 
 	@Override
-	public boolean onEntitySwing(ItemStack stack, LivingEntity entity, InteractionHand hand) {
+	public boolean onEntitySwing(ItemStack stack, LivingEntity entity) {
 		return true;
 	}
 
@@ -289,10 +296,9 @@ public class PotatoCannonItem extends ProjectileWeaponItem implements CustomArmP
 		return null;
 	}
 
-	@Override
-	@OnlyIn(Dist.CLIENT)
-	public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-		consumer.accept(SimpleCustomRenderer.create(this, new PotatoCannonItemRenderer()));
+	@Environment(EnvType.CLIENT)
+	public void initializeClient() {
+		BuiltinItemRendererRegistry.INSTANCE.register(this, SimpleCustomRenderer.create(this, new PotatoCannonItemRenderer()));
 	}
 
 	public record Ammo(ItemStack stack, PotatoCannonProjectileType type) {

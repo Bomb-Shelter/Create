@@ -11,12 +11,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import net.neoforged.neoforge.client.extensions.common.IClientBlockExtensions;
+public class ReducedDestroyEffects {
 
-public class ReducedDestroyEffects implements IClientBlockExtensions {
-
-	@Override
-	public boolean addDestroyEffects(BlockState state, Level worldIn, BlockPos pos, ParticleEngine manager) {
+	public static boolean addDestroyEffects(BlockState state, Level worldIn, BlockPos pos, ParticleEngine manager) {
 		if (!(worldIn instanceof ClientLevel world))
 			return true;
 		VoxelShape voxelshape = state.getShape(world, pos);

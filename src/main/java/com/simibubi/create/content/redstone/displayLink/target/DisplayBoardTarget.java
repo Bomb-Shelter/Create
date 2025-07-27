@@ -16,8 +16,8 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.AABB;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class DisplayBoardTarget extends DisplayTarget {
 
@@ -87,7 +87,7 @@ public class DisplayBoardTarget extends DisplayTarget {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public AABB getMultiblockBounds(LevelAccessor level, BlockPos pos) {
 		AABB baseShape = super.getMultiblockBounds(level, pos);
 		BlockEntity be = level.getBlockEntity(pos);

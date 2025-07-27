@@ -7,11 +7,13 @@ import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringB
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.TankManipulationBehaviour;
 import com.simibubi.create.foundation.utility.FluidFormatter;
 
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class FluidAmountDisplaySource extends SingleLineDisplaySource {
 
@@ -23,14 +25,14 @@ public class FluidAmountDisplaySource extends SingleLineDisplaySource {
 
 		TankManipulationBehaviour tankManipulationBehaviour = cobe.getBehaviour(TankManipulationBehaviour.OBSERVE);
 		FilteringBehaviour filteringBehaviour = cobe.getBehaviour(FilteringBehaviour.TYPE);
-		IFluidHandler handler = tankManipulationBehaviour.getInventory();
+		Storage<FluidVariant> handler = tankManipulationBehaviour.getInventory();
 
 		if (handler == null)
 			return EMPTY_LINE;
 
 		long collected = 0;
-		for (int i = 0; i < handler.getTanks(); i++) {
-			FluidStack stack = handler.getFluidInTank(i);
+		for (StorageView<FluidVariant> view : handler) {
+			FluidStack stack = new FluidStack(view);
 			if (stack.isEmpty())
 				continue;
 			if (!filteringBehaviour.test(stack))

@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.block.state.properties.RailShape;
-import net.neoforged.neoforge.client.model.generators.ModelFile;
+import io.github.fabricators_of_create.porting_lib.models.generators.ModelFile;
 
 public class ControllerRailGenerator extends SpecialBlockStateGen {
 

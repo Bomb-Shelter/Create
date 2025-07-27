@@ -111,7 +111,7 @@ public class CouplingCommand {
 							if (!(cart2 instanceof AbstractMinecart))
 								throw ONLY_MINECARTS_ALLOWED.create();
 
-							MinecartController cart1Capability = cart1.getData(AllAttachmentTypes.MINECART_CONTROLLER);
+							MinecartController cart1Capability = cart1.getAttachedOrCreate(AllAttachmentTypes.MINECART_CONTROLLER);
 							if (cart1Capability == MinecartController.EMPTY) {
 								ctx.getSource()
 									.sendSuccess(() -> {
@@ -162,7 +162,7 @@ public class CouplingCommand {
 						if (!(cart instanceof AbstractMinecart))
 							throw ONLY_MINECARTS_ALLOWED.create();
 
-						MinecartController capability = cart.getData(AllAttachmentTypes.MINECART_CONTROLLER);
+						MinecartController capability = cart.getAttachedOrCreate(AllAttachmentTypes.MINECART_CONTROLLER);
 						if (capability == MinecartController.EMPTY) {
 							ctx.getSource()
 								.sendSuccess(() -> {

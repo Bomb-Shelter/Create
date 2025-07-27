@@ -10,26 +10,26 @@ import com.simibubi.create.content.logistics.stockTicker.PackageOrder;
 import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.foundation.gui.menu.GhostItemMenu;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlotItemHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.SlotItemHandler;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public class RedstoneRequesterMenu extends GhostItemMenu<RedstoneRequesterBlockEntity> {
+public class RedstoneRequesterMenu extends GhostItemMenu<RedstoneRequesterBlockEntity, BlockPos> {
 
 	public RedstoneRequesterMenu(MenuType<?> type, int id, Inventory inv, RedstoneRequesterBlockEntity contentHolder) {
 		super(type, id, inv, contentHolder);
 	}
 
-	public RedstoneRequesterMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
-		super(type, id, inv, extraData);
+	public RedstoneRequesterMenu(MenuType<?> type, int id, Inventory inv, BlockPos extraData) {
+		super(type, id, inv, extraData, true);
 	}
 
 	public static RedstoneRequesterMenu create(int id, Inventory inv, RedstoneRequesterBlockEntity be) {
@@ -51,9 +51,8 @@ public class RedstoneRequesterMenu extends GhostItemMenu<RedstoneRequesterBlockE
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
-	protected RedstoneRequesterBlockEntity createOnClient(RegistryFriendlyByteBuf extraData) {
-		BlockPos blockPos = extraData.readBlockPos();
+	@Environment(EnvType.CLIENT)
+	protected RedstoneRequesterBlockEntity createOnClient(BlockPos blockPos) {
 		return AllBlocks.REDSTONE_REQUESTER.get()
 			.getBlockEntity(Minecraft.getInstance().level, blockPos);
 	}
@@ -74,7 +73,7 @@ public class RedstoneRequesterMenu extends GhostItemMenu<RedstoneRequesterBlockE
 	protected void saveData(RedstoneRequesterBlockEntity contentHolder) {
 		List<BigItemStack> stacks = contentHolder.encodedRequest.stacks();
 		ArrayList<BigItemStack> list = new ArrayList<>();
-		for (int i = 0; i < ghostInventory.getSlots(); i++) {
+		for (int i = 0; i < ghostInventory.getSlotCount(); i++) {
 			ItemStack stackInSlot = ghostInventory.getStackInSlot(i);
 			if (stackInSlot.isEmpty())
 				continue;
@@ -91,7 +90,7 @@ public class RedstoneRequesterMenu extends GhostItemMenu<RedstoneRequesterBlockE
 	// this is used to prevent InventorySorter from interfering with scrolling on the slots.
 	// we just need a class to use as a marker, see InventorySorterCompat
 	public static class SorterProofSlot extends SlotItemHandler {
-		public SorterProofSlot(IItemHandler itemHandler, int index, int xPosition, int yPosition) {
+		public SorterProofSlot(SlottedStackStorage itemHandler, int index, int xPosition, int yPosition) {
 			super(itemHandler, index, xPosition, yPosition);
 		}
 	}

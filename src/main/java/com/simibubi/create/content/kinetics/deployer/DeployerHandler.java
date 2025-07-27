@@ -8,6 +8,22 @@ import java.util.Map;
 
 import javax.annotation.Nullable;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.HarvestableBlock;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerDestroyItemEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.LeftClickBlock;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.LeftClickBlock.Action;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickBlock;
+import io.github.fabricators_of_create.porting_lib.item.extensions.SneakBypassUseItem;
+import io.github.fabricators_of_create.porting_lib.item.extensions.UseFirstBehaviorItem;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import net.fabricmc.fabric.api.util.TriState;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+
+import net.minecraft.world.level.block.BaseRailBlock;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.collect.HashMultimap;
@@ -68,13 +84,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.common.CommonHooks;
-import net.neoforged.neoforge.common.extensions.IBaseRailBlockExtension;
-import net.neoforged.neoforge.common.util.TriState;
-import net.neoforged.neoforge.event.EventHooks;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
-
 public class DeployerHandler {
 	private static final Map<BlockPos, List<ItemEntity>> CAPTURED_BLOCK_DROPS = new HashMap<>();
 	public static final Map<BlockPos, List<ItemEntity>> CAPTURED_BLOCK_DROPS_VIEW = Collections.unmodifiableMap(CAPTURED_BLOCK_DROPS);
@@ -132,7 +141,8 @@ public class DeployerHandler {
 	static void activate(DeployerFakePlayer player, Vec3 vec, BlockPos clickedPos, Vec3 extensionVector, Mode mode) {
 		HashMultimap<Holder<Attribute>, AttributeModifier> attributeModifiers = HashMultimap.create();
 		player.getMainHandItem()
-			.getAttributeModifiers()
+			.getComponents()
+			.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY)
 			.modifiers()
 			.forEach(e -> attributeModifiers.put(e.attribute(), e.modifier()));
 
@@ -167,7 +177,7 @@ public class DeployerHandler {
 
 			// Use on entity
 			if (mode == Mode.USE) {
-				InteractionResult cancelResult = CommonHooks.onInteractEntity(player, entity, hand);
+				InteractionResult cancelResult = UseEntityCallback.EVENT.invoker().interact(player, player.level(), hand, entity, null);
 				if (cancelResult == InteractionResult.FAIL) {
 					entity.captureDrops(null);
 					return;
@@ -187,7 +197,7 @@ public class DeployerHandler {
 				}
 				if (!success && entity instanceof Player playerEntity) {
 					if (stack.has(DataComponents.FOOD)) {
-						FoodProperties foodProperties = item.getFoodProperties(stack, player);
+						FoodProperties foodProperties = stack.get(DataComponents.FOOD);
 						if (foodProperties != null && playerEntity.canEat(foodProperties.canAlwaysEat())) {
 							ItemStack copy = stack.copy();
 							player.setItemInHand(hand, stack.finishUsingItem(level, playerEntity));
@@ -238,7 +248,8 @@ public class DeployerHandler {
 				player.blockBreakingProgress = null;
 				return;
 			}
-			LeftClickBlock event = CommonHooks.onLeftClickBlock(player, clickedPos, face, ServerboundPlayerActionPacket.Action.START_DESTROY_BLOCK);
+			LeftClickBlock event = new LeftClickBlock(player, clickedPos, face, Action.START);
+			event.sendEvent();
 			if (event.isCanceled())
 				return;
 			if (BlockHelper.extinguishFire(level, player, clickedPos, face))
@@ -280,14 +291,15 @@ public class DeployerHandler {
 		TriState useItem = TriState.DEFAULT;
 		if (!clickedState.getShape(level, clickedPos)
 			.isEmpty()) {
-			RightClickBlock event = CommonHooks.onRightClickBlock(player, hand, clickedPos, result);
+			RightClickBlock event = new RightClickBlock(player, hand, clickedPos, result);
+			event.sendEvent();
 			useBlock = event.getUseBlock();
 			useItem = event.getUseItem();
 		}
 
 		// Item has custom active use
-		if (useItem != TriState.FALSE) {
-			InteractionResult actionresult = stack.onItemUseFirst(itemusecontext);
+		if (useItem != TriState.FALSE && stack.getItem() instanceof UseFirstBehaviorItem firstBehaviorItem) {
+			InteractionResult actionresult = firstBehaviorItem.onItemUseFirst(stack, itemusecontext);
 			if (actionresult != InteractionResult.PASS)
 				return;
 		}
@@ -295,7 +307,7 @@ public class DeployerHandler {
 		boolean holdingSomething = !player.getMainHandItem()
 			.isEmpty();
 		boolean flag1 =
-			!(player.isShiftKeyDown() && holdingSomething) || (stack.doesSneakBypassUse(level, clickedPos, player));
+			!(player.isShiftKeyDown() && holdingSomething) || (stack.getItem() instanceof SneakBypassUseItem sneakBypassUseItem && sneakBypassUseItem.doesSneakBypassUse(stack, level, clickedPos, player));
 
 		// Use on block
 		if (useBlock != TriState.FALSE && flag1
@@ -325,7 +337,7 @@ public class DeployerHandler {
 		InteractionResult onItemUse = stack.useOn(itemusecontext);
 		if (onItemUse.consumesAction()) {
 			if (item instanceof BlockItem bi
-				&& (bi.getBlock() instanceof IBaseRailBlockExtension || bi.getBlock() instanceof ITrackBlock))
+				&& (bi.getBlock() instanceof BaseRailBlock || bi.getBlock() instanceof ITrackBlock))
 				player.placedTracks = true;
 			return;
 		}
@@ -370,7 +382,7 @@ public class DeployerHandler {
 		BlockState blockstate = world.getBlockState(pos);
 		GameType gameType = interactionManager.getGameModeForPlayer();
 
-		if (CommonHooks.fireBlockBreak(world, gameType, player, pos, blockstate).isCanceled())
+		if (!PlayerBlockBreakEvents.BEFORE.invoker().beforeBlockBreak(world, player, pos, blockstate, null))
 			return false;
 
 		BlockEntity blockEntity = world.getBlockEntity(pos);
@@ -380,10 +392,10 @@ public class DeployerHandler {
 		ItemStack prevHeldItem = player.getMainHandItem();
 		ItemStack heldItem = prevHeldItem.copy();
 
-		boolean canHarvest = blockstate.canHarvestBlock(world, pos, player);
+		boolean canHarvest = CreateFabricUtil.canHarvestBlock(blockstate, world, pos, player);
 		prevHeldItem.mineBlock(world, blockstate, pos, player);
 		if (prevHeldItem.isEmpty() && !heldItem.isEmpty())
-			EventHooks.onPlayerDestroyItem(player, heldItem, InteractionHand.MAIN_HAND);
+			new PlayerDestroyItemEvent(player, heldItem, InteractionHand.MAIN_HAND).sendEvent();
 
 		BlockPos posUp = pos.above();
 		BlockState stateUp = world.getBlockState(posUp);
@@ -395,7 +407,7 @@ public class DeployerHandler {
 			world.setBlock(pos, Blocks.AIR.defaultBlockState(), 35);
 			world.setBlock(posUp, Blocks.AIR.defaultBlockState(), 35);
 		} else {
-			if (!blockstate.onDestroyedByPlayer(world, pos, player, canHarvest, world.getFluidState(pos)))
+			if (!blockstate.port_lib$onDestroyedByPlayer(world, pos, player, canHarvest, world.getFluidState(pos)))
 				return true;
 		}
 

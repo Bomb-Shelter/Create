@@ -5,9 +5,9 @@ import java.util.Set;
 import java.util.function.Consumer;
 
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
+import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.item.Item;
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
 
 public class CustomRenderedItems {
 
@@ -31,8 +31,8 @@ public class CustomRenderedItems {
 			Iterator<Item> iterator = ITEMS.iterator();
 			while (iterator.hasNext()) {
 				Item item = iterator.next();
-				if (!BuiltInRegistries.ITEM.containsValue(item) || !(IClientItemExtensions.of(item)
-					.getCustomRenderer() instanceof CustomRenderedItemModelRenderer)) {
+				if (BuiltInRegistries.ITEM.getId(item) == -1 || !(BuiltinItemRendererRegistry.INSTANCE.get(item)
+					 instanceof CustomRenderedItemModelRenderer)) {
 					iterator.remove();
 				}
 			}

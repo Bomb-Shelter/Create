@@ -2,6 +2,8 @@ package com.simibubi.create.content.contraptions.behaviour.dispenser;
 
 import java.util.function.Predicate;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
@@ -18,8 +20,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.LevelEvent;
-
-import net.neoforged.neoforge.items.IItemHandler;
 
 public class DropperMovementBehaviour implements MovementBehaviour {
 	@Override
@@ -52,9 +52,9 @@ public class DropperMovementBehaviour implements MovementBehaviour {
 	/**
 	 * Finds a dispensable slot. Empty slots are skipped and nearly-empty slots are topped off.
 	 */
-	private static int getSlot(MountedItemStorage storage, RandomSource random, IItemHandler contraptionInventory) {
+	private static int getSlot(MountedItemStorage storage, RandomSource random, SlottedStackStorage contraptionInventory) {
 		IntList filledSlots = new IntArrayList();
-		for (int i = 0; i < storage.getSlots(); i++) {
+		for (int i = 0; i < storage.getSlotCount(); i++) {
 			ItemStack stack = storage.getStackInSlot(i);
 			if (stack.isEmpty())
 				continue;
@@ -79,7 +79,7 @@ public class DropperMovementBehaviour implements MovementBehaviour {
 	}
 
 	@Nullable
-	private static ItemStack tryTopOff(ItemStack stack, IItemHandler from) {
+	private static ItemStack tryTopOff(ItemStack stack, SlottedStackStorage from) {
 		Predicate<ItemStack> test = otherStack -> ItemStack.isSameItemSameComponents(stack, otherStack);
 		int needed = stack.getMaxStackSize() - stack.getCount();
 

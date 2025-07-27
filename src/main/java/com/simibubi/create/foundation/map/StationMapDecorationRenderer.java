@@ -1,5 +1,7 @@
 package com.simibubi.create.foundation.map;
 
+import io.github.fabricators_of_create.porting_lib.gui.map.IMapDecorationRenderer;
+
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 
@@ -15,7 +17,6 @@ import net.minecraft.client.resources.MapDecorationTextureManager;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.saveddata.maps.MapDecoration;
 import net.minecraft.world.level.saveddata.maps.MapItemSavedData;
-import net.neoforged.neoforge.client.gui.map.IMapDecorationRenderer;
 
 public class StationMapDecorationRenderer implements IMapDecorationRenderer {
 	@Override

@@ -6,6 +6,9 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.MinecartPassHandlerBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.SlopeCreationCheckingRailBlock;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.mojang.serialization.MapCodec;
@@ -64,7 +67,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 public class CartAssemblerBlock extends BaseRailBlock
-	implements IBE<CartAssemblerBlockEntity>, IWrenchable, SpecialBlockItemRequirement {
+	implements IBE<CartAssemblerBlockEntity>, IWrenchable, SpecialBlockItemRequirement, SlopeCreationCheckingRailBlock, MinecartPassHandlerBlock {
 
 	public static final BooleanProperty POWERED = BlockStateProperties.POWERED;
 	public static final BooleanProperty BACKWARDS = BooleanProperty.create("backwards");
@@ -76,7 +79,7 @@ public class CartAssemblerBlock extends BaseRailBlock
 	public static final MapCodec<CartAssemblerBlock> CODEC = simpleCodec(CartAssemblerBlock::new);
 
 	public CartAssemblerBlock(Properties properties) {
-		super(true, properties);
+		super(true, properties.pushReaction(PushReaction.BLOCK));
 		registerDefaultState(defaultBlockState().setValue(POWERED, false)
 			.setValue(BACKWARDS, false)
 			.setValue(RAIL_TYPE, CartAssembleRailType.POWERED_RAIL)
@@ -163,7 +166,7 @@ public class CartAssemblerBlock extends BaseRailBlock
 	}
 
 	public static boolean canAssembleTo(AbstractMinecart cart) {
-		return cart.canBeRidden() || cart instanceof MinecartFurnace || cart instanceof MinecartChest;
+		return /*cart.canBeRidden() ||*/ cart instanceof MinecartFurnace || cart instanceof MinecartChest;
 	}
 
 	@Override
@@ -234,11 +237,11 @@ public class CartAssemblerBlock extends BaseRailBlock
 		return Shapes.block();
 	}
 
-	@Override
+	/*@Override
 	@Nonnull
 	public PushReaction getPistonPushReaction(@Nonnull BlockState state) {
 		return PushReaction.BLOCK;
-	}
+	}*/
 
 	@Override
 	public Class<CartAssemblerBlockEntity> getBlockEntityClass() {

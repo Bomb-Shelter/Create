@@ -3,6 +3,18 @@ package com.simibubi.create.foundation.data;
 import java.util.List;
 import java.util.stream.Stream;
 
+import com.mojang.serialization.Codec;
+import com.simibubi.create.Create;
+
+import net.fabricmc.fabric.api.recipe.v1.ingredient.CustomIngredient;
+
+import net.fabricmc.fabric.api.recipe.v1.ingredient.CustomIngredientSerializer;
+
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.mojang.serialization.MapCodec;
@@ -14,12 +26,8 @@ import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.common.NeoForgeMod;
-import net.neoforged.neoforge.common.crafting.ICustomIngredient;
-import net.neoforged.neoforge.common.crafting.IngredientType;
-import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
-public class SimpleDatagenIngredient implements ICustomIngredient {
+public class SimpleDatagenIngredient implements CustomIngredient {
 
 	/*
 	"ingredients": [
@@ -37,8 +45,7 @@ public class SimpleDatagenIngredient implements ICustomIngredient {
 				return new SimpleDatagenIngredient(mod, location.getPath());
 			}
 		}
-		throw new AssertionError("ID "+location.getNamespace()+" doesn't correspond to any compat mod." +
-				" SimpleDatagenIngredient is not meant for deserialization anyway");
+		throw new AssertionError("ID "+location.getNamespace()+" doesn't correspond to any compat mod.");
 	}));
 
 	private static final MapCodec<SimpleDatagenIngredient> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
@@ -47,7 +54,7 @@ public class SimpleDatagenIngredient implements ICustomIngredient {
 		assert list.size() == 1 : "SimpleDatagenIngredient should only be serialized as a single-element list, and shouldn't be deserialized anyway";
 		return list.getFirst();
 	}));
-	private static final IngredientType<?> INGREDIENT_TYPE = new IngredientType<>(CODEC);
+	//private static final IngredientType<?> INGREDIENT_TYPE = new IngredientType<>(CODEC);
 
 	private final Mods mod;
 	private final String id;
@@ -59,22 +66,56 @@ public class SimpleDatagenIngredient implements ICustomIngredient {
 
 	@Override
 	public boolean test(@NotNull ItemStack stack) {
-		return stack.getItemHolder().getKey().location().equals(mod.asResource(id));
+		return stack.getItemHolder().unwrapKey().orElseThrow().location().equals(mod.asResource(id));
 	}
 
 	@Override
-	public @NotNull Stream<ItemStack> getItems() {
-		return Stream.empty();
+	public List<ItemStack> getMatchingStacks() {
+		var id = ResourceLocation.fromNamespaceAndPath(mod.getId(), this.id);
+		if (BuiltInRegistries.ITEM.getOptional(id).isPresent())
+			return List.of(new ItemStack(BuiltInRegistries.ITEM.get(id)));
+
+		return List.of();
 	}
 
 	@Override
-	public boolean isSimple() {
+	public boolean requiresTesting() {
 		return false;
 	}
 
-	private static boolean didRegistryInjection = false;
-
 	@Override
+	public CustomIngredientSerializer<?> getSerializer() {
+		return Serializer.SERIALIZER;
+	}
+
+	public static class Serializer implements CustomIngredientSerializer<SimpleDatagenIngredient> {
+		public static final Serializer SERIALIZER = new Serializer();
+
+		public static final ResourceLocation ID = Create.asResource("simple_datagen");
+		public static final MapCodec<SimpleDatagenIngredient> CODEC = SimpleDatagenIngredient.CODEC;
+		public static final StreamCodec<RegistryFriendlyByteBuf, SimpleDatagenIngredient> STREAM_CODEC = StreamCodec.composite(
+			Mods.STREAM_CODEC, ingredient -> ingredient.mod,
+			ByteBufCodecs.STRING_UTF8, ingredient -> ingredient.id,
+			SimpleDatagenIngredient::new
+		);
+
+		@Override
+		public ResourceLocation getIdentifier() {
+			return ID;
+		}
+
+		@Override
+		public MapCodec<SimpleDatagenIngredient> getCodec(boolean allowEmpty) {
+			return CODEC;
+		}
+
+		@Override
+		public StreamCodec<RegistryFriendlyByteBuf, SimpleDatagenIngredient> getPacketCodec() {
+			return STREAM_CODEC;
+		}
+	}
+
+	/*@Override
 	public @NotNull IngredientType<?> getType() {
 		if (!didRegistryInjection) {
 			// Need to do some registry injection to get the Registry#byNameCodec to encode the right type for this
@@ -103,7 +144,7 @@ public class SimpleDatagenIngredient implements ICustomIngredient {
 						}
 					]
 				}
-				 */
+				 *//*
 
 				didRegistryInjection = true;
 			} else {
@@ -115,6 +156,6 @@ public class SimpleDatagenIngredient implements ICustomIngredient {
 			}
 		}
 		return INGREDIENT_TYPE;
-	}
+	}*/
 
 }

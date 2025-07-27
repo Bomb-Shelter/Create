@@ -1,14 +1,14 @@
 package com.simibubi.create.foundation.fluid;
 
 import java.util.function.Consumer;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
+import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
 
 public class SmartFluidTank extends FluidTank {
 
 	private Consumer<FluidStack> updateCallback;
 
-	public SmartFluidTank(int capacity, Consumer<FluidStack> updateCallback) {
+	public SmartFluidTank(long capacity, Consumer<FluidStack> updateCallback) {
 		super(capacity);
 		this.updateCallback = updateCallback;
 	}

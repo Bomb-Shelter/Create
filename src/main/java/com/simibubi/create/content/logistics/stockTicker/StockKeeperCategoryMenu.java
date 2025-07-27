@@ -1,5 +1,13 @@
 package com.simibubi.create.content.logistics.stockTicker;
 
+import com.simibubi.create.foundation.blockEntity.SmartBlockEntity.SmartBlockData;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlotItemHandler;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.simibubi.create.AllBlocks;
@@ -20,17 +28,13 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.SlotItemHandler;
-
-public class StockKeeperCategoryMenu extends MenuBase<StockTickerBlockEntity> {
+public class StockKeeperCategoryMenu extends MenuBase<StockTickerBlockEntity, BlockPos> {
 
 	public boolean slotsActive = true;
 	public ItemStackHandler proxyInventory;
 
-	public StockKeeperCategoryMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
-		super(type, id, inv, extraData);
+	public StockKeeperCategoryMenu(MenuType<?> type, int id, Inventory inv, BlockPos extraData) {
+		super(type, id, inv, extraData, true);
 	}
 
 	public static AbstractContainerMenu create(int pContainerId, Inventory pPlayerInventory,
@@ -49,8 +53,7 @@ public class StockKeeperCategoryMenu extends MenuBase<StockTickerBlockEntity> {
 	}
 
 	@Override
-	protected StockTickerBlockEntity createOnClient(RegistryFriendlyByteBuf extraData) {
-		BlockPos blockPos = extraData.readBlockPos();
+	protected StockTickerBlockEntity createOnClient(BlockPos blockPos) {
 		return AllBlocks.STOCK_TICKER.get()
 			.getBlockEntity(Minecraft.getInstance().level, blockPos);
 	}
@@ -94,7 +97,7 @@ public class StockKeeperCategoryMenu extends MenuBase<StockTickerBlockEntity> {
 
 	class InactiveItemHandlerSlot extends SlotItemHandler {
 
-		public InactiveItemHandlerSlot(IItemHandler itemHandler, int index, int xPosition, int yPosition) {
+		public InactiveItemHandlerSlot(SlottedStackStorage itemHandler, int index, int xPosition, int yPosition) {
 			super(itemHandler, index, xPosition, yPosition);
 		}
 

@@ -29,8 +29,8 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class LecternControllerBlockEntity extends SmartBlockEntity {
 	private ItemContainerContents controllerData = ItemContainerContents.EMPTY;
@@ -93,20 +93,20 @@ public class LecternControllerBlockEntity extends SmartBlockEntity {
 
 	private void startUsing(Player player) {
 		user = player.getUUID();
-		player.getPersistentData().putBoolean("IsUsingLecternController", true);
+		player.getCustomData().putBoolean("IsUsingLecternController", true);
 		sendData();
 	}
 
 	private void stopUsing(Player player) {
 		user = null;
 		if (player != null)
-			player.getPersistentData().remove("IsUsingLecternController");
+			player.getCustomData().remove("IsUsingLecternController");
 		deactivatedThisTick = true;
 		sendData();
 	}
 
 	public static boolean playerIsUsingLectern(Player player) {
-		return player.getPersistentData().contains("IsUsingLecternController");
+		return player.getCustomData().contains("IsUsingLecternController");
 	}
 
 	@Override
@@ -137,7 +137,7 @@ public class LecternControllerBlockEntity extends SmartBlockEntity {
 		}
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private void tryToggleActive() {
 		if (user == null && Minecraft.getInstance().player.getUUID().equals(prevUser)) {
 			LinkedControllerClientHandler.deactivateInLectern();

@@ -12,6 +12,9 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.simibubi.create.Create;
 
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
@@ -26,7 +29,19 @@ import net.minecraft.world.level.Level;
 public class RecipeFinder {
 	private static final Cache<Object, List<RecipeHolder<? extends Recipe<?>>>> CACHED_SEARCHES = CacheBuilder.newBuilder().build();
 
-	public static final ResourceManagerReloadListener LISTENER = resourceManager -> CACHED_SEARCHES.invalidateAll();
+	public static final SimpleSynchronousResourceReloadListener LISTENER = new SimpleSynchronousResourceReloadListener() {
+		public static final ResourceLocation ID = Create.asResource("recipe_finder");
+
+		@Override
+		public ResourceLocation getFabricId() {
+			return ID;
+		}
+
+		@Override
+		public void onResourceManagerReload(ResourceManager resourceManager) {
+			CACHED_SEARCHES.invalidateAll();
+		}
+	};
 
 	/**
 	 * Find all recipes matching the condition predicate.

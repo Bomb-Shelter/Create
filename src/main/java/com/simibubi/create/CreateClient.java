@@ -6,33 +6,47 @@ import com.simibubi.create.compat.Mods;
 import com.simibubi.create.compat.ftb.FTBIntegration;
 import com.simibubi.create.compat.pojav.PojavChecker;
 import com.simibubi.create.compat.sodium.SodiumCompat;
+import com.simibubi.create.compat.trainmap.TrainMapEvents;
+import com.simibubi.create.content.contraptions.ContraptionHandlerClient;
+import com.simibubi.create.content.contraptions.glue.SuperGlueHandler;
 import com.simibubi.create.content.contraptions.glue.SuperGlueSelectionHandler;
 import com.simibubi.create.content.contraptions.render.ContraptionRenderInfo;
 import com.simibubi.create.content.contraptions.render.ContraptionRenderInfoManager;
 import com.simibubi.create.content.decoration.encasing.CasingConnectivity;
+import com.simibubi.create.content.equipment.armor.CardboardArmorHandlerClient;
+import com.simibubi.create.content.equipment.armor.CardboardArmorStealthOverlay;
 import com.simibubi.create.content.equipment.bell.SoulPulseEffectHandler;
 import com.simibubi.create.content.equipment.potatoCannon.PotatoCannonRenderHandler;
 import com.simibubi.create.content.equipment.zapper.ZapperRenderHandler;
 import com.simibubi.create.content.kinetics.base.KineticBlockEntityRenderer;
 import com.simibubi.create.content.kinetics.simpleRelays.CogWheelBlock;
 import com.simibubi.create.content.kinetics.waterwheel.WaterWheelRenderer;
+import com.simibubi.create.content.logistics.box.PackageClientInteractionHandler;
 import com.simibubi.create.content.schematics.client.ClientSchematicLoader;
 import com.simibubi.create.content.schematics.client.SchematicAndQuillHandler;
 import com.simibubi.create.content.schematics.client.SchematicHandler;
 import com.simibubi.create.content.trains.GlobalRailwayManager;
+import com.simibubi.create.content.trains.track.TrackBlockOutline;
 import com.simibubi.create.foundation.ClientResourceReloadListener;
 import com.simibubi.create.foundation.blockEntity.behaviour.ValueSettingsClient;
+import com.simibubi.create.foundation.events.ClientEvents;
+import com.simibubi.create.foundation.events.InputEvents;
 import com.simibubi.create.foundation.model.ModelSwapper;
 import com.simibubi.create.foundation.ponder.CreatePonderPlugin;
 import com.simibubi.create.foundation.render.AllInstanceTypes;
+import com.simibubi.create.foundation.render.RenderTypes;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.simibubi.create.infrastructure.gui.CreateMainMenuScreen;
+
+import com.simibubi.create.infrastructure.gui.OpenCreateMenuButton.OpenConfigButtonHandler;
 
 import net.createmod.catnip.config.ui.BaseConfigScreen;
 import net.createmod.catnip.config.ui.ConfigScreen;
 import net.createmod.catnip.render.CachedBuffers;
 import net.createmod.catnip.render.SuperByteBufferCache;
 import net.createmod.ponder.foundation.PonderIndex;
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.GraphicsStatus;
 import net.minecraft.client.Minecraft;
@@ -43,14 +57,9 @@ import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.network.chat.MutableComponent;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
-import net.neoforged.neoforge.common.NeoForge;
+import net.fabricmc.api.EnvType;
 
-@Mod(value = Create.ID, dist = Dist.CLIENT)
-public class CreateClient {
+public class CreateClient implements ClientModInitializer {
 
 	public static final ModelSwapper MODEL_SWAPPER = new ModelSwapper();
 	public static final CasingConnectivity CASING_CONNECTIVITY = new CasingConnectivity();
@@ -68,29 +77,44 @@ public class CreateClient {
 
 	public static final ClientResourceReloadListener RESOURCE_RELOAD_LISTENER = new ClientResourceReloadListener();
 
-	public CreateClient(IEventBus modEventBus) {
-		onCtorClient(modEventBus);
+	public void onInitializeClient() {
+		onCtorClient();
+
+		TrainMapEvents.init();
+		ContraptionHandlerClient.init();
+		SuperGlueHandler.init();
+		CardboardArmorHandlerClient.init();
+		PackageClientInteractionHandler.init();
+		TrackBlockOutline.init();
+		InputEvents.init();
+		ClientEvents.init();
+		RenderTypes.init();
+		OpenConfigButtonHandler.init();
+
+		ClientLifecycleEvents.CLIENT_STARTED.register(client -> {
+			CardboardArmorStealthOverlay.init();
+		});
 	}
 
-	public static void onCtorClient(IEventBus modEventBus) {
-		IEventBus neoEventBus = NeoForge.EVENT_BUS;
+	public static void onCtorClient() {
+		AllKeys.register();
 
-		modEventBus.addListener(CreateClient::clientInit);
-		modEventBus.addListener(AllParticleTypes::registerFactories);
+		CreateClient.clientInit();
+		AllParticleTypes.registerFactories();
 
 		AllInstanceTypes.init();
 
-		MODEL_SWAPPER.registerListeners(modEventBus);
+		MODEL_SWAPPER.registerListeners();
 
-		ZAPPER_RENDER_HANDLER.registerListeners(neoEventBus);
-		POTATO_CANNON_RENDER_HANDLER.registerListeners(neoEventBus);
+		ZAPPER_RENDER_HANDLER.registerListeners();
+		POTATO_CANNON_RENDER_HANDLER.registerListeners();
 
-		Mods.FTBLIBRARY.executeIfInstalled(() -> () -> FTBIntegration.init(modEventBus, neoEventBus));
-		Mods.SODIUM.executeIfInstalled(() -> () -> SodiumCompat.init(modEventBus, neoEventBus));
+		Mods.FTBLIBRARY.executeIfInstalled(() -> () -> FTBIntegration.init());
+		Mods.SODIUM.executeIfInstalled(() -> () -> SodiumCompat.init());
 		PojavChecker.init();
 	}
 
-	public static void clientInit(final FMLClientSetupEvent event) {
+	public static void clientInit() {
 		//BUFFER_CACHE.registerCompartment(CachedBufferer.GENERIC_BLOCK);
 		//BUFFER_CACHE.registerCompartment(CachedPartialBuffers.partial);
 		//BUFFER_CACHE.registerCompartment(CachedBufferer.DIRECTIONAL_PARTIAL);

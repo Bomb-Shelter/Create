@@ -7,6 +7,14 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllBlockEntityTypes;
@@ -58,13 +66,7 @@ import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.neoforged.neoforge.items.ItemStackHandler;
-
-public class PackagerBlockEntity extends SmartBlockEntity {
+public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity {
 
 	public boolean redstonePowered;
 	public int buttonCooldown;
@@ -103,12 +105,12 @@ public class PackagerBlockEntity extends SmartBlockEntity {
 		buttonCooldown = 0;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-			Capabilities.ItemHandler.BLOCK,
-			AllBlockEntityTypes.PACKAGER.get(),
-			(be, context) -> be.inventory
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		return inventory;
 	}
 
 	@Override
@@ -181,7 +183,7 @@ public class PackagerBlockEntity extends SmartBlockEntity {
 
 		InventorySummary availableItems = new InventorySummary();
 
-		IItemHandler targetInv = targetInventory.getInventory();
+		Storage<ItemVariant> targetInv = targetInventory.getInventory();
 		if (targetInv == null || targetInv instanceof PackagerItemHandler) {
 			this.availableItems = availableItems;
 			return availableItems;
@@ -193,8 +195,8 @@ public class PackagerBlockEntity extends SmartBlockEntity {
 			return availableItems;
 		}
 
-		for (int slot = 0; slot < targetInv.getSlots(); slot++) {
-			availableItems.add(targetInv.getStackInSlot(slot));
+		for (StorageView<ItemVariant> view : targetInv) {
+			availableItems.add(CreateTransferUtil.getLimitedStack(view.getResource(), view.getAmount()));
 		}
 
 		invVersionTracker.awaitNewVersion(targetInventory.getInventory());
@@ -368,7 +370,7 @@ public class PackagerBlockEntity extends SmartBlockEntity {
 		if (queuedRequests == null && (!heldBox.isEmpty() || animationTicks != 0 || buttonCooldown > 0))
 			return;
 
-		IItemHandler targetInv = targetInventory.getInventory();
+		Storage<ItemVariant> targetInv = targetInventory.getInventory();
 		if (targetInv == null || targetInv instanceof PackagerItemHandler)
 			return;
 
@@ -406,9 +408,9 @@ public class PackagerBlockEntity extends SmartBlockEntity {
 			while (continuePacking) {
 				continuePacking = false;
 
-				for (int slot = 0; slot < targetInv.getSlots(); slot++) {
+				for (StorageView<ItemVariant> view : targetInv) {
 					int initialCount = requestQueue ? Math.min(64, nextRequest.getCount()) : 64;
-					ItemStack extracted = targetInv.extractItem(slot, initialCount, true);
+					ItemStack extracted = CreateTransferUtil.extractItem(view, initialCount, true);
 					if (extracted.isEmpty())
 						continue;
 					if (requestQueue && !ItemStack.isSameItemSameComponents(extracted, nextRequest.item()))
@@ -420,10 +422,10 @@ public class PackagerBlockEntity extends SmartBlockEntity {
 						continue;
 
 					anyItemPresent = true;
-					int leftovers = ItemHandlerHelper.insertItemStacked(extractedItems, extracted.copy(), false)
+					int leftovers = CreateTransferUtil.insertItemStacked(extractedItems, extracted.copy(), false)
 						.getCount();
 					int transferred = extracted.getCount() - leftovers;
-					targetInv.extractItem(slot, transferred, false);
+					CreateTransferUtil.extractItem(view, transferred, false);
 
 					if (extracted.getItem() instanceof PackageItem)
 						extractedPackageItem = extracted;
@@ -608,7 +610,7 @@ public class PackagerBlockEntity extends SmartBlockEntity {
 		if (inventory == null)
 			return false;
 
-		IItemHandler targetHandler = this.targetInventory.getInventory();
+		Storage<ItemVariant> targetHandler = this.targetInventory.getInventory();
 		if (targetHandler == null)
 			return false;
 
@@ -620,18 +622,18 @@ public class PackagerBlockEntity extends SmartBlockEntity {
 		}
 	}
 
-	private static boolean isSameInventoryFallback(IItemHandler first, IItemHandler second) {
+	private static boolean isSameInventoryFallback(Storage<ItemVariant> first, Storage<ItemVariant> second) {
 		if (first == second)
 			return true;
 
 		// If a contained ItemStack instance is the same, we can be pretty sure these
 		// inventories are the same (works for compound inventories)
-		for (int i = 0; i < second.getSlots(); i++) {
-			ItemStack stackInSlot = second.getStackInSlot(i);
+		for (StorageView<ItemVariant> view : second) {
+			ItemStack stackInSlot = CreateTransferUtil.getLimitedStack(view.getResource(), view.getAmount());
 			if (stackInSlot.isEmpty())
 				continue;
-			for (int j = 0; j < first.getSlots(); j++)
-				if (stackInSlot == first.getStackInSlot(j))
+			for (StorageView<ItemVariant> firstView : first)
+				if (stackInSlot.equals(CreateTransferUtil.getLimitedStack(firstView.getResource(), firstView.getAmount())))
 					return true;
 			break;
 		}

@@ -1,5 +1,7 @@
 package com.simibubi.create.content.fluids.particle;
 
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry;
 import net.minecraft.core.particles.ColorParticleOption;
 
 import org.jetbrains.annotations.NotNull;
@@ -15,14 +17,13 @@ import net.minecraft.client.particle.TextureSheetParticle;
 import net.minecraft.core.particles.ParticleType;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.world.inventory.InventoryMenu;
-import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
-import net.neoforged.neoforge.fluids.FluidStack;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class FluidStackParticle extends TextureSheetParticle {
 	private final float uo;
 	private final float vo;
 	private final FluidStack fluid;
-	private final IClientFluidTypeExtensions clientFluid;
+	private final FluidRenderHandler clientFluid;
 
 	public static FluidStackParticle create(ParticleType<FluidParticleData> type, ClientLevel world, FluidStack fluid,
 		double x, double y, double z, double vx, double vy, double vz) {
@@ -35,18 +36,16 @@ public class FluidStackParticle extends TextureSheetParticle {
 		double vz) {
 		super(world, x, y, z, vx, vy, vz);
 
-		clientFluid = IClientFluidTypeExtensions.of(fluid.getFluid());
+		clientFluid = FluidRenderHandlerRegistry.INSTANCE.get(fluid.getFluid());
 
 		this.fluid = fluid;
-		this.setSprite(Minecraft.getInstance()
-			.getTextureAtlas(InventoryMenu.BLOCK_ATLAS)
-			.apply(clientFluid.getStillTexture(fluid)));
+		this.setSprite(clientFluid.getFluidSprites(world, null, fluid.getFluid().defaultFluidState())[0]);
 
 		this.gravity = 1.0F;
 		this.rCol = 0.8F;
 		this.gCol = 0.8F;
 		this.bCol = 0.8F;
-		this.multiplyColor(clientFluid.getTintColor(fluid));
+		this.multiplyColor(clientFluid.getFluidColor(world, null, fluid.getFluid().defaultFluidState()));
 
 		this.xd = vx;
 		this.yd = vy;
@@ -102,7 +101,7 @@ public class FluidStackParticle extends TextureSheetParticle {
 		if (!onGround && level.random.nextFloat() < 1 / 8f)
 			return;
 
-		Color color = new Color(clientFluid.getTintColor(fluid));
+		Color color = new Color(clientFluid.getFluidColor(level, null, fluid.getFluid().defaultFluidState()));
 		level.addParticle(ColorParticleOption.create(ParticleTypes.ENTITY_EFFECT, color.getRedAsFloat(), color.getGreenAsFloat(), color.getBlueAsFloat()), x, y, z, 0, 0, 0);
 	}
 

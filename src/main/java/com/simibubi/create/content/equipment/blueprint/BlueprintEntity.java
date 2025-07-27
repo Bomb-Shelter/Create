@@ -17,16 +17,26 @@ import com.simibubi.create.content.schematics.requirement.ItemRequirement.ItemUs
 import com.simibubi.create.foundation.networking.ISyncPersistentData;
 import com.simibubi.create.foundation.utility.IInteractionChecker;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+import com.simibubi.create.infrastructure.fabric.transfer.InventoryStorage;
+
+import io.github.fabricators_of_create.porting_lib.entity.IEntityWithComplexSpawn;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.math.VecHelper;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -59,15 +69,9 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.common.CommonHooks;
-import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
-import net.neoforged.neoforge.event.EventHooks;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.wrapper.InvWrapper;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.fabricmc.fabric.api.entity.FakePlayer;
 
 public class BlueprintEntity extends HangingEntity
 	implements IEntityWithComplexSpawn, SpecialEntityItemRequirement, ISyncPersistentData, IInteractionChecker {
@@ -201,7 +205,7 @@ public class BlueprintEntity extends HangingEntity
 	}
 
 	@Override
-	protected void recalculateBoundingBox() {
+	public void recalculateBoundingBox() {
 		if (this.direction != null && this.verticalOrientation != null) {
 			setBoundingBox(calculateBoundingBox(pos, direction));
 		}
@@ -277,7 +281,7 @@ public class BlueprintEntity extends HangingEntity
 		if (items.getStackInSlot(9)
 			.isEmpty())
 			return super.skipAttackInteraction(source);
-		for (int i = 0; i < items.getSlots(); i++)
+		for (int i = 0; i < items.getSlotCount(); i++)
 			items.setStackInSlot(i, ItemStack.EMPTY);
 		sectionAt.save(items);
 		return true;
@@ -299,7 +303,7 @@ public class BlueprintEntity extends HangingEntity
 	}
 
 	@Override
-	public ItemStack getPickedResult(HitResult target) {
+	public @org.jetbrains.annotations.Nullable ItemStack getPickResult() {
 		return AllItems.CRAFTING_BLUEPRINT.asStack();
 	}
 
@@ -319,7 +323,7 @@ public class BlueprintEntity extends HangingEntity
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void lerpTo(double pX, double pY, double pZ, float pYRot, float pXRot, int pSteps) {
 		BlockPos blockpos =
 				this.pos.offset(BlockPos.containing(pX - this.getX(), pY - this.getY(), pZ - this.getZ()));
@@ -331,13 +335,13 @@ public class BlueprintEntity extends HangingEntity
 		CompoundTag compound = new CompoundTag();
 		addAdditionalSaveData(compound);
 		registryFriendlyByteBuf.writeNbt(compound);
-		registryFriendlyByteBuf.writeNbt(getPersistentData());
+		registryFriendlyByteBuf.writeNbt(getCustomData());
 	}
 
 	@Override
 	public void readSpawnData(RegistryFriendlyByteBuf registryFriendlyByteBuf) {
 		readAdditionalSaveData(registryFriendlyByteBuf.readNbt());
-		getPersistentData().merge(registryFriendlyByteBuf.readNbt());
+		getCustomData().merge(registryFriendlyByteBuf.readNbt());
 	}
 
 	@Override
@@ -352,10 +356,10 @@ public class BlueprintEntity extends HangingEntity
 		if (!holdingWrench && !level().isClientSide && !items.getStackInSlot(9)
 			.isEmpty()) {
 
-			IItemHandlerModifiable playerInv = new InvWrapper(player.getInventory());
+			SlottedStackStorage playerInv = InventoryStorage.of(player.getInventory(), null);
 			boolean firstPass = true;
 			int amountCrafted = 0;
-			CommonHooks.setCraftingPlayer(player);
+			//CommonHooks.setCraftingPlayer(player);
 			Optional<RecipeHolder<CraftingRecipe>> recipe = Optional.empty();
 
 			do {
@@ -371,10 +375,10 @@ public class BlueprintEntity extends HangingEntity
 						continue;
 					}
 
-					for (int slot = 0; slot < playerInv.getSlots(); slot++) {
+					for (int slot = 0; slot < playerInv.getSlotCount(); slot++) {
 						if (!requestedItem.test(level(), playerInv.getStackInSlot(slot)))
 							continue;
-						ItemStack currentItem = playerInv.extractItem(slot, 1, false);
+						ItemStack currentItem = CreateTransferUtil.extractItem(playerInv.getSlot(slot), 1, false);
 						if (stacksTaken.containsKey(slot))
 							stacksTaken.get(slot)
 								.grow(1);
@@ -405,7 +409,7 @@ public class BlueprintEntity extends HangingEntity
 					} else {
 						amountCrafted += result.getCount();
 						result.onCraftedBy(player.level(), player, 1);
-						EventHooks.firePlayerCraftingEvent(player, result, craftingInventory);
+						//EventHooks.firePlayerCraftingEvent(player, result, craftingInventory);
 						NonNullList<ItemStack> nonnulllist = level().getRecipeManager()
 							.getRemainingItemsFor(RecipeType.CRAFTING, craftingInventory.asCraftInput(), level());
 
@@ -423,21 +427,18 @@ public class BlueprintEntity extends HangingEntity
 
 				if (!success) {
 					for (Entry<Integer, ItemStack> entry : stacksTaken.entrySet())
-						playerInv.insertItem(entry.getKey(), entry.getValue(), false);
+						CreateTransferUtil.insertItem(playerInv.getSlot(entry.getKey()), entry.getValue(), false);
 					break;
 				}
 
 			} while (player.isShiftKeyDown());
-			CommonHooks.setCraftingPlayer(null);
+			//CommonHooks.setCraftingPlayer(null);
 			return InteractionResult.SUCCESS;
 		}
 
 		int i = section.index;
 		if (!level().isClientSide && player instanceof ServerPlayer) {
-			player.openMenu(section, buf -> {
-				buf.writeVarInt(getId());
-				buf.writeVarInt(i);
-			});
+			player.openMenu(section);
 		}
 
 		return InteractionResult.SUCCESS;
@@ -486,7 +487,7 @@ public class BlueprintEntity extends HangingEntity
 	}
 
 	public CompoundTag getOrCreateRecipeCompound() {
-		CompoundTag persistentData = getPersistentData();
+		CompoundTag persistentData = getCustomData();
 		if (!persistentData.contains("Recipes"))
 			persistentData.put("Recipes", new CompoundTag());
 		return persistentData.getCompound("Recipes");
@@ -498,7 +499,7 @@ public class BlueprintEntity extends HangingEntity
 		return sectionCache.computeIfAbsent(index, i -> new BlueprintSection(i));
 	}
 
-	class BlueprintSection implements MenuProvider, IInteractionChecker {
+	class BlueprintSection implements ExtendedScreenHandlerFactory<BlueprintData>, IInteractionChecker {
 		int index;
 		Couple<ItemStack> cachedDisplayItems;
 		public boolean inferredIcon = false;
@@ -522,6 +523,11 @@ public class BlueprintEntity extends HangingEntity
 			if (!invNBT.isEmpty())
 				newInv.deserializeNBT(registryAccess(), invNBT);
 			return newInv;
+		}
+
+		@Override
+		public BlueprintData getScreenOpeningData(ServerPlayer player) {
+			return new BlueprintData(getId(), this.index);
 		}
 
 		public void save(ItemStackHandler inventory) {
@@ -592,4 +598,11 @@ public class BlueprintEntity extends HangingEntity
 		return (dx * dx + dy * dy + dz * dz) <= 64.0D;
 	}
 
+	public record BlueprintData(int id, int index) {
+		public static final StreamCodec<RegistryFriendlyByteBuf, BlueprintData> STREAM_CODEC = StreamCodec.composite(
+			ByteBufCodecs.VAR_INT, BlueprintData::id,
+			ByteBufCodecs.VAR_INT, BlueprintData::index,
+			BlueprintData::new
+		);
+	}
 }

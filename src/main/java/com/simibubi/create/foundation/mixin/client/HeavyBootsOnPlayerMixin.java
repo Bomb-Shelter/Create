@@ -20,7 +20,7 @@ public abstract class HeavyBootsOnPlayerMixin extends AbstractClientPlayer {
 
 	@Inject(method = "isUnderWater()Z", at = @At("HEAD"), cancellable = true)
 	private void create$noSwimmingWithHeavyBootsOn(CallbackInfoReturnable<Boolean> cir) {
-		CompoundTag persistentData = getPersistentData();
+		CompoundTag persistentData = getCustomData();
 		if (persistentData.contains("HeavyBoots"))
 			cir.setReturnValue(false);
 	}

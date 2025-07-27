@@ -15,6 +15,7 @@ import com.simibubi.create.foundation.recipe.ItemCopyingRecipe.SupportsItemCopyi
 import com.simibubi.create.foundation.utility.CreateLang;
 
 import net.createmod.catnip.data.Couple;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -37,10 +38,10 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public class ScheduleItem extends Item implements MenuProvider, SupportsItemCopying {
+public class ScheduleItem extends Item implements ExtendedScreenHandlerFactory<ItemStack>, SupportsItemCopying {
 
 	public ScheduleItem(Properties pProperties) {
 		super(pProperties);
@@ -59,9 +60,7 @@ public class ScheduleItem extends Item implements MenuProvider, SupportsItemCopy
 
 		if (!player.isShiftKeyDown() && hand == InteractionHand.MAIN_HAND) {
 			if (!world.isClientSide && player instanceof ServerPlayer)
-				player.openMenu(this, buf -> {
-					ItemStack.STREAM_CODEC.encode(buf, heldItem);
-				});
+				player.openMenu(this);
 			return InteractionResultHolder.success(heldItem);
 		}
 		return InteractionResultHolder.pass(heldItem);
@@ -127,7 +126,7 @@ public class ScheduleItem extends Item implements MenuProvider, SupportsItemCopy
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flagIn) {
 		Schedule schedule = getSchedule(context.registries(), stack);
 		if (schedule == null || schedule.entries.isEmpty())
@@ -171,4 +170,8 @@ public class ScheduleItem extends Item implements MenuProvider, SupportsItemCopy
 		return AllDataComponents.TRAIN_SCHEDULE;
 	}
 
+	@Override
+	public ItemStack getScreenOpeningData(ServerPlayer player) {
+		return player.getMainHandItem();
+	}
 }

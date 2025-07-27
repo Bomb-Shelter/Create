@@ -39,6 +39,7 @@ import com.simibubi.create.foundation.gui.widget.SelectionScrollInput;
 import com.simibubi.create.foundation.utility.CreateLang;
 
 import dev.engine_room.flywheel.lib.transform.TransformStack;
+import io.github.fabricators_of_create.porting_lib.util.KeyBindingHelper;
 import net.createmod.catnip.gui.UIRenderHelper;
 import net.createmod.catnip.gui.element.GuiGameElement;
 import net.createmod.catnip.platform.CatnipServices;
@@ -296,7 +297,7 @@ public class ScheduleScreen extends AbstractSimiContainerScreen<ScheduleMenu> im
 		editorSubWidgets.forEach(this::removeWidget);
 		editorSubWidgets.clear();
 		field.initConfigurationWidgets(
-			new ModularGuiLineBuilder(font, editorSubWidgets, getGuiLeft() + 77, getGuiTop() + 92).speechBubble());
+			new ModularGuiLineBuilder(font, editorSubWidgets, leftPos + 77, topPos + 92).speechBubble());
 		editorSubWidgets.loadValues(field.getData(), this::addRenderableWidget, this::addRenderableOnly);
 
 		if (!(field instanceof DestinationInstruction))
@@ -895,7 +896,7 @@ public class ScheduleScreen extends AbstractSimiContainerScreen<ScheduleMenu> im
 			return super.keyPressed(pKeyCode, pScanCode, pModifiers);
 		InputConstants.Key mouseKey = InputConstants.getKey(pKeyCode, pScanCode);
 		boolean hitEnter = getFocused() instanceof EditBox && (pKeyCode == 257 || pKeyCode == 335);
-		boolean hitE = getFocused() == null && minecraft.options.keyInventory.isActiveAndMatches(mouseKey);
+		boolean hitE = getFocused() == null && KeyBindingHelper.isActiveAndMatches(minecraft.options.keyInventory, mouseKey);
 		if (hitE || hitEnter) {
 			onEditorClose.accept(true);
 			stopEditing();
@@ -1020,8 +1021,8 @@ public class ScheduleScreen extends AbstractSimiContainerScreen<ScheduleMenu> im
 		AllGuiTextures.SCHEDULE.render(graphics, leftPos, topPos);
 		FormattedCharSequence formattedcharsequence = title.getVisualOrderText();
 		int center = leftPos + (AllGuiTextures.SCHEDULE.getWidth() - 8) / 2;
-		graphics.drawString(font, formattedcharsequence, (float) (center - font.width(formattedcharsequence) / 2),
-			(float) topPos + 4, 0x505050, false);
+		graphics.drawString(font, formattedcharsequence, (center - font.width(formattedcharsequence) / 2),
+			 topPos + 4, 0x505050, false);
 		renderSchedule(graphics, pMouseX, pMouseY, pPartialTick);
 
 		if (editingCondition == null && editingDestination == null)
@@ -1036,8 +1037,8 @@ public class ScheduleScreen extends AbstractSimiContainerScreen<ScheduleMenu> im
 			.getVisualOrderText()
 			: CreateLang.translateDirect("schedule.condition.editor")
 			.getVisualOrderText();
-		graphics.drawString(font, formattedcharsequence, (float) (center - font.width(formattedcharsequence) / 2),
-			(float) topPos + 44, 0x505050, false);
+		graphics.drawString(font, formattedcharsequence, (center - font.width(formattedcharsequence) / 2),
+			 topPos + 44, 0x505050, false);
 
 		IScheduleInput rendered = editingCondition == null ? editingDestination : editingCondition;
 
@@ -1059,8 +1060,8 @@ public class ScheduleScreen extends AbstractSimiContainerScreen<ScheduleMenu> im
 
 		PoseStack pPoseStack = graphics.pose();
 		pPoseStack.pushPose();
-		pPoseStack.translate(0, getGuiTop() + 87, 0);
-		editorSubWidgets.renderWidgetBG(getGuiLeft() + 77, graphics);
+		pPoseStack.translate(0, topPos + 87, 0);
+		editorSubWidgets.renderWidgetBG(leftPos + 77, graphics);
 		pPoseStack.popPose();
 	}
 

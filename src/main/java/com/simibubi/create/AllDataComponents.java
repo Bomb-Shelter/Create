@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.UnaryOperator;
 
+import io.github.fabricators_of_create.porting_lib.registry.DeferredRegister;
+
 import org.jetbrains.annotations.ApiStatus.Internal;
 
 import com.mojang.serialization.Codec;
@@ -48,11 +50,8 @@ import net.minecraft.world.level.block.Mirror;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.registries.DeferredRegister;
-
 public class AllDataComponents {
-	private static final DeferredRegister.DataComponents DATA_COMPONENTS = DeferredRegister.createDataComponents(Registries.DATA_COMPONENT_TYPE, Create.ID);
+	private static final DeferredRegister.DataComponents DATA_COMPONENTS = DeferredRegister.createDataComponents(Create.ID);
 
 	public static final DataComponentType<Integer> BACKTANK_AIR = register(
 			"banktank_air",
@@ -343,7 +342,7 @@ public class AllDataComponents {
 	}
 
 	@Internal
-	public static void register(IEventBus modEventBus) {
-		DATA_COMPONENTS.register(modEventBus);
+	public static void register() {
+		DATA_COMPONENTS.register();
 	}
 }

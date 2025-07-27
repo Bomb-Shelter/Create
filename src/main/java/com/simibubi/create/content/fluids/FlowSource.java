@@ -3,6 +3,13 @@ package com.simibubi.create.content.fluids;
 import java.lang.ref.WeakReference;
 import java.util.function.Predicate;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.foundation.ICapabilityProvider;
@@ -14,15 +21,11 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public abstract class FlowSource {
 
-	private static final ICapabilityProvider<IFluidHandler> EMPTY = null;
+	private static final ICapabilityProvider<Storage<FluidVariant>> EMPTY = null;
 
 	BlockFace location;
 
@@ -31,25 +34,25 @@ public abstract class FlowSource {
 	}
 
 	public FluidStack provideFluid(Predicate<FluidStack> extractionPredicate) {
-		@Nullable ICapabilityProvider<IFluidHandler> tankCache = provideHandler();
+		@Nullable ICapabilityProvider<Storage<FluidVariant>> tankCache = provideHandler();
 		if (tankCache == null)
 			return FluidStack.EMPTY;
-		IFluidHandler tank = tankCache.getCapability();
+		Storage<FluidVariant> tank = tankCache.getCapability();
 		if (tank == null)
 			return FluidStack.EMPTY;
-		FluidStack immediateFluid = tank.drain(1, FluidAction.SIMULATE);
+		FluidStack immediateFluid = CreateTransferUtil.extractAnyFluid(tank, 1, true);
 		if (extractionPredicate.test(immediateFluid))
 			return immediateFluid;
 
-		for (int i = 0; i < tank.getTanks(); i++) {
-			FluidStack contained = tank.getFluidInTank(i);
+		for (StorageView<FluidVariant> view : tank) {
+			FluidStack contained = new FluidStack(view);
 			if (contained.isEmpty())
 				continue;
 			if (!extractionPredicate.test(contained))
 				continue;
 			FluidStack toExtract = contained.copy();
 			toExtract.setAmount(1);
-			return tank.drain(toExtract, FluidAction.SIMULATE);
+			return CreateTransferUtil.extractFluid(view, toExtract, true);
 		}
 
 		return FluidStack.EMPTY;
@@ -65,13 +68,13 @@ public abstract class FlowSource {
 
 	public void whileFlowPresent(Level world, boolean pulling) {}
 
-	public @Nullable ICapabilityProvider<IFluidHandler> provideHandler() {
+	public @Nullable ICapabilityProvider<Storage<FluidVariant>> provideHandler() {
 		return EMPTY;
 	}
 
 	public static class FluidHandler extends FlowSource {
 		@Nullable
-		ICapabilityProvider<IFluidHandler> fluidHandlerCache;
+		ICapabilityProvider<Storage<FluidVariant>> fluidHandlerCache;
 
 		public FluidHandler(BlockFace location) {
 			super(location);
@@ -79,7 +82,8 @@ public abstract class FlowSource {
 		}
 
 		public void manageSource(Level level, BlockEntity networkBE) {
-			if (fluidHandlerCache == null) {
+			// Fabric TODO: how?
+			/*if (fluidHandlerCache == null) {
 				BlockEntity blockEntity = level.getBlockEntity(location.getConnectedPos());
 				if (blockEntity != null) {
 					if (level instanceof ServerLevel serverLevel) {
@@ -99,12 +103,12 @@ public abstract class FlowSource {
 						));
 					}
 				}
-			}
+			}*/
 		}
 
 		@Override
 		@Nullable
-		public ICapabilityProvider<IFluidHandler> provideHandler() {
+		public ICapabilityProvider<Storage<FluidVariant>> provideHandler() {
 			return fluidHandlerCache;
 		}
 

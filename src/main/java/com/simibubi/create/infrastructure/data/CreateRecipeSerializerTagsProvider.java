@@ -2,6 +2,10 @@ package com.simibubi.create.infrastructure.data;
 
 import java.util.concurrent.CompletableFuture;
 
+import io.github.fabricators_of_create.porting_lib.data.ExistingFileHelper;
+import io.github.fabricators_of_create.porting_lib.data.PortingLibTagsProvider;
+import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllTags.AllRecipeSerializerTags;
@@ -14,10 +18,9 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.tags.TagsProvider;
 import net.minecraft.world.item.crafting.RecipeSerializer;
-import net.neoforged.neoforge.common.data.ExistingFileHelper;
 
-public class CreateRecipeSerializerTagsProvider extends TagsProvider<RecipeSerializer<?>> {
-	public CreateRecipeSerializerTagsProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, @Nullable ExistingFileHelper existingFileHelper) {
+public class CreateRecipeSerializerTagsProvider extends PortingLibTagsProvider<RecipeSerializer<?>> {
+	public CreateRecipeSerializerTagsProvider(FabricDataOutput output, CompletableFuture<HolderLookup.Provider> lookupProvider, @Nullable ExistingFileHelper existingFileHelper) {
 		super(output, Registries.RECIPE_SERIALIZER, lookupProvider, Create.ID, existingFileHelper);
 	}
 

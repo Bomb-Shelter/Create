@@ -14,6 +14,15 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import io.github.fabricators_of_create.porting_lib.core.event.CancellableEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.EntityInteract;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.EntityInteractSpecific;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.LeftClickBlock;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickBlock;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickItem;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.RenderType;
@@ -27,68 +36,66 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.ICancellableEvent;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderHighlightEvent.Block;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.EntityInteract;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.EntityInteractSpecific;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.LeftClickBlock;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickItem;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-@EventBusSubscriber
 public class ClipboardValueSettingsHandler {
+	static {
+		WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register(ClipboardValueSettingsHandler::drawCustomBlockSelection);
 
-	@SubscribeEvent
-	@OnlyIn(Dist.CLIENT)
-	public static void drawCustomBlockSelection(Block event) {
+		RightClickBlock.EVENT.register(ClipboardValueSettingsHandler::rightClickToCopy);
+		LeftClickBlock.EVENT.register(ClipboardValueSettingsHandler::leftClickToPaste);
+	}
+
+	@Environment(EnvType.CLIENT)
+	public static boolean drawCustomBlockSelection(WorldRenderContext context, HitResult hitResult) {
+		if (!(hitResult instanceof BlockHitResult target))
+			return true;
+
 		Minecraft mc = Minecraft.getInstance();
-		BlockHitResult target = event.getTarget();
 		BlockPos pos = target.getBlockPos();
 		BlockState blockstate = mc.level.getBlockState(pos);
 
 		if (mc.player == null || mc.player.isSpectator())
-			return;
+			return true;
 		if (!mc.level.getWorldBorder()
 			.isWithinBounds(pos))
-			return;
+			return true;
 		if (!AllBlocks.CLIPBOARD.isIn(mc.player.getMainHandItem()))
-			return;
+			return true;
 		if (!(mc.level.getBlockEntity(pos) instanceof SmartBlockEntity smartBE))
-			return;
+			return true;
 		if (!(smartBE instanceof ClipboardBlockEntity) && !smartBE.getAllBehaviours()
 			.stream()
 			.anyMatch(b -> b instanceof ClipboardCloneable cc
 				&& cc.writeToClipboard(mc.level.registryAccess(), new CompoundTag(), target.getDirection()))
 			&& !(smartBE instanceof ClipboardCloneable))
-			return;
+			return true;
 
 		VoxelShape shape = blockstate.getShape(mc.level, pos);
 		if (shape.isEmpty())
-			return;
+			return true;
 
-		VertexConsumer vb = event.getMultiBufferSource()
+		VertexConsumer vb = context.consumers()
 			.getBuffer(RenderType.lines());
-		Vec3 camPos = event.getCamera()
+		Vec3 camPos = context.camera()
 			.getPosition();
 
-		PoseStack ms = event.getPoseStack();
+		PoseStack ms = context.matrixStack();
 
 		ms.pushPose();
 		ms.translate(pos.getX() - camPos.x, pos.getY() - camPos.y, pos.getZ() - camPos.z);
 		TrackBlockOutline.renderShape(shape, ms, vb, true);
-		event.setCanceled(true);
 
 		ms.popPose();
+
+		return false;
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public static void clientTick() {
 		Minecraft mc = Minecraft.getInstance();
 		if (!(mc.hitResult instanceof BlockHitResult target))
@@ -136,12 +143,12 @@ public class ClipboardValueSettingsHandler {
 		CreateClient.VALUE_SETTINGS_HANDLER.showHoverTip(tip);
 	}
 
-	@SubscribeEvent
+	//@SubscribeEvent
 	public static void rightClickToCopy(RightClickBlock event) {
 		interact(event, false);
 	}
 
-	@SubscribeEvent
+	//@SubscribeEvent
 	public static void leftClickToPaste(LeftClickBlock event) {
 		interact(event, true);
 	}
@@ -162,7 +169,7 @@ public class ClipboardValueSettingsHandler {
 			return;
 
 		if (smartBE instanceof ClipboardBlockEntity cbe) {
-			if (event instanceof ICancellableEvent cancellableEvent) {
+			if (event instanceof CancellableEvent cancellableEvent) {
 				cancellableEvent.setCanceled(true);
 
 				switch (event) {
@@ -261,7 +268,7 @@ public class ClipboardValueSettingsHandler {
 		if (!anyValid)
 			return;
 
-		((ICancellableEvent) event).setCanceled(true);
+		((CancellableEvent) event).setCanceled(true);
 		if (event instanceof RightClickBlock rightClickBlock)
 			rightClickBlock.setCancellationResult(InteractionResult.SUCCESS);
 

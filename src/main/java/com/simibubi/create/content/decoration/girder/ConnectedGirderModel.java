@@ -3,11 +3,17 @@ package com.simibubi.create.content.decoration.girder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 
 import com.simibubi.create.AllPartialModels;
 import com.simibubi.create.foundation.block.connected.CTModel;
 
+import io.github.fabricators_of_create.porting_lib.models.data.ModelData;
+import io.github.fabricators_of_create.porting_lib.models.data.ModelData.Builder;
+import io.github.fabricators_of_create.porting_lib.models.data.ModelProperty;
 import net.createmod.catnip.data.Iterate;
+import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
+import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.resources.model.BakedModel;
@@ -17,41 +23,25 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.neoforge.client.model.data.ModelData;
-import net.neoforged.neoforge.client.model.data.ModelData.Builder;
-import net.neoforged.neoforge.client.model.data.ModelProperty;
-
 public class ConnectedGirderModel extends CTModel {
-
-	protected static final ModelProperty<ConnectionData> CONNECTION_PROPERTY = new ModelProperty<>();
 
 	public ConnectedGirderModel(BakedModel originalModel) {
 		super(originalModel, new GirderCTBehaviour());
 	}
 
 	@Override
-	protected ModelData.Builder gatherModelData(Builder builder, BlockAndTintGetter world, BlockPos pos, BlockState state,
-		ModelData blockEntityData) {
-		super.gatherModelData(builder, world, pos, state, blockEntityData);
-		ConnectionData connectionData = new ConnectionData();
+	public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context) {
+		ConnectionData data = new ConnectionData();
 		for (Direction d : Iterate.horizontalDirections)
-			connectionData.setConnected(d, GirderBlock.isConnected(world, pos, state, d));
-		return builder.with(CONNECTION_PROPERTY, connectionData);
-	}
+			data.setConnected(d, GirderBlock.isConnected(blockView, pos, state, d));
 
-	@Override
-	public List<BakedQuad> getQuads(BlockState state, Direction side, RandomSource rand, ModelData extraData, RenderType renderType) {
-		List<BakedQuad> superQuads = super.getQuads(state, side, rand, extraData, renderType);
-		if (side != null || !extraData.has(CONNECTION_PROPERTY))
-			return superQuads;
-		List<BakedQuad> quads = new ArrayList<>(superQuads);
-		ConnectionData data = extraData.get(CONNECTION_PROPERTY);
+		super.emitBlockQuads(blockView, state, pos, randomSupplier, context);
+
 		for (Direction d : Iterate.horizontalDirections)
 			if (data.isConnected(d))
-				quads.addAll(AllPartialModels.METAL_GIRDER_BRACKETS.get(d)
+				AllPartialModels.METAL_GIRDER_BRACKETS.get(d)
 					.get()
-					.getQuads(state, side, rand, extraData, renderType));
-		return quads;
+					.emitBlockQuads(blockView, state, pos, randomSupplier, context);
 	}
 
 	private static class ConnectionData {

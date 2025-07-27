@@ -4,11 +4,20 @@ import java.util.Map;
 
 import com.simibubi.create.AllTags.AllItemTags;
 
+import com.simibubi.create.Create;
+
+import io.github.fabricators_of_create.porting_lib.transfer.MutableContainerItemContext;
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import net.createmod.catnip.math.VecHelper;
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -17,16 +26,26 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.capabilities.Capabilities;
 
 public class BeltHelper {
 
 	public static Map<Item, Boolean> uprightCache = new Object2BooleanOpenHashMap<>();
-	public static final ResourceManagerReloadListener LISTENER = resourceManager -> uprightCache.clear();
+	public static final SimpleSynchronousResourceReloadListener LISTENER = new SimpleSynchronousResourceReloadListener() {
+		public static final ResourceLocation ID = Create.asResource("recipe_finder");
+		@Override
+		public void onResourceManagerReload(ResourceManager resourceManager) {
+			uprightCache.clear();
+		}
+
+		@Override
+		public ResourceLocation getFabricId() {
+			return ID;
+		}
+	};
 
 	public static boolean isItemUpright(ItemStack stack) {
 		return uprightCache.computeIfAbsent(stack.getItem(),
-			item -> stack.getCapability(Capabilities.FluidHandler.ITEM) != null || AllItemTags.UPRIGHT_ON_BELT.matches(stack));
+			item -> FluidStorage.ITEM.find(stack, new MutableContainerItemContext(stack)) != null || AllItemTags.UPRIGHT_ON_BELT.matches(stack));
 	}
 
 	public static BeltBlockEntity getSegmentBE(LevelAccessor world, BlockPos pos) {

@@ -16,6 +16,11 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -41,10 +46,7 @@ import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
-import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import net.fabricmc.fabric.api.entity.FakePlayer;
 
 public class ItemHatchBlock extends HorizontalDirectionalBlock
 	implements IBE<ItemHatchBlockEntity>, IWrenchable, ProperWaterloggedBlock {
@@ -100,7 +102,7 @@ public class ItemHatchBlock extends HorizontalDirectionalBlock
 		BlockEntity blockEntity = level.getBlockEntity(pos.relative(state.getValue(FACING)));
 		if (blockEntity == null)
 			return ItemInteractionResult.FAIL;
-		IItemHandler targetInv = level.getCapability(ItemHandler.BLOCK, blockEntity.getBlockPos(), null);
+		Storage<ItemVariant> targetInv = TransferUtil.getItemStorage(level, blockEntity.getBlockPos(), blockEntity, null);
 		if (targetInv == null)
 			return ItemInteractionResult.FAIL;
 
@@ -131,12 +133,12 @@ public class ItemHatchBlock extends HorizontalDirectionalBlock
 				.isEmpty() && !filter.test(item))
 				continue;
 
-			ItemStack remainder = ItemHandlerHelper.insertItemStacked(targetInv, item, true);
+			ItemStack remainder = CreateTransferUtil.insertItemStacked(targetInv, item, true);
 			if (remainder.getCount() == item.getCount())
 				continue;
 
 			ItemStack extracted = inventory.removeItem(i, item.getCount() - remainder.getCount());
-			remainder = ItemHandlerHelper.insertItemStacked(targetInv, extracted, false);
+			remainder = CreateTransferUtil.insertItemStacked(targetInv, extracted, false);
 			anyInserted = true;
 
 			// remainder might not be empty in itemhandler edge cases

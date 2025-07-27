@@ -9,21 +9,23 @@ import com.simibubi.create.foundation.blockEntity.behaviour.inventory.InvManipul
 import com.simibubi.create.foundation.item.CountedItemStackList;
 
 import net.createmod.catnip.data.IntAttached;
+import net.createmod.catnip.data.LongAttached;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.items.IItemHandler;
 
 public class ItemListDisplaySource extends ValueListDisplaySource {
 
 	@Override
-	protected Stream<IntAttached<MutableComponent>> provideEntries(DisplayLinkContext context, int maxRows) {
+	protected Stream<LongAttached<MutableComponent>> provideEntries(DisplayLinkContext context, int maxRows) {
 		BlockEntity sourceBE = context.getSourceBlockEntity();
 		if (!(sourceBE instanceof SmartObserverBlockEntity cobe))
 			return Stream.empty();
 
 		InvManipulationBehaviour invManipulationBehaviour = cobe.getBehaviour(InvManipulationBehaviour.TYPE);
 		FilteringBehaviour filteringBehaviour = cobe.getBehaviour(FilteringBehaviour.TYPE);
-		IItemHandler handler = invManipulationBehaviour.getInventory();
+		Storage<ItemVariant> handler = invManipulationBehaviour.getInventory();
 
 		if (handler == null)
 			return Stream.empty();

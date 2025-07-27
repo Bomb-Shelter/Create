@@ -1,19 +1,22 @@
 package com.simibubi.create.foundation.item;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
 
-public class ItemHandlerWrapper implements IItemHandlerModifiable {
+public class ItemHandlerWrapper implements SlottedStackStorage {
 
-	private IItemHandlerModifiable wrapped;
+	private SlottedStackStorage wrapped;
 
-	public ItemHandlerWrapper(IItemHandlerModifiable wrapped) {
+	public ItemHandlerWrapper(SlottedStackStorage wrapped) {
 		this.wrapped = wrapped;
 	}
 
 	@Override
-	public int getSlots() {
-		return wrapped.getSlots();
+	public int getSlotCount() {
+		return wrapped.getSlotCount();
 	}
 
 	@Override
@@ -22,13 +25,13 @@ public class ItemHandlerWrapper implements IItemHandlerModifiable {
 	}
 
 	@Override
-	public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-		return wrapped.insertItem(slot, stack, simulate);
+	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+		return wrapped.insert(resource, maxAmount, transaction);
 	}
 
 	@Override
-	public ItemStack extractItem(int slot, int amount, boolean simulate) {
-		return wrapped.extractItem(slot, amount, simulate);
+	public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+		return wrapped.extract(resource, maxAmount, transaction);
 	}
 
 	@Override
@@ -37,8 +40,13 @@ public class ItemHandlerWrapper implements IItemHandlerModifiable {
 	}
 
 	@Override
-	public boolean isItemValid(int slot, ItemStack stack) {
-		return wrapped.isItemValid(slot, stack);
+	public boolean isItemValid(int slot, ItemVariant resource, int count) {
+		return wrapped.isItemValid(slot, resource, count);
+	}
+
+	@Override
+	public SingleSlotStorage<ItemVariant> getSlot(int slot) {
+		return wrapped.getSlot(slot);
 	}
 
 	@Override

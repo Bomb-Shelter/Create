@@ -6,10 +6,10 @@ import com.tterrag.registrate.providers.DataGenContext;
 import com.tterrag.registrate.providers.RegistrateBlockstateProvider;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
 
+import io.github.fabricators_of_create.porting_lib.models.generators.ModelFile;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.client.model.generators.ModelFile;
 
 public class BracketGenerator extends DirectionalAxisBlockStateGen {
 
@@ -27,7 +27,7 @@ public class BracketGenerator extends DirectionalAxisBlockStateGen {
 
 	@Override
 	public <T extends Block> ModelFile getModel(DataGenContext<Block, T> ctx, RegistrateBlockstateProvider prov,
-		BlockState state) {
+												BlockState state) {
 		String type = state.getValue(BracketBlock.TYPE)
 			.getSerializedName();
 		boolean vertical = state.getValue(BracketBlock.FACING)

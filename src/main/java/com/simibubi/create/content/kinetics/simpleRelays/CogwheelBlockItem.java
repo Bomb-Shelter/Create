@@ -11,6 +11,8 @@ import com.simibubi.create.content.kinetics.base.HorizontalKineticBlock;
 import com.simibubi.create.content.kinetics.base.IRotate;
 import com.simibubi.create.content.kinetics.base.RotatedPillarKineticBlock;
 
+import io.github.fabricators_of_create.porting_lib.event.client.InteractEvents.Use;
+import io.github.fabricators_of_create.porting_lib.item.extensions.UseFirstBehaviorItem;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.placement.IPlacementHelper;
 import net.createmod.catnip.placement.PlacementHelpers;
@@ -28,7 +30,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-public class CogwheelBlockItem extends BlockItem {
+public class CogwheelBlockItem extends BlockItem implements UseFirstBehaviorItem {
 
 	boolean large;
 
@@ -67,7 +69,7 @@ public class CogwheelBlockItem extends BlockItem {
 			}
 		}
 
-		return super.onItemUseFirst(stack, context);
+		return UseFirstBehaviorItem.super.onItemUseFirst(stack, context);
 	}
 
 	@MethodsReturnNonnullByDefault

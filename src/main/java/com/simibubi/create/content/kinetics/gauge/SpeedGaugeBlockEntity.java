@@ -11,7 +11,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
-import dan200.computercraft.api.peripheral.PeripheralCapability;
+import dan200.computercraft.api.peripheral.PeripheralLookup;
 import net.createmod.catnip.theme.Color;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -19,7 +19,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 public class SpeedGaugeBlockEntity extends GaugeBlockEntity {
 
@@ -35,13 +34,9 @@ public class SpeedGaugeBlockEntity extends GaugeBlockEntity {
 		behaviours.add(computerBehaviour = ComputerCraftProxy.behaviour(this));
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+	public static void registerCapabilities() {
 		if (Mods.COMPUTERCRAFT.isLoaded()) {
-			event.registerBlockEntity(
-					PeripheralCapability.get(),
-					AllBlockEntityTypes.SPEEDOMETER.get(),
-					(be, context) -> be.computerBehaviour.getPeripheralCapability()
-			);
+			PeripheralLookup.get().registerForBlockEntity((be, context) -> be.computerBehaviour.getPeripheralCapability(), AllBlockEntityTypes.SPEEDOMETER.get());
 		}
 	}
 

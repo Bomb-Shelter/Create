@@ -12,7 +12,11 @@ import com.simibubi.create.content.trains.station.GlobalStation.GlobalPackagePor
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
@@ -21,10 +25,10 @@ import net.minecraft.world.item.BoneMealItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
-public class PostboxBlockEntity extends PackagePortBlockEntity {
+import org.jetbrains.annotations.Nullable;
+
+public class PostboxBlockEntity extends PackagePortBlockEntity implements SidedStorageBlockEntity {
 
 	public WeakReference<GlobalStation> trackedGlobalStation;
 
@@ -40,12 +44,12 @@ public class PostboxBlockEntity extends PackagePortBlockEntity {
 			.startWithValue(0);
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-			Capabilities.ItemHandler.BLOCK,
-			AllBlockEntityTypes.PACKAGE_POSTBOX.get(),
-			(be, context) -> be.itemHandler
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		return this.itemHandler;
 	}
 
 	@Override
@@ -112,7 +116,7 @@ public class PostboxBlockEntity extends PackagePortBlockEntity {
 		if (!station.connectedPorts.containsKey(worldPosition))
 			return;
 		GlobalPackagePort globalPackagePort = station.connectedPorts.get(worldPosition);
-		for (int i = 0; i < inventory.getSlots(); i++) {
+		for (int i = 0; i < inventory.getSlotCount(); i++) {
 			globalPackagePort.offlineBuffer.setStackInSlot(i, inventory.getStackInSlot(i));
 			inventory.setStackInSlot(i, ItemStack.EMPTY);
 		}

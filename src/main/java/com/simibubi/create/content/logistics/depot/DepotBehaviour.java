@@ -22,6 +22,9 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.item.ItemHelper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.core.BlockPos;
@@ -36,8 +39,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class DepotBehaviour extends BlockEntityBehaviour {
 
@@ -164,7 +165,7 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 		if (funnelFacing == null || !canFunnelsPullFrom.test(funnelFacing.getOpposite()))
 			return false;
 
-		for (int slot = 0; slot < processingOutputBuffer.getSlots(); slot++) {
+		for (int slot = 0; slot < processingOutputBuffer.getSlotCount(); slot++) {
 			ItemStack previousItem = processingOutputBuffer.getStackInSlot(slot);
 			if (previousItem.isEmpty())
 				continue;
@@ -210,8 +211,8 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 
 	@Override
 	public void unload() {
-		if (itemHandler != null)
-			blockEntity.invalidateCapabilities();
+		//if (itemHandler != null)
+			//blockEntity.invalidateCapabilities();
 	}
 
 	@Override
@@ -254,7 +255,7 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 	public int getPresentStackSize() {
 		int cumulativeStackSize = 0;
 		cumulativeStackSize += getHeldItemStack().getCount();
-		for (int slot = 0; slot < processingOutputBuffer.getSlots(); slot++)
+		for (int slot = 0; slot < processingOutputBuffer.getSlotCount(); slot++)
 			cumulativeStackSize += processingOutputBuffer.getStackInSlot(slot)
 				.getCount();
 		return cumulativeStackSize;
@@ -400,7 +401,7 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 				setCenteredHeldItem(added);
 				continue;
 			}
-			ItemStack remainder = ItemHandlerHelper.insertItemStacked(processingOutputBuffer, added.stack, false);
+			ItemStack remainder = CreateTransferUtil.insertItemStacked(processingOutputBuffer, added.stack, false);
 			Vec3 vec = VecHelper.getCenterOf(blockEntity.getBlockPos());
 			Containers.dropItemStack(blockEntity.getLevel(), vec.x, vec.y + .5f, vec.z, remainder);
 		}
@@ -414,7 +415,7 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 	}
 
 	public boolean isOutputEmpty() {
-		for (int i = 0; i < processingOutputBuffer.getSlots(); i++)
+		for (int i = 0; i < processingOutputBuffer.getSlotCount(); i++)
 			if (!processingOutputBuffer.getStackInSlot(i)
 				.isEmpty())
 				return false;

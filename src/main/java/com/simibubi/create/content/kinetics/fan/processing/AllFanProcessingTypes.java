@@ -278,14 +278,14 @@ public class AllFanProcessingTypes {
 				livingEntity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, 1, false, false));
 			}
 			if (entity instanceof Horse horse) {
-				int progress = horse.getPersistentData()
+				int progress = horse.getCustomData()
 					.getInt("CreateHaunting");
 				if (progress < 100) {
 					if (progress % 10 == 0) {
 						level.playSound(null, entity.blockPosition(), SoundEvents.SOUL_ESCAPE.value(), SoundSource.NEUTRAL,
 							1f, 1.5f * progress / 100f);
 					}
-					horse.getPersistentData()
+					horse.getCustomData()
 						.putInt("CreateHaunting", progress + 1);
 					return;
 				}
@@ -300,7 +300,7 @@ public class AllFanProcessingTypes {
 					.isEmpty())
 					horse.spawnAtLocation(horse.getBodyArmorItem());
 
-				skeletonHorse.deserializeNBT(entity.registryAccess(), serializeNBT);
+				skeletonHorse.load(serializeNBT);
 				skeletonHorse.setPos(horse.getPosition(0));
 				level.addFreshEntity(skeletonHorse);
 				horse.discard();

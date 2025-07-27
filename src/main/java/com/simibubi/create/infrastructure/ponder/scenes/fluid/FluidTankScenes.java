@@ -15,6 +15,9 @@ import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.simibubi.create.foundation.gui.AllIcons;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.createmod.catnip.math.Pointing;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.ponder.api.PonderPalette;
@@ -23,6 +26,8 @@ import net.createmod.ponder.api.element.WorldSectionElement;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
@@ -30,10 +35,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class FluidTankScenes {
 
@@ -88,8 +90,8 @@ public class FluidTankScenes {
 		scene.idle(5);
 		FluidStack content = new FluidStack(AllFluids.CHOCOLATE.get()
 			.getSource(), 16000);
-		scene.world().modifyBlockEntity(tankPos, FluidTankBlockEntity.class, be -> be.getTankInventory()
-			.fill(content, FluidAction.EXECUTE));
+		scene.world().modifyBlockEntity(tankPos, FluidTankBlockEntity.class, be -> CreateTransferUtil
+			.insertFluid(be.getTankInventory(), content, false));
 		scene.idle(25);
 
 		scene.world().moveSection(tankLink, util.vector().of(0, 0, 1), 10);
@@ -106,13 +108,13 @@ public class FluidTankScenes {
 
 		scene.idle(5);
 		scene.world().propagatePipeChange(pumpPos);
-		scene.world().modifyBlockEntity(util.grid().at(2, 0, 5), FluidTankBlockEntity.class, be -> be.getTankInventory()
-			.fill(content, FluidAction.EXECUTE));
+		scene.world().modifyBlockEntity(util.grid().at(2, 0, 5), FluidTankBlockEntity.class, be -> CreateTransferUtil
+			.insertFluid(be.getTankInventory(), content, false));
 		scene.idle(20);
 
 		for (int i = 0; i < 4; i++) {
-			scene.world().modifyBlockEntity(tankPos, FluidTankBlockEntity.class, be -> be.getTankInventory()
-				.drain(2000, FluidAction.EXECUTE));
+			scene.world().modifyBlockEntity(tankPos, FluidTankBlockEntity.class, be -> CreateTransferUtil
+				.extractFluid(be.getTankInventory(), 2000, false));
 			scene.idle(5);
 		}
 
@@ -126,8 +128,8 @@ public class FluidTankScenes {
 		scene.world().modifyBlock(pumpPos, s -> s.setValue(PumpBlock.FACING, Direction.NORTH), true);
 		scene.world().propagatePipeChange(pumpPos);
 		for (int i = 0; i < 4; i++) {
-			scene.world().modifyBlockEntity(tankPos, FluidTankBlockEntity.class, be -> be.getTankInventory()
-				.fill(FluidHelper.copyStackWithAmount(content, 2000), FluidAction.EXECUTE));
+			scene.world().modifyBlockEntity(tankPos, FluidTankBlockEntity.class, be -> CreateTransferUtil
+				.insertFluid(be.getTankInventory(), FluidHelper.copyStackWithAmount(content, 2000), false));
 			scene.idle(5);
 		}
 		scene.idle(40);
@@ -169,9 +171,9 @@ public class FluidTankScenes {
 		scene.idle(80);
 		scene.world().modifyBlockEntity(util.grid().at(4, 3, 0), SpoutBlockEntity.class,
 			be -> {
-				IFluidHandler handler = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+				Storage<FluidVariant> handler = TransferUtil.getFluidStorage(be.getLevel(), be.getBlockPos(), be, null);
 				if (handler != null)
-					handler.fill(content, FluidAction.EXECUTE);
+					CreateTransferUtil.insertFluid(handler, content, false);
 			});
 
 		scene.world().moveSection(tankLink, util.vector().of(0, 0, 1), 7);

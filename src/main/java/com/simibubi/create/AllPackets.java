@@ -86,6 +86,7 @@ import com.simibubi.create.content.schematics.packet.SchematicUploadPacket;
 import com.simibubi.create.content.trains.HonkPacket;
 import com.simibubi.create.content.trains.TrainHUDUpdatePacket;
 import com.simibubi.create.content.trains.entity.AddTrainPacket;
+import com.simibubi.create.content.trains.entity.CarriageDataUpdatePacket;
 import com.simibubi.create.content.trains.entity.RemoveTrainPacket;
 import com.simibubi.create.content.trains.entity.TrainPromptPacket;
 import com.simibubi.create.content.trains.entity.TrainRelocationPacket;
@@ -234,7 +235,10 @@ public enum AllPackets implements BasePacketPayload.PacketTypeProvider {
 	REDSTONE_REQUESTER_EFFECT(RedstoneRequesterEffectPacket.class, RedstoneRequesterEffectPacket.STREAM_CODEC),
 	KNOCKBACK(KnockbackPacket.class, KnockbackPacket.STREAM_CODEC),
 	TRAIN_MAP_SYNC(TrainMapSyncPacket.class, TrainMapSyncPacket.STREAM_CODEC),
-	CLIENTBOUND_CHAIN_CONVEYOR(ClientboundChainConveyorRidingPacket.class, ClientboundChainConveyorRidingPacket.STREAM_CODEC)
+	CLIENTBOUND_CHAIN_CONVEYOR(ClientboundChainConveyorRidingPacket.class, ClientboundChainConveyorRidingPacket.STREAM_CODEC),
+
+	// Fabric: Server to Client
+	CARRIAGE_DATA_UPDATE(CarriageDataUpdatePacket.class, CarriageDataUpdatePacket.STREAM_CODEC)
 	;
 
 	static {

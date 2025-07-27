@@ -17,8 +17,8 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public record ContraptionSeatMappingPacket(int entityId, Map<UUID, Integer> mapping, int dismountedId) implements ClientboundPacketPayload {
 	public static final StreamCodec<ByteBuf, ContraptionSeatMappingPacket> STREAM_CODEC = StreamCodec.composite(
@@ -33,7 +33,7 @@ public record ContraptionSeatMappingPacket(int entityId, Map<UUID, Integer> mapp
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void handle(LocalPlayer player) {
 		Entity entityByID = player.clientLevel.getEntity(entityId);
 		if (!(entityByID instanceof AbstractContraptionEntity contraptionEntity))
@@ -42,7 +42,7 @@ public record ContraptionSeatMappingPacket(int entityId, Map<UUID, Integer> mapp
 		if (dismountedId == player.getId()) {
 			Vec3 transformedVector = contraptionEntity.getPassengerPosition(player, 1);
 			if (transformedVector != null)
-				player.getPersistentData()
+				player.getCustomData()
 						.put("ContraptionDismountLocation", VecHelper.writeNBT(transformedVector));
 		}
 

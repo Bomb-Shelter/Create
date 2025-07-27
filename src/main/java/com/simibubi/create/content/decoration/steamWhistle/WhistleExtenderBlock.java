@@ -5,6 +5,7 @@ import com.simibubi.create.AllShapes;
 import com.simibubi.create.content.decoration.steamWhistle.WhistleBlock.WhistleSize;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.FaceHidingBlock;
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -31,7 +32,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class WhistleExtenderBlock extends Block implements IWrenchable {
+public class WhistleExtenderBlock extends Block implements IWrenchable, FaceHidingBlock {
 
 	public static final EnumProperty<WhistleExtenderShape> SHAPE =
 		EnumProperty.create("shape", WhistleExtenderShape.class);
@@ -95,7 +96,7 @@ public class WhistleExtenderBlock extends Block implements IWrenchable {
 	}
 
 	@Override
-	public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
+	public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
 		return AllBlocks.STEAM_WHISTLE.asStack();
 	}
 

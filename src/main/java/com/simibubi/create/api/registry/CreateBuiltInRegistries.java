@@ -2,6 +2,10 @@ package com.simibubi.create.api.registry;
 
 import com.mojang.serialization.Lifecycle;
 
+import io.github.fabricators_of_create.porting_lib.registry.RegistryBuilder;
+
+import net.fabricmc.fabric.api.event.registry.FabricRegistryBuilder;
+
 import org.jetbrains.annotations.ApiStatus.Internal;
 
 import com.mojang.serialization.MapCodec;
@@ -26,7 +30,8 @@ import net.minecraft.core.WritableRegistry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 
-import net.neoforged.neoforge.registries.RegistryBuilder;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Static registries added by Create.
@@ -46,6 +51,8 @@ public class CreateBuiltInRegistries {
 	public static final Registry<MapCodec<? extends PotatoProjectileRenderMode>> POTATO_PROJECTILE_RENDER_MODE = simple(CreateRegistries.POTATO_PROJECTILE_RENDER_MODE);
 	public static final Registry<MapCodec<? extends PotatoProjectileEntityHitAction>> POTATO_PROJECTILE_ENTITY_HIT_ACTION = simple(CreateRegistries.POTATO_PROJECTILE_ENTITY_HIT_ACTION);
 	public static final Registry<MapCodec<? extends PotatoProjectileBlockHitAction>> POTATO_PROJECTILE_BLOCK_HIT_ACTION = simple(CreateRegistries.POTATO_PROJECTILE_BLOCK_HIT_ACTION);
+
+	public static List<Runnable> bakeCallbacks;
 
 	private static <T> Registry<T> simple(ResourceKey<Registry<T>> key) {
 		return register(key, false, () -> {});
@@ -67,11 +74,15 @@ public class CreateBuiltInRegistries {
 		if (hasIntrusiveHolders)
 			builder.withIntrusiveHolders();
 
-		builder.onBake(r -> onBakeCallback.run());
+		if (bakeCallbacks == null)
+			bakeCallbacks = new ArrayList<>();
+
+		bakeCallbacks.add(onBakeCallback);
+		//builder.onBake(r -> onBakeCallback.run());
 
 		Registry<T> registry = builder.create();
-		((WritableRegistry) BuiltInRegistries.REGISTRY)
-			.register(key, registry, RegistrationInfo.BUILT_IN);
+		/*((WritableRegistry) BuiltInRegistries.REGISTRY)
+			.register(key, registry, RegistrationInfo.BUILT_IN);*/
 		return registry;
 	}
 

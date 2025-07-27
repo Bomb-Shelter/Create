@@ -1,6 +1,8 @@
 package com.simibubi.create.content.equipment.toolbox;
 
 import com.simibubi.create.AllPackets;
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.createmod.catnip.net.base.ServerboundPacketPayload;
 
 import net.createmod.catnip.codecs.stream.CatnipStreamCodecBuilders;
@@ -14,8 +16,6 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-
-import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 public record ToolboxEquipPacket(BlockPos toolboxPos, int slot, int hotbarSlot) implements ServerboundPacketPayload {
 	public static final StreamCodec<ByteBuf, ToolboxEquipPacket> STREAM_CODEC = StreamCodec.composite(
@@ -60,16 +60,16 @@ public record ToolboxEquipPacket(BlockPos toolboxPos, int slot, int hotbarSlot) 
 		if (!playerStack.isEmpty() && !ToolboxInventory.canItemsShareCompartment(playerStack,
 				toolboxBlockEntity.inventory.filters.get(slot))) {
 			toolboxBlockEntity.inventory.inLimitedMode(inventory -> {
-				ItemStack remainder = ItemHandlerHelper.insertItemStacked(inventory, playerStack, false);
+				ItemStack remainder = CreateTransferUtil.insertItemStacked(inventory, playerStack, false);
 				if (!remainder.isEmpty())
-					remainder = ItemHandlerHelper.insertItemStacked(new ItemReturnInvWrapper(player.getInventory()),
+					remainder = CreateTransferUtil.insertItemStacked(new ItemReturnInvWrapper(player.getInventory()),
 							remainder, false);
 				if (remainder.getCount() != playerStack.getCount())
 					player.getInventory().setItem(hotbarSlot, remainder);
 			});
 		}
 
-		CompoundTag compound = player.getPersistentData()
+		CompoundTag compound = player.getCustomData()
 				.getCompound("CreateToolboxData");
 		String key = String.valueOf(hotbarSlot);
 
@@ -78,7 +78,7 @@ public record ToolboxEquipPacket(BlockPos toolboxPos, int slot, int hotbarSlot) 
 		data.put("Pos", NbtUtils.writeBlockPos(toolboxPos));
 		compound.put(key, data);
 
-		player.getPersistentData()
+		player.getCustomData()
 				.put("CreateToolboxData", compound);
 
 		toolboxBlockEntity.connectPlayer(slot, player, hotbarSlot);

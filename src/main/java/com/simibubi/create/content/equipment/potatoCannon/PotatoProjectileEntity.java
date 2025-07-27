@@ -1,5 +1,7 @@
 package com.simibubi.create.content.equipment.potatoCannon;
 
+import io.github.fabricators_of_create.porting_lib.entity.IEntityWithComplexSpawn;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,8 +44,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
-
 public class PotatoProjectileEntity extends AbstractHurtingProjectile implements IEntityWithComplexSpawn {
 
 	protected PotatoCannonProjectileType type;
@@ -74,7 +74,7 @@ public class PotatoProjectileEntity extends AbstractHurtingProjectile implements
 	public void setEnchantmentEffectsFromCannon(ItemStack cannon) {
 		Registry<Enchantment> enchantmentRegistry = registryAccess().registryOrThrow(Registries.ENCHANTMENT);
 
-		int recovery = cannon.getEnchantmentLevel(enchantmentRegistry.getHolderOrThrow(AllEnchantments.POTATO_RECOVERY));
+		int recovery = EnchantmentHelper.getItemEnchantmentLevel(enchantmentRegistry.getHolderOrThrow(AllEnchantments.POTATO_RECOVERY), cannon);
 
 		if (recovery > 0)
 			recoveryChance = .125f + recovery * .125f;

@@ -7,6 +7,7 @@ import com.mojang.serialization.MapCodec;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.equipment.wrench.IWrenchable;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.MinecartPassHandlerBlock;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.MethodsReturnNonnullByDefault;
@@ -40,7 +41,7 @@ import net.minecraft.world.phys.Vec3;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class ControllerRailBlock extends BaseRailBlock implements IWrenchable {
+public class ControllerRailBlock extends BaseRailBlock implements IWrenchable, MinecartPassHandlerBlock {
 
 	public static final EnumProperty<RailShape> SHAPE = BlockStateProperties.RAIL_SHAPE_STRAIGHT;
 	public static final BooleanProperty BACKWARDS = BooleanProperty.create("backwards");
@@ -145,7 +146,7 @@ public class ControllerRailBlock extends BaseRailBlock implements IWrenchable {
 		if (world.isClientSide)
 			return;
 		Vec3 accelerationVec = Vec3.atLowerCornerOf(getAccelerationVector(state));
-		double targetSpeed = cart.getMaxSpeedWithRail() * state.getValue(POWER) / 15f;
+		double targetSpeed = cart.getMaxSpeedOnRail() * state.getValue(POWER) / 15f;
 
 		if (cart instanceof MinecartFurnace fme) {
 			fme.xPush = accelerationVec.x;

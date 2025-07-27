@@ -2,6 +2,8 @@ package com.simibubi.create.content.legacy;
 
 import com.simibubi.create.AllDataComponents;
 
+import io.github.fabricators_of_create.porting_lib.item.extensions.EntityTickListenerItem;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.simibubi.create.AllItems;
@@ -35,7 +37,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 
-public class ChromaticCompoundItem extends Item {
+public class ChromaticCompoundItem extends Item implements EntityTickListenerItem {
 
 	public ChromaticCompoundItem(Properties properties) {
 		super(properties);
@@ -61,10 +63,11 @@ public class ChromaticCompoundItem extends Item {
 			getLight(stack) / (float) AllConfigs.server().recipes.lightSourceCountForRefinedRadiance.get());
 	}
 
-	@Override
+	//Fabric TODO: impl
+	/*@Override
 	public int getMaxStackSize(ItemStack stack) {
 		return isBarVisible(stack) ? 1 : 16;
-	}
+	}*/
 
 	@Override
 	public boolean onEntityItemUpdate(ItemStack stack, ItemEntity entity) {
@@ -88,7 +91,7 @@ public class ChromaticCompoundItem extends Item {
 		double y = entity.getY();
 		double yMotion = entity.getDeltaMovement().y;
 		int minHeight = world.getMinBuildHeight();
-		CompoundTag data = entity.getPersistentData();
+		CompoundTag data = entity.getCustomData();
 
 		// Convert to Shadow steel if in void
 		if (y < minHeight && y - yMotion < -10 + minHeight && config.enableShadowSteelRecipe.get()) {
@@ -106,7 +109,7 @@ public class ChromaticCompoundItem extends Item {
 			ItemStack newStack = AllItems.REFINED_RADIANCE.asStack();
 			ItemEntity newEntity = new ItemEntity(world, entity.getX(), entity.getY(), entity.getZ(), newStack);
 			newEntity.setDeltaMovement(entity.getDeltaMovement());
-			newEntity.getPersistentData()
+			newEntity.getCustomData()
 				.putBoolean("JustCreated", true);
 			itemStack.remove(AllDataComponents.CHROMATIC_COMPOUND_COLLECTING_LIGHT);
 			world.addFreshEntity(newEntity);
@@ -205,7 +208,7 @@ public class ChromaticCompoundItem extends Item {
 
 	public boolean checkLight(ItemStack stack, ItemEntity entity, Level world, ItemStack itemStack, Vec3 positionVec,
 							  BlockPos randomOffset, BlockState state) {
-		if (state.getLightEmission(world, randomOffset) == 0)
+		if (state.getLightEmission(/*world, randomOffset*/) == 0)
 			return false;
 		if (state.getDestroySpeed(world, randomOffset) == -1)
 			return false;
@@ -224,7 +227,8 @@ public class ChromaticCompoundItem extends Item {
 		newEntity.setDeltaMovement(entity.getDeltaMovement());
 		newEntity.setDefaultPickUpDelay();
 		world.addFreshEntity(newEntity);
-		entity.lifespan = 6000;
+		entity.setExtendedLifetime();
+		//entity.lifespan = 6000;
 		if (stack.isEmpty())
 			entity.discard();
 		return true;

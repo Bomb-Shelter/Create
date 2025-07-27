@@ -44,8 +44,6 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-
 import org.jetbrains.annotations.NotNull;
 
 public class PlacardBlock extends FaceAttachedHorizontalDirectionalBlock

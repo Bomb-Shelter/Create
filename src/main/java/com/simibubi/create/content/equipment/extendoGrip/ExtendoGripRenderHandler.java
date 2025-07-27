@@ -7,6 +7,9 @@ import com.simibubi.create.AllPartialModels;
 
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import dev.engine_room.flywheel.lib.transform.TransformStack;
+import io.github.fabricators_of_create.porting_lib.client_events.event.client.RenderHandEvent;
+import io.github.fabricators_of_create.porting_lib.models.TransformTypeDependentItemBakedModel;
+import io.github.fabricators_of_create.porting_lib.models.TransformTypeDependentItemBakedModel.DefaultTransform;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
@@ -19,13 +22,8 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.ClientHooks;
-import net.neoforged.neoforge.client.event.RenderHandEvent;
+import net.fabricmc.api.EnvType;
 
-@EventBusSubscriber(value = Dist.CLIENT)
 public class ExtendoGripRenderHandler {
 
 	public static float mainHandAnimation;
@@ -52,7 +50,10 @@ public class ExtendoGripRenderHandler {
 		pose = AllPartialModels.DEPLOYER_HAND_HOLDING;
 	}
 
-	@SubscribeEvent
+	static {
+		RenderHandEvent.EVENT.register(ExtendoGripRenderHandler::onRenderPlayerHand);
+	}
+
 	public static void onRenderPlayerHand(RenderHandEvent event) {
 		ItemStack heldItem = event.getItemStack();
 		Minecraft mc = Minecraft.getInstance();
@@ -116,8 +117,11 @@ public class ExtendoGripRenderHandler {
 				event.getPoseStack(), event.getMultiBufferSource(), event.getPackedLight());
 
 			if (!notInOffhand) {
-				ClientHooks.handleCameraTransforms(ms, mc.getItemRenderer()
-					.getModel(offhandItem, null, null, 0), transform, !rightHand);
+				TransformTypeDependentItemBakedModel.maybeApplyTransform(
+					mc.getItemRenderer()
+						.getModel(offhandItem, null, null, 0),
+					transform, ms, !rightHand, m -> {}
+				);
 				ms.translate(flip * -.05f, .15f, -1.2f);
 				ms.translate(0, 0, -animation * 2.25f);
 				if (blockItem && mc.getItemRenderer()

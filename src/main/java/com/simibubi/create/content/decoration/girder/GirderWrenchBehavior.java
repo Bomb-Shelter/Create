@@ -29,12 +29,12 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class GirderWrenchBehavior {
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public static void tick() {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.player == null || mc.level == null || !(mc.hitResult instanceof BlockHitResult result))

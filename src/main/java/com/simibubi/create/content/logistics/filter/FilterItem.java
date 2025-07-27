@@ -7,6 +7,12 @@ import java.util.Objects;
 
 import javax.annotation.Nonnull;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+
+import net.minecraft.core.BlockPos;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.simibubi.create.AllDataComponents;
@@ -37,11 +43,10 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public class FilterItem extends Item implements MenuProvider, SupportsItemCopying {
+public class FilterItem extends Item implements ExtendedScreenHandlerFactory<ItemStack>, SupportsItemCopying {
 
 	private FilterType type;
 
@@ -75,7 +80,7 @@ public class FilterItem extends Item implements MenuProvider, SupportsItemCopyin
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flagIn) {
 		if (AllKeys.shiftDown())
 			return;
@@ -88,7 +93,7 @@ public class FilterItem extends Item implements MenuProvider, SupportsItemCopyin
 
 	private List<Component> makeSummary(ItemStack filter) {
 		List<Component> list = new ArrayList<>();
-		if (filter.isComponentsPatchEmpty())
+		if (filter.getComponentsPatch().isEmpty())
 			return list;
 
 		if (type == FilterType.REGULAR) {
@@ -98,7 +103,7 @@ public class FilterItem extends Item implements MenuProvider, SupportsItemCopyin
 			list.add((blacklist ? CreateLang.translateDirect("gui.filter.deny_list")
 				: CreateLang.translateDirect("gui.filter.allow_list")).withStyle(ChatFormatting.GOLD));
 			int count = 0;
-			for (int i = 0; i < filterItems.getSlots(); i++) {
+			for (int i = 0; i < filterItems.getSlotCount(); i++) {
 				if (count > 3) {
 					list.add(Component.literal("- ...")
 						.withStyle(ChatFormatting.DARK_GRAY));
@@ -167,12 +172,15 @@ public class FilterItem extends Item implements MenuProvider, SupportsItemCopyin
 
 		if (!player.isShiftKeyDown() && hand == InteractionHand.MAIN_HAND) {
 			if (!world.isClientSide && player instanceof ServerPlayer)
-				player.openMenu(this, buf -> {
-					ItemStack.STREAM_CODEC.encode(buf, heldItem);
-				});
+				player.openMenu(this);
 			return InteractionResultHolder.success(heldItem);
 		}
 		return InteractionResultHolder.pass(heldItem);
+	}
+
+	@Override
+	public ItemStack getScreenOpeningData(ServerPlayer player) {
+		return player.getMainHandItem();
 	}
 
 	@Override

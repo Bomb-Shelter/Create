@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+import io.github.fabricators_of_create.porting_lib.models.generators.ModelProvider;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -39,8 +40,6 @@ import net.minecraft.world.level.block.WeatheringCopperFullBlock;
 import net.minecraft.world.level.block.WeatheringCopperSlabBlock;
 import net.minecraft.world.level.block.state.BlockBehaviour.Properties;
 
-
-import net.neoforged.neoforge.client.model.generators.ModelProvider;
 
 public class CopperBlockSet {
 	protected static final WeatherState[] WEATHER_STATES = WeatherState.values();

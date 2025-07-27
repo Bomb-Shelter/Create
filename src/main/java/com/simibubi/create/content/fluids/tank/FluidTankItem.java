@@ -22,7 +22,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.fluids.FluidStack;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class FluidTankItem extends BlockItem {
 
@@ -131,10 +131,10 @@ public class FluidTankItem extends BlockItem {
 				if (FluidTankBlock.isTank(blockState))
 					continue;
 				BlockPlaceContext context = BlockPlaceContext.at(ctx, offsetPos, face);
-				player.getPersistentData()
+				player.getCustomData()
 					.putBoolean("SilenceTankSound", true);
 				super.place(context);
-				player.getPersistentData()
+				player.getCustomData()
 					.remove("SilenceTankSound");
 			}
 		}

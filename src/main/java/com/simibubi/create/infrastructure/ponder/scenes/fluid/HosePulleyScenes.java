@@ -10,22 +10,24 @@ import com.simibubi.create.content.fluids.pump.PumpBlock;
 import com.simibubi.create.content.fluids.tank.FluidTankBlockEntity;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.element.ElementLink;
 import net.createmod.ponder.api.element.WorldSectionElement;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class HosePulleyScenes {
 
@@ -126,9 +128,9 @@ public class HosePulleyScenes {
 		}
 
 		scene.world().modifyBlockEntity(util.grid().at(1, 5, 1), HosePulleyBlockEntity.class, be -> {
-			IFluidHandler ifh = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+			Storage<FluidVariant> ifh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 			if (ifh != null)
-				ifh.fill(new FluidStack(Fluids.WATER, 100), FluidAction.EXECUTE);
+				CreateTransferUtil.insertFluid(ifh, new FluidStack(Fluids.WATER, 100), false);
 		});
 
 		scene.idle(20);
@@ -230,9 +232,9 @@ public class HosePulleyScenes {
 		scene.world().showSectionAndMerge(cogs, Direction.NORTH, hoselink);
 		scene.world().showSectionAndMerge(pipes, Direction.WEST, hoselink);
 		scene.world().modifyBlockEntity(util.grid().at(1, 6, 1), HosePulleyBlockEntity.class, be -> {
-			IFluidHandler ifh = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+			Storage<FluidVariant> ifh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 			if (ifh != null)
-				ifh.fill(new FluidStack(Fluids.WATER, 100), FluidAction.EXECUTE);
+				CreateTransferUtil.insertFluid(ifh, new FluidStack(Fluids.WATER, 100), false);
 		});
 		scene.world().propagatePipeChange(util.grid().at(3, 2, 1));
 
@@ -346,9 +348,9 @@ public class HosePulleyScenes {
 
 		scene.idle(40);
 		scene.world().modifyBlockEntity(util.grid().at(1, 3, 2), HosePulleyBlockEntity.class, be -> {
-			IFluidHandler ifh = be.getLevel().getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), null);
+			Storage<FluidVariant> ifh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 			if (ifh != null)
-				ifh.fill(new FluidStack(Fluids.WATER, 1000), FluidAction.EXECUTE);
+				CreateTransferUtil.insertFluid(ifh, new FluidStack(Fluids.WATER, 1000), false);
 		});
 		scene.world().setKineticSpeed(hose, 0);
 		scene.world().modifyBlock(pumpPos, s -> s.setValue(PumpBlock.FACING, Direction.DOWN), true);
@@ -365,8 +367,8 @@ public class HosePulleyScenes {
 
 		scene.idle(60);
 
-		scene.world().modifyBlockEntity(util.grid().at(4, 1, 1), FluidTankBlockEntity.class, be -> be.getTankInventory()
-			.fill(new FluidStack(Fluids.WATER, 24000), FluidAction.EXECUTE));
+		scene.world().modifyBlockEntity(util.grid().at(4, 1, 1), FluidTankBlockEntity.class, be -> CreateTransferUtil.insertFluid(be.getTankInventory(),
+			new FluidStack(Fluids.WATER, 24000), false));
 
 		scene.idle(20);
 

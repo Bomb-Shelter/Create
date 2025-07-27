@@ -35,7 +35,6 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.client.model.data.ModelData;
 
 public class WaterWheelRenderer<T extends WaterWheelBlockEntity> extends KineticBlockEntityRenderer<T> {
 	public static final SuperByteBufferCache.Compartment<ModelKey> WATER_WHEEL = new SuperByteBufferCache.Compartment<>();
@@ -145,13 +144,13 @@ public class WaterWheelRenderer<T extends WaterWheelBlockEntity> extends Kinetic
 			return null;
 		RandomSource random = RandomSource.create();
 		random.setSeed(42L);
-		List<BakedQuad> quads = model.getQuads(state, side, random, ModelData.EMPTY, null);
+		List<BakedQuad> quads = model.getQuads(state, side, random);
 		if (!quads.isEmpty()) {
 			return quads.get(0)
 				.getSprite();
 		}
 		random.setSeed(42L);
-		quads = model.getQuads(state, null, random, ModelData.EMPTY, null);
+		quads = model.getQuads(state, null, random);
 		if (!quads.isEmpty()) {
 			for (BakedQuad quad : quads) {
 				if (quad.getDirection() == side) {
@@ -159,7 +158,7 @@ public class WaterWheelRenderer<T extends WaterWheelBlockEntity> extends Kinetic
 				}
 			}
 		}
-		return model.getParticleIcon(ModelData.EMPTY);
+		return model.getParticleIcon();
 	}
 
 	public enum Variant {

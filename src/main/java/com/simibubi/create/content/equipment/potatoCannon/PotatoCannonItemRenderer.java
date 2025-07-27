@@ -11,8 +11,11 @@ import com.simibubi.create.foundation.item.render.CustomRenderedItemModelRendere
 import com.simibubi.create.foundation.item.render.PartialItemModelRenderer;
 
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
+import io.github.fabricators_of_create.porting_lib.item.client.IItemDecorator;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.util.Mth;
@@ -20,27 +23,28 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 
-import net.neoforged.neoforge.client.IItemDecorator;
-
 public class PotatoCannonItemRenderer extends CustomRenderedItemModelRenderer {
-	public static final IItemDecorator DECORATOR = (guiGraphics, font, stack, xOffset, yOffset) -> {
-		LocalPlayer player = Minecraft.getInstance().player;
-		if (player == null) {
+	public static final IItemDecorator DECORATOR = new IItemDecorator() {
+		@Override
+		public boolean render(GuiGraphics guiGraphics, Font font, ItemStack stack, int xOffset, int yOffset) {
+			LocalPlayer player = Minecraft.getInstance().player;
+			if (player == null) {
+				return false;
+			}
+
+			Ammo ammo = PotatoCannonItem.getAmmo(player, stack);
+			if (ammo == null || AllItems.POTATO_CANNON.is(ammo.stack())) {
+				return false;
+			}
+
+			PoseStack poseStack = guiGraphics.pose();
+			poseStack.pushPose();
+			poseStack.translate(xOffset, yOffset + 8, 100);
+			poseStack.scale(.5f, .5f, .5f);
+			guiGraphics.renderItem(ammo.stack(), 0, 0);
+			poseStack.popPose();
 			return false;
 		}
-
-		Ammo ammo = PotatoCannonItem.getAmmo(player, stack);
-		if (ammo == null || AllItems.POTATO_CANNON.is(ammo.stack())) {
-			return false;
-		}
-
-		PoseStack poseStack = guiGraphics.pose();
-		poseStack.pushPose();
-		poseStack.translate(xOffset, yOffset + 8, 100);
-		poseStack.scale(.5f, .5f, .5f);
-		guiGraphics.renderItem(ammo.stack(), 0, 0);
-		poseStack.popPose();
-		return false;
 	};
 
 	protected static final PartialModel COG = PartialModel.of(Create.asResource("item/potato_cannon/cog"));

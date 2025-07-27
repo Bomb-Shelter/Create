@@ -14,6 +14,13 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.simibubi.create.foundation.item.ItemHelper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
@@ -43,12 +50,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.EntityCollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class BasinBlock extends Block implements IBE<BasinBlockEntity>, IWrenchable {
 
@@ -97,9 +99,9 @@ public class BasinBlock extends Block implements IBE<BasinBlockEntity>, IWrencha
 					|| GenericItemFilling.canItemBeFilled(level, stack))
 					return ItemInteractionResult.SUCCESS;
 				if (stack.getItem().equals(Items.SPONGE)) {
-					IFluidHandler fluidHandler = level.getCapability(Capabilities.FluidHandler.BLOCK, pos, null);
+					Storage<FluidVariant> fluidHandler = TransferUtil.getFluidStorage(level, pos, null);
 					if (fluidHandler != null) {
-					FluidStack drained = fluidHandler.drain(Integer.MAX_VALUE, IFluidHandler.FluidAction.EXECUTE);
+					FluidStack drained = CreateTransferUtil.extractFluid(fluidHandler, Integer.MAX_VALUE, false);
 					if (!drained.isEmpty()) {
 							return ItemInteractionResult.SUCCESS;
 						}
@@ -108,11 +110,11 @@ public class BasinBlock extends Block implements IBE<BasinBlockEntity>, IWrencha
 				return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 			}
 
-			IItemHandlerModifiable inv = be.itemCapability;
+			SlottedStackStorage inv = be.itemCapability;
 			if (inv == null)
 				inv = new ItemStackHandler(1);
 			boolean success = false;
-			for (int slot = 0; slot < inv.getSlots(); slot++) {
+			for (int slot = 0; slot < inv.getSlotCount(); slot++) {
 				ItemStack stackInSlot = inv.getStackInSlot(slot);
 				if (stackInSlot.isEmpty())
 					continue;
@@ -140,7 +142,7 @@ public class BasinBlock extends Block implements IBE<BasinBlockEntity>, IWrencha
 		if (!entityIn.isAlive())
 			return;
 		withBlockEntityDo(worldIn, entityIn.blockPosition(), be -> {
-			ItemStack insertItem = ItemHandlerHelper.insertItem(be.inputInventory, itemEntity.getItem()
+			ItemStack insertItem = CreateTransferUtil.insertItem(be.inputInventory, itemEntity.getItem()
 				.copy(), false);
 			if (insertItem.isEmpty()) {
 				itemEntity.discard();

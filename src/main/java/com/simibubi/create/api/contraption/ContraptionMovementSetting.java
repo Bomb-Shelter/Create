@@ -13,8 +13,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 
-import net.neoforged.neoforge.common.extensions.IBlockExtension;
-
 /**
  * Defines whether a block is movable by contraptions.
  * This is used as a fallback check for {@link BlockMovementChecks#isMovementAllowed(BlockState, Level, BlockPos)}.
@@ -72,7 +70,7 @@ public enum ContraptionMovementSetting {
 	/**
 	 * Interface that may optionally be implemented on a Block implementation which will be queried instead of the registry.
 	 */
-	public interface MovementSettingProvider extends IBlockExtension {
+	public interface MovementSettingProvider {
 		ContraptionMovementSetting getContraptionMovementSetting();
 	}
 }

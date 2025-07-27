@@ -6,8 +6,8 @@ import net.createmod.catnip.net.base.ClientboundPacketPayload;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 /**
  * A server to client version of {@link BlockEntityConfigurationPacket}
@@ -20,7 +20,7 @@ public abstract class BlockEntityDataPacket<BE extends SyncedBlockEntity> implem
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void handle(LocalPlayer player) {
 		BlockEntity blockEntity = player.clientLevel.getBlockEntity(pos);
 

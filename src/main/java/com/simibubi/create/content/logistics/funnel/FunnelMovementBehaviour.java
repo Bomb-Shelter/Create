@@ -8,6 +8,8 @@ import com.simibubi.create.content.logistics.box.PackageEntity;
 import com.simibubi.create.content.logistics.filter.FilterItemStack;
 import com.simibubi.create.foundation.item.ItemHelper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundEvents;
@@ -18,8 +20,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-
-import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 public class FunnelMovementBehaviour implements MovementBehaviour {
 
@@ -109,7 +109,7 @@ public class FunnelMovementBehaviour implements MovementBehaviour {
 			if (!filter.test(context.world, toInsert))
 				continue;
 			ItemStack remainder =
-				ItemHandlerHelper.insertItemStacked(context.contraption.getStorage().getAllItems(), toInsert, false);
+				CreateTransferUtil.insertItemStacked(context.contraption.getStorage().getAllItems(), toInsert, false);
 			if (remainder.getCount() == toInsert.getCount())
 				continue;
 			if (remainder.isEmpty()) {

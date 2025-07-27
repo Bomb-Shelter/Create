@@ -7,12 +7,11 @@ import com.simibubi.create.AllTags;
 import com.simibubi.create.content.kinetics.millstone.MillingRecipe;
 import com.tterrag.registrate.util.entry.ItemEntry;
 
+import io.github.fabricators_of_create.porting_lib.conditions.NotCondition;
+import io.github.fabricators_of_create.porting_lib.conditions.TagEmptyCondition;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Item;
-
-import net.neoforged.neoforge.common.conditions.NotCondition;
-import net.neoforged.neoforge.common.conditions.TagEmptyCondition;
 
 /**
  * The base class for Milling recipe generation.

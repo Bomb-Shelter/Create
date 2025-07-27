@@ -3,6 +3,7 @@ package com.simibubi.create.content.redstone.diodes;
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.AllItems;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.ConnectableRedstoneBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
@@ -25,7 +26,7 @@ import net.minecraft.world.phys.BlockHitResult;
 
 import org.jetbrains.annotations.NotNull;
 
-public class ToggleLatchBlock extends AbstractDiodeBlock {
+public class ToggleLatchBlock extends AbstractDiodeBlock implements ConnectableRedstoneBlock {
 
 	public static BooleanProperty POWERING = BooleanProperty.create("powering");
 

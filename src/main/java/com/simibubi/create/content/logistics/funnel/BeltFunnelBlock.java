@@ -126,7 +126,7 @@ public class BeltFunnelBlock extends AbstractHorizontalFunnelBlock implements Sp
 	}
 
 	@Override
-	public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
+	public ItemStack getCloneItemStack(LevelReader level, BlockPos pos, BlockState state) {
 		return parent.asStack();
 	}
 

@@ -19,8 +19,6 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.phys.BlockHitResult;
 
-import net.neoforged.neoforge.common.SpecialPlantable;
-
 public class AllPotatoProjectileBlockHitActions {
 
 	static {
@@ -59,11 +57,13 @@ public class AllPotatoProjectileBlockHitActions {
 			if (!level.getBlockState(placePos)
 				.canBeReplaced())
 				return false;
-			if (!(cropBlock.value() instanceof SpecialPlantable specialPlantable))
+			// Fabric TODO: impl
+			/*if (!(cropBlock.value() instanceof SpecialPlantable specialPlantable))
 				return false;
 			if (specialPlantable.canPlacePlantAtPosition(projectile, level, placePos, null))
 				specialPlantable.spawnPlantAtPosition(projectile, level, placePos, null);
-			return true;
+			return true;*/
+			return false;
 		}
 
 		@Override

@@ -5,6 +5,7 @@ import com.simibubi.create.AllBlocks;
 import com.simibubi.create.content.kinetics.base.DirectionalKineticBlock;
 import com.simibubi.create.foundation.block.IBE;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.FlammableBlock;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.levelWrappers.WrappedLevel;
 import net.minecraft.core.BlockPos;
@@ -27,7 +28,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-public class WaterWheelBlock extends DirectionalKineticBlock implements IBE<WaterWheelBlockEntity> {
+public class WaterWheelBlock extends DirectionalKineticBlock implements IBE<WaterWheelBlockEntity>, FlammableBlock {
 
 	public WaterWheelBlock(Properties properties) {
 		super(properties);

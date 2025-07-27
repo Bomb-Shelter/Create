@@ -2,55 +2,106 @@ package com.simibubi.create.content.logistics.chute;
 
 import com.simibubi.create.foundation.item.ItemHelper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+import com.simibubi.create.infrastructure.fabric.transfer.FinalCommitSnapshot;
+
+import com.simibubi.create.infrastructure.fabric.transfer.SingleSlotStorageImpl;
+
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.IItemHandler;
 
-public class ChuteItemHandler implements IItemHandler {
+import java.util.Iterator;
+
+public class ChuteItemHandler implements SlottedStorage<ItemVariant> {
 
 	private ChuteBlockEntity blockEntity;
+	private final ChuteItemSingleSlotStorage singleSlotStorage = new ChuteItemSingleSlotStorage();
 
 	public ChuteItemHandler(ChuteBlockEntity be) {
 		this.blockEntity = be;
 	}
 
 	@Override
-	public int getSlots() {
+	public int getSlotCount() {
 		return 1;
 	}
 
 	@Override
-	public ItemStack getStackInSlot(int slot) {
-		return blockEntity.item;
+	public SingleSlotStorage<ItemVariant> getSlot(int slot) {
+		if (slot != 0)
+			throw new IllegalArgumentException();
+
+		return singleSlotStorage;
 	}
 
 	@Override
-	public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-		if (!blockEntity.canAcceptItem(stack))
-			return stack;
-		ItemStack remainder = ItemHelper.limitCountToMaxStackSize(stack, simulate);
-		if (!simulate)
-			blockEntity.setItem(stack);
-		return remainder;
+	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+		return singleSlotStorage.insert(resource, maxAmount, transaction);
 	}
 
 	@Override
-	public ItemStack extractItem(int slot, int amount, boolean simulate) {
-		ItemStack remainder = blockEntity.item.copy();
-		ItemStack split = remainder.split(amount);
-		if (!simulate)
-			blockEntity.setItem(remainder);
-		return split;
+	public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+		return singleSlotStorage.extract(resource, maxAmount, transaction);
 	}
 
 	@Override
-	public int getSlotLimit(int slot) {
-		return Math.min(64, getStackInSlot(slot).getOrDefault(DataComponents.MAX_STACK_SIZE, 64));
+	public Iterator<StorageView<ItemVariant>> iterator() {
+		return singleSlotStorage.iterator();
 	}
 
-	@Override
-	public boolean isItemValid(int slot, ItemStack stack) {
-		return true;
+	private class ChuteItemSingleSlotStorage implements SingleSlotStorage<ItemVariant> {
+		@Override
+		public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+			if (!blockEntity.canAcceptItem(resource.toStack((int) Math.min(maxAmount, resource.getComponentMap().getOrDefault(DataComponents.MAX_STACK_SIZE, resource.getItem().getDefaultMaxStackSize())))))
+				return 0;
+
+			ItemStack stack = CreateTransferUtil.getLimitedStack(resource, maxAmount);
+			ItemStack remainder = ItemHelper.limitCountToMaxStackSize(stack, true);
+			var snapshot = new FinalCommitSnapshot(maxAmount, () -> {
+				ItemHelper.limitCountToMaxStackSize(stack, false);
+				blockEntity.setItem(stack);
+			});
+			snapshot.updateSnapshots(transaction);
+
+			return maxAmount - remainder.getCount();
+		}
+
+		@Override
+		public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+			ItemStack remainder = blockEntity.item.copy();
+			ItemStack split = remainder.split((int) Math.min(CreateTransferUtil.getMaxStackSize(resource), maxAmount));
+			var snapshot = new FinalCommitSnapshot(maxAmount, () -> {
+				blockEntity.setItem(remainder);
+			});
+			snapshot.updateSnapshots(transaction);
+
+			return split.getCount();
+		}
+
+		@Override
+		public boolean isResourceBlank() {
+			return blockEntity.item.isEmpty();
+		}
+
+		@Override
+		public ItemVariant getResource() {
+			return ItemVariant.of(blockEntity.item);
+		}
+
+		@Override
+		public long getAmount() {
+			return blockEntity.item.getCount();
+		}
+
+		@Override
+		public long getCapacity() {
+			return Math.min(64, blockEntity.item.getOrDefault(DataComponents.MAX_STACK_SIZE, 64));
+		}
 	}
 
 }

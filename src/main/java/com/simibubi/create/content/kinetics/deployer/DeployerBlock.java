@@ -48,12 +48,7 @@ public class DeployerBlock extends DirectionalAxisKineticBlock implements IBE<De
 	private static final int placementHelperId = PlacementHelpers.register(new PlacementHelper());
 
 	public DeployerBlock(Properties properties) {
-		super(properties);
-	}
-
-	@Override
-	public PushReaction getPistonPushReaction(BlockState state) {
-		return PushReaction.NORMAL;
+		super(properties.pushReaction(PushReaction.NORMAL));
 	}
 
 	@Override

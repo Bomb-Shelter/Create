@@ -9,6 +9,8 @@ import com.simibubi.create.content.fluids.tank.FluidTankBlockEntity;
 import com.simibubi.create.content.kinetics.simpleRelays.CogWheelBlock;
 import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.element.ElementLink;
@@ -23,7 +25,6 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 
 public class PumpScenes {
 
@@ -182,8 +183,8 @@ public class PumpScenes {
 		Selection megapipe2 = util.select().fromTo(3, 3, 1, 5, 6, 2);
 
 		scene.world().modifyBlock(pumpPos, s -> s.setValue(PumpBlock.FACING, Direction.WEST), false);
-		scene.world().modifyBlockEntity(util.grid().at(0, 1, 2), FluidTankBlockEntity.class, be -> be.getTankInventory()
-			.drain(3000, FluidAction.EXECUTE));
+		scene.world().modifyBlockEntity(util.grid().at(0, 1, 2), FluidTankBlockEntity.class, be -> CreateTransferUtil.extractFluid(be.getTankInventory(),
+			3000, false));
 		scene.world().multiplyKineticSpeed(util.select().everywhere(), 0.125f);
 
 		BlockPos east = pumpPos.east();

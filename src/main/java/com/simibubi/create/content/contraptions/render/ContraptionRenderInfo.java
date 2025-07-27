@@ -1,5 +1,7 @@
 package com.simibubi.create.content.contraptions.render;
 
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -25,7 +27,7 @@ import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 
-import net.neoforged.neoforge.client.model.data.ModelData;
+import org.jetbrains.annotations.Nullable;
 
 public class ContraptionRenderInfo {
 	public static final SuperByteBufferCache.Compartment<Pair<Contraption, RenderType>> CONTRAPTION = new SuperByteBufferCache.Compartment<>();
@@ -93,8 +95,8 @@ public class ContraptionRenderInfo {
 			}
 
 			@Override
-			public ModelData getModelData(BlockPos pos) {
-				return c.modelData.getOrDefault(pos, ModelData.EMPTY);
+			public @Nullable Object getBlockEntityRenderData(BlockPos pos) {
+				return c.modelData.get(pos);
 			}
 		};
 
@@ -124,13 +126,13 @@ public class ContraptionRenderInfo {
 			BlockState state = blocks.lookup().apply(pos);
 			if (state.getRenderShape() == RenderShape.MODEL) {
 				BakedModel model = dispatcher.getBlockModel(state);
-				ModelData modelData = model.getModelData(renderWorld, pos, state, renderWorld.getModelData(pos));
+				Object modelData = renderWorld.getBlockEntityRenderData(pos);
 				long randomSeed = state.getSeed(pos);
 				random.setSeed(randomSeed);
-				if (model.getRenderTypes(state, random, modelData).contains(layer)) {
+				if (ItemBlockRenderTypes.getChunkRenderType(state) == layer) {
 					poseStack.pushPose();
 					poseStack.translate(pos.getX(), pos.getY(), pos.getZ());
-					renderer.tesselateBlock(renderWorld, model, state, pos, poseStack, sbbBuilder, true, random, randomSeed, OverlayTexture.NO_OVERLAY, modelData, layer);
+					renderer.tesselateBlock(renderWorld, model, state, pos, poseStack, sbbBuilder, true, random, randomSeed, OverlayTexture.NO_OVERLAY);
 					poseStack.popPose();
 				}
 			}

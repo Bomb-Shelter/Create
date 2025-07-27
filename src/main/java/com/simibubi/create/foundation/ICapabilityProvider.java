@@ -5,15 +5,13 @@ import java.util.function.Supplier;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 
-import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
-
 public interface ICapabilityProvider<T> {
 	@Nullable
 	T getCapability();
 
-	static <T, C> ICapabilityProvider<T> of(BlockCapabilityCache<T, C> cache) {
+	/*static <T, C> ICapabilityProvider<T> of(BlockCapabilityCache<T, C> cache) {
 		return new BlockCapabilityCacheProvider<>(cache);
-	}
+	}*/
 
 	static <T> ICapabilityProvider<T> of(Supplier<T> supplier) {
 		return new SupplierProvider<>(supplier);
@@ -23,7 +21,7 @@ public interface ICapabilityProvider<T> {
 		return new SimpleProvider<>(cap);
 	}
 
-	@ApiStatus.Internal
+	/*@ApiStatus.Internal
 	class BlockCapabilityCacheProvider<T, C> implements ICapabilityProvider<T> {
 		private final BlockCapabilityCache<T, C> inner;
 
@@ -35,7 +33,7 @@ public interface ICapabilityProvider<T> {
 		public @Nullable T getCapability() {
 			return inner == null ? null : inner.getCapability();
 		}
-	}
+	}*/
 
 	class SupplierProvider<T> implements ICapabilityProvider<T> {
 		private final Supplier<T> inner;

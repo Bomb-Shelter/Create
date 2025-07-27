@@ -2,6 +2,7 @@ package com.simibubi.create.content.kinetics.base;
 
 import javax.annotation.Nullable;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.WeakPowerCheckingBlock;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -14,9 +15,9 @@ import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.material.PushReaction;
 
 @MethodsReturnNonnullByDefault
-public abstract class AbstractEncasedShaftBlock extends RotatedPillarKineticBlock {
+public abstract class AbstractEncasedShaftBlock extends RotatedPillarKineticBlock implements WeakPowerCheckingBlock {
     public AbstractEncasedShaftBlock(Properties properties) {
-        super(properties);
+        super(properties.pushReaction(PushReaction.NORMAL));
     }
 
     @Override
@@ -27,11 +28,6 @@ public abstract class AbstractEncasedShaftBlock extends RotatedPillarKineticBloc
     @Override
     public boolean shouldCheckWeakPower(BlockState state, SignalGetter level, BlockPos pos, Direction side) {
         return false;
-    }
-    
-    @Override
-    public PushReaction getPistonPushReaction(@Nullable BlockState state) {
-        return PushReaction.NORMAL;
     }
 
     @Override

@@ -79,7 +79,7 @@ public class DepotRenderer extends SafeBlockEntityRenderer<DepotBlockEntity> {
 			depotBehaviour.incoming.remove(transported);
 
 		// Render output items
-		for (int i = 0; i < depotBehaviour.processingOutputBuffer.getSlots(); i++) {
+		for (int i = 0; i < depotBehaviour.processingOutputBuffer.getSlotCount(); i++) {
 			ItemStack stack = depotBehaviour.processingOutputBuffer.getStackInSlot(i);
 			if (stack.isEmpty())
 				continue;

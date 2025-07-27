@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import com.mojang.serialization.JsonOps;
 import com.simibubi.create.Create;
 
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.FileToIdConverter;
 import net.minecraft.resources.ResourceLocation;
@@ -23,7 +24,19 @@ public class TrainHatInfoReloadListener {
 
 	private static final Map<EntityType<?>, TrainHatInfo> ENTITY_INFO_MAP = new HashMap<>();
 	public static final String HAT_INFO_DIRECTORY = "train_hat_info";
-	public static final ResourceManagerReloadListener LISTENER = TrainHatInfoReloadListener::registerOffsetOverrides;
+	public static final SimpleSynchronousResourceReloadListener LISTENER = new SimpleSynchronousResourceReloadListener() {
+		public static final ResourceLocation ID = Create.asResource("train_hat_info");
+
+		@Override
+		public ResourceLocation getFabricId() {
+			return ID;
+		}
+
+		@Override
+		public void onResourceManagerReload(ResourceManager resourceManager) {
+			TrainHatInfoReloadListener.registerOffsetOverrides(resourceManager);
+		}
+	};
 	private static final TrainHatInfo DEFAULT = new TrainHatInfo("", 0, Vec3.ZERO, 1.0F);
 
 	private static void registerOffsetOverrides(ResourceManager manager) {

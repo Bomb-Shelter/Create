@@ -5,21 +5,23 @@ import com.simibubi.create.content.fluids.spout.SpoutBlockEntity;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public enum SpoutCasting implements BlockSpoutingBehaviour {
 	INSTANCE;
 
 	@Override
-	public int fillBlock(Level level, BlockPos pos, SpoutBlockEntity spout, FluidStack availableFluid, boolean simulate) {
+	public long fillBlock(Level level, BlockPos pos, SpoutBlockEntity spout, FluidStack availableFluid, boolean simulate) {
 		if (!enabled())
 			return 0;
 
@@ -27,27 +29,27 @@ public enum SpoutCasting implements BlockSpoutingBehaviour {
 		if (blockEntity == null)
 			return 0;
 
-		IFluidHandler handler = level.getCapability(Capabilities.FluidHandler.BLOCK, blockEntity.getBlockPos(), Direction.UP);
+		Storage<FluidVariant> handler = TransferUtil.getFluidStorage(level, blockEntity.getBlockPos(), blockEntity, Direction.UP);
 		if (handler == null)
 			return 0;
-		if (handler.getTanks() != 1)
+		if (CreateTransferUtil.getSlotCount(handler) != 1)
 			return 0;
 
-		if (!handler.isFluidValid(0, availableFluid))
-			return 0;
+		/*if (!handler.isFluidValid(0, availableFluid))
+			return 0;*/
 
-		FluidStack containedFluid = handler.getFluidInTank(0);
+		FluidStack containedFluid = TransferUtil.getFirstFluid(handler);
 		if (!(containedFluid.isEmpty() || FluidStack.isSameFluidSameComponents(containedFluid, availableFluid)))
 			return 0;
 
 		// Do not fill if it would only partially fill the table (unless > 1000mb)
-		int amount = availableFluid.getAmount();
+		long amount = availableFluid.getAmount();
 		if (amount < 1000
-			&& handler.fill(FluidHelper.copyStackWithAmount(availableFluid, amount + 1), FluidAction.SIMULATE) > amount)
+			&& CreateTransferUtil.insertFluid(handler, FluidHelper.copyStackWithAmount(availableFluid, amount + 1), true) > amount)
 			return 0;
 
 		// Return amount filled into the table/basin
-		return handler.fill(availableFluid, simulate ? FluidAction.SIMULATE : FluidAction.EXECUTE);
+		return CreateTransferUtil.insertFluid(handler, availableFluid, false);
 	}
 
 	private boolean enabled() {

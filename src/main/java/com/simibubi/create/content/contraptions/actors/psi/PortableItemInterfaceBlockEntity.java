@@ -4,30 +4,37 @@ import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.content.contraptions.Contraption;
 import com.simibubi.create.foundation.item.ItemHandlerWrapper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.FinalCommitSnapshot;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
-public class PortableItemInterfaceBlockEntity extends PortableStorageInterfaceBlockEntity {
+import org.jetbrains.annotations.Nullable;
 
-	protected IItemHandlerModifiable capability;
+public class PortableItemInterfaceBlockEntity extends PortableStorageInterfaceBlockEntity implements SidedStorageBlockEntity {
+
+	protected Storage<ItemVariant> capability;
 
 	public PortableItemInterfaceBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
 		capability = createEmptyHandler();
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.PORTABLE_STORAGE_INTERFACE.get(),
-				(be, context) -> be.capability
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		return capability;
 	}
 
 	@Override
@@ -44,39 +51,77 @@ public class PortableItemInterfaceBlockEntity extends PortableStorageInterfaceBl
 		super.stopTransferring();
 	}
 
-	private IItemHandlerModifiable createEmptyHandler() {
+	private SlottedStackStorage createEmptyHandler() {
 		return new InterfaceItemHandler(new ItemStackHandler(0));
 	}
 
 	@Override
 	protected void invalidateCapability() {
-		invalidateCapabilities();
+		//invalidateCapabilities();
 	}
 
 	class InterfaceItemHandler extends ItemHandlerWrapper {
 
-		public InterfaceItemHandler(IItemHandlerModifiable wrapped) {
+		public InterfaceItemHandler(SlottedStackStorage wrapped) {
 			super(wrapped);
 		}
 
 		@Override
-		public ItemStack extractItem(int slot, int amount, boolean simulate) {
+		public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
 			if (!canTransfer())
-				return ItemStack.EMPTY;
-			ItemStack extractItem = super.extractItem(slot, amount, simulate);
-			if (!simulate && !extractItem.isEmpty())
-				onContentTransferred();
-			return extractItem;
+				return 0;
+
+			long extracted = super.extract(resource, maxAmount, transaction);
+			(new FinalCommitSnapshot(maxAmount, () -> {
+				if (extracted > 0)
+					onContentTransferred();
+			})).updateSnapshots(transaction);
+
+			return extracted;
 		}
 
 		@Override
-		public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+		public long extractSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
 			if (!canTransfer())
-				return stack;
-			ItemStack insertItem = super.insertItem(slot, stack, simulate);
-			if (!simulate && !ItemStack.matches(insertItem, stack))
-				onContentTransferred();
-			return insertItem;
+				return 0;
+
+			long extracted = super.extractSlot(slot, resource, maxAmount, transaction);
+			(new FinalCommitSnapshot(maxAmount, () -> {
+				if (extracted > 0)
+					onContentTransferred();
+			})).updateSnapshots(transaction);
+
+			return extracted;
+		}
+
+		@Override
+		public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+			if (!canTransfer())
+				return 0;
+
+			long inserted = super.insert(resource, maxAmount, transaction);
+
+			(new FinalCommitSnapshot(maxAmount, () -> {
+				if (inserted > 0)
+					onContentTransferred();
+			})).updateSnapshots(transaction);
+
+			return inserted;
+		}
+
+		@Override
+		public long insertSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
+			if (!canTransfer())
+				return 0;
+
+			long inserted = super.insertSlot(slot, resource, maxAmount, transaction);
+
+			(new FinalCommitSnapshot(maxAmount, () -> {
+				if (inserted > 0)
+					onContentTransferred();
+			})).updateSnapshots(transaction);
+
+			return inserted;
 		}
 
 	}

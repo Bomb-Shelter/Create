@@ -6,6 +6,7 @@ import java.util.List;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.simibubi.create.AllKeys;
 
+import net.fabricmc.fabric.mixin.client.keybinding.KeyBindingAccessor;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
@@ -29,7 +30,7 @@ public class ControlsUtil {
 	}
 
 	public static boolean isActuallyPressed(KeyMapping kb) {
-		InputConstants.Key key = kb.getKey();
+		InputConstants.Key key = ((KeyBindingAccessor) kb).fabric_getBoundKey();
 		if (key.getType() == InputConstants.Type.MOUSE) {
 			return AllKeys.isMouseButtonDown(key.getValue());
 		} else {

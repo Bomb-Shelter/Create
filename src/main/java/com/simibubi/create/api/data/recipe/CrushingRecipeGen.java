@@ -14,6 +14,8 @@ import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
 import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 import com.simibubi.create.foundation.data.recipe.CompatMetals;
 
+import io.github.fabricators_of_create.porting_lib.conditions.NotCondition;
+import io.github.fabricators_of_create.porting_lib.conditions.TagEmptyCondition;
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
@@ -22,9 +24,6 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Blocks;
-
-import net.neoforged.neoforge.common.conditions.NotCondition;
-import net.neoforged.neoforge.common.conditions.TagEmptyCondition;
 
 /**
  * The base class for Crushing recipe generation.

@@ -6,9 +6,9 @@ import com.tterrag.registrate.builders.FluidBuilder;
 import com.tterrag.registrate.util.nullness.NonNullFunction;
 import com.tterrag.registrate.util.nullness.NonNullSupplier;
 
+import io.github.fabricators_of_create.porting_lib.fluids.BaseFlowingFluid;
+import io.github.fabricators_of_create.porting_lib.fluids.BaseFlowingFluid.Properties;
 import net.minecraft.resources.ResourceLocation;
-import net.neoforged.neoforge.fluids.BaseFlowingFluid;
-import net.neoforged.neoforge.fluids.BaseFlowingFluid.Properties;
 
 /**
  * For registering fluids with no buckets/blocks

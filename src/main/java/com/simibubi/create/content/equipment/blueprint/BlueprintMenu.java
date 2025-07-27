@@ -2,9 +2,16 @@ package com.simibubi.create.content.equipment.blueprint;
 
 import com.simibubi.create.AllDataComponents;
 import com.simibubi.create.AllMenuTypes;
+import com.simibubi.create.content.equipment.blueprint.BlueprintEntity.BlueprintData;
 import com.simibubi.create.content.equipment.blueprint.BlueprintEntity.BlueprintSection;
+import com.simibubi.create.foundation.blockEntity.SmartBlockEntity.SmartBlockData;
 import com.simibubi.create.foundation.gui.menu.GhostItemMenu;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlotItemHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
@@ -22,18 +29,15 @@ import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.Level;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.SlotItemHandler;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 import java.util.Optional;
 
-public class BlueprintMenu extends GhostItemMenu<BlueprintSection> {
+public class BlueprintMenu extends GhostItemMenu<BlueprintSection, BlueprintData> {
 
-	public BlueprintMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
-		super(type, id, inv, extraData);
+	public BlueprintMenu(MenuType<?> type, int id, Inventory inv, BlueprintData extraData) {
+		super(type, id, inv, extraData, true);
 	}
 
 	public BlueprintMenu(MenuType<?> type, int id, Inventory inv, BlueprintSection section) {
@@ -122,10 +126,10 @@ public class BlueprintMenu extends GhostItemMenu<BlueprintSection> {
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
-	protected BlueprintSection createOnClient(RegistryFriendlyByteBuf extraData) {
-		int entityID = extraData.readVarInt();
-		int section = extraData.readVarInt();
+	@Environment(EnvType.CLIENT)
+	protected BlueprintSection createOnClient(BlueprintData extraData) {
+		int entityID = extraData.id();
+		int section = extraData.index();
 		Entity entityByID = Minecraft.getInstance().level.getEntity(entityID);
 		if (!(entityByID instanceof BlueprintEntity blueprintEntity))
 			return null;
@@ -156,7 +160,7 @@ public class BlueprintMenu extends GhostItemMenu<BlueprintSection> {
 
 		private int index;
 
-		public BlueprintCraftSlot(IItemHandler itemHandler, int index, int xPosition, int yPosition) {
+		public BlueprintCraftSlot(SlottedStackStorage itemHandler, int index, int xPosition, int yPosition) {
 			super(itemHandler, index, xPosition, yPosition);
 			this.index = index;
 		}

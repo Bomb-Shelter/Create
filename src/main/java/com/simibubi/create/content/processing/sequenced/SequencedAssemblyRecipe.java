@@ -18,7 +18,10 @@ import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
 import com.simibubi.create.foundation.fluid.FluidIngredient;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import com.simibubi.create.infrastructure.fabric.CreateRecipeWrapper;
+
 import io.netty.buffer.ByteBuf;
+import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.HolderLookup;
@@ -37,12 +40,10 @@ import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.Level;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
-import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public class SequencedAssemblyRecipe implements Recipe<RecipeWrapper> {
+public class SequencedAssemblyRecipe implements Recipe<CreateRecipeWrapper> {
 
 	protected SequencedAssemblyRecipeSerializer serializer;
 
@@ -90,7 +91,7 @@ public class SequencedAssemblyRecipe implements Recipe<RecipeWrapper> {
 
 	public static <R extends ProcessingRecipe<?, ?>> Stream<RecipeHolder<R>> getRecipes(Level world, ItemStack item, RecipeType<R> type, Class<R> recipeClass) {
 		List<RecipeHolder<SequencedAssemblyRecipe>> all = world.getRecipeManager()
-			.<RecipeWrapper, SequencedAssemblyRecipe>getAllRecipesFor(AllRecipeTypes.SEQUENCED_ASSEMBLY.getType());
+			.<CreateRecipeWrapper, SequencedAssemblyRecipe>getAllRecipesFor(AllRecipeTypes.SEQUENCED_ASSEMBLY.getType());
 
 		List<RecipeHolder<R>> result = new ArrayList<>();
 
@@ -181,12 +182,12 @@ public class SequencedAssemblyRecipe implements Recipe<RecipeWrapper> {
 	}
 
 	@Override
-	public boolean matches(RecipeWrapper inv, Level p_77569_2_) {
+	public boolean matches(CreateRecipeWrapper inv, Level p_77569_2_) {
 		return false;
 	}
 
 	@Override
-	public ItemStack assemble(RecipeWrapper input, HolderLookup.Provider registries) {
+	public ItemStack assemble(CreateRecipeWrapper input, HolderLookup.Provider registries) {
 		return ItemStack.EMPTY;
 	}
 
@@ -223,9 +224,8 @@ public class SequencedAssemblyRecipe implements Recipe<RecipeWrapper> {
 		return AllRecipeTypes.SEQUENCED_ASSEMBLY.getType();
 	}
 
-	@OnlyIn(Dist.CLIENT)
-	public static void addToTooltip(ItemTooltipEvent event) {
-		ItemStack stack = event.getItemStack();
+	@Environment(EnvType.CLIENT)
+	public static void addToTooltip(ItemStack stack, List<Component> tooltip) {
 		if (!stack.has(AllDataComponents.SEQUENCED_ASSEMBLY))
 			return;
 		SequencedAssembly sequencedAssembly = stack.get(AllDataComponents.SEQUENCED_ASSEMBLY);
@@ -242,7 +242,6 @@ public class SequencedAssemblyRecipe implements Recipe<RecipeWrapper> {
 		int length = sequencedAssemblyRecipe.sequence.size();
 		int step = sequencedAssemblyRecipe.getStep(stack);
 		int total = length * sequencedAssemblyRecipe.loops;
-		List<Component> tooltip = event.getToolTip();
 		tooltip.add(CommonComponents.EMPTY);
 		tooltip.add(CreateLang.translateDirect("recipe.sequenced_assembly")
 			.withStyle(ChatFormatting.GRAY));
@@ -265,6 +264,12 @@ public class SequencedAssemblyRecipe implements Recipe<RecipeWrapper> {
 			}
 		}
 
+	}
+
+	static {
+		ItemTooltipCallback.EVENT.register((stack, tooltipContext, tooltipType, lines) -> {
+			addToTooltip(stack, lines);
+		});
 	}
 
 	public Ingredient getIngredient() {

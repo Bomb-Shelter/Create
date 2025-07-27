@@ -3,14 +3,16 @@ package com.simibubi.create.foundation.blockEntity.behaviour.inventory;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
-import net.neoforged.neoforge.items.IItemHandler;
+
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 
 public class VersionedInventoryTrackerBehaviour extends BlockEntityBehaviour {
 
 	public static final BehaviourType<VersionedInventoryTrackerBehaviour> TYPE = new BehaviourType<>();
 
 	private int ignoredId;
-	private int ignoredVersion;
+	private long ignoredVersion;
 
 	public VersionedInventoryTrackerBehaviour(SmartBlockEntity be) {
 		super(be);
@@ -21,7 +23,7 @@ public class VersionedInventoryTrackerBehaviour extends BlockEntityBehaviour {
 		return behaviour.hasInventory() && stillWaiting(behaviour.getInventory());
 	}
 
-	public boolean stillWaiting(IItemHandler handler) {
+	public boolean stillWaiting(Storage<ItemVariant> handler) {
 		if (handler instanceof VersionedInventoryWrapper viw)
 			return viw.getId() == ignoredId && viw.getVersion() == ignoredVersion;
 		return false;
@@ -32,7 +34,7 @@ public class VersionedInventoryTrackerBehaviour extends BlockEntityBehaviour {
 			awaitNewVersion(behaviour.getInventory());
 	}
 
-	public void awaitNewVersion(IItemHandler handler) {
+	public void awaitNewVersion(Storage<ItemVariant> handler) {
 		if (handler instanceof VersionedInventoryWrapper viw) {
 			ignoredId = viw.getId();
 			ignoredVersion = viw.getVersion();

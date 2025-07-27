@@ -6,6 +6,10 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.utility.RaycastHelper;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickBlock;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -17,16 +21,13 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.LogicalSide;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
-@EventBusSubscriber
 public class LinkHandler {
 
-	@SubscribeEvent
+	public static void init() {
+		RightClickBlock.EVENT.register(LinkHandler::onBlockActivated);
+	}
+
 	public static void onBlockActivated(PlayerInteractEvent.RightClickBlock event) {
 		Level world = event.getLevel();
 		BlockPos pos = event.getPos();
@@ -65,7 +66,7 @@ public class LinkHandler {
 
 		for (boolean first : Arrays.asList(false, true)) {
 			if (behaviour.testHit(first, ray.getLocation()) || fakePlayer && fakePlayerChoice == first) {
-				if (event.getSide() != LogicalSide.CLIENT)
+				if (event.getSide() != EnvType.CLIENT)
 					behaviour.setFrequency(first, heldItem);
 				event.setCanceled(true);
 				event.setCancellationResult(InteractionResult.SUCCESS);

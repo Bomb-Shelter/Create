@@ -3,9 +3,10 @@ package com.simibubi.create.compat.thresholdSwitch;
 import com.simibubi.create.compat.Mods;
 
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.items.IItemHandler;
 
 public class SophisticatedStorage implements ThresholdSwitchCompat {
 
@@ -23,8 +24,8 @@ public class SophisticatedStorage implements ThresholdSwitchCompat {
 	}
 
 	@Override
-	public long getSpaceInSlot(IItemHandler inv, int slot) {
-		return ((long) inv.getSlotLimit(slot) * inv.getStackInSlot(slot).getOrDefault(DataComponents.MAX_STACK_SIZE, 64)) / 64;
+	public long getSpaceInSlot(SlottedStorage<ItemVariant> inv, int slot) {
+		return ((long) inv.getSlot(slot).getCapacity() * inv.getSlot(slot).getResource().getComponentMap().getOrDefault(DataComponents.MAX_STACK_SIZE, 64)) / 64;
 	}
 
 }

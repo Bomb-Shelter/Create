@@ -5,6 +5,17 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.content.fluids.potion.PotionFluidHandler;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.MutableContainerItemContext;
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.fluid.base.FullItemFluidStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.impl.transfer.fluid.EmptyBucketStorage;
 import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -15,11 +26,7 @@ import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
-import net.neoforged.neoforge.fluids.capability.IFluidHandlerItem;
-import net.neoforged.neoforge.fluids.capability.wrappers.FluidBucketWrapper;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class GenericItemFilling {
 
@@ -38,15 +45,15 @@ public class GenericItemFilling {
 	 * @param fluidHandler The IFluidHandlerItem instance retrieved from the ItemStack.
 	 * @return If the IFluidHandlerItem is valid for the passed ItemStack.
 	 */
-	public static boolean isFluidHandlerValid(ItemStack stack, IFluidHandlerItem fluidHandler) {
+	public static boolean isFluidHandlerValid(ItemStack stack, Storage<FluidVariant> fluidHandler) {
 		// Not instanceof in case a correct subclass is made
-		if (fluidHandler.getClass() == FluidBucketWrapper.class) {
+		/*if (fluidHandler.getClass() == FluidBucketWrapper.class) {
 			Item item = stack.getItem();
 			// Forge does not patch the FluidBucketWrapper onto subclasses of BucketItem
 			if (item.getClass() != BucketItem.class && !(item instanceof MilkBucketItem)) {
 				return false;
 			}
-		}
+		}*/
 		return true;
 	}
 
@@ -56,40 +63,38 @@ public class GenericItemFilling {
 		if (stack.getItem() == Items.MILK_BUCKET)
 			return false;
 
-		IFluidHandlerItem capability = stack.getCapability(Capabilities.FluidHandler.ITEM);
+		Storage<FluidVariant> capability = FluidStorage.ITEM.find(stack, new MutableContainerItemContext(stack));
 		if (capability == null)
 			return false;
 		if (!isFluidHandlerValid(stack, capability))
 			return false;
-		for (int i = 0; i < capability.getTanks(); i++) {
-			if (capability.getFluidInTank(i)
-				.getAmount() < capability.getTankCapacity(i))
+		for (StorageView<FluidVariant> view : capability) {
+			if (view.getAmount() < view.getCapacity())
 				return true;
 		}
 		return false;
 	}
 
-	public static int getRequiredAmountForItem(Level world, ItemStack stack, FluidStack availableFluid) {
+	public static long getRequiredAmountForItem(Level world, ItemStack stack, FluidStack availableFluid) {
 		if (stack.getItem() == Items.GLASS_BOTTLE && canFillGlassBottleInternally(availableFluid))
 			return PotionFluidHandler.getRequiredAmountForFilledBottle(stack, availableFluid);
 		if (stack.getItem() == Items.BUCKET && canFillBucketInternally(availableFluid))
 			return 1000;
 
-		IFluidHandlerItem capability = stack.getCapability(Capabilities.FluidHandler.ITEM);
-		if (capability == null)
+		Storage<FluidVariant> capability = FluidStorage.ITEM.find(stack, new MutableContainerItemContext(stack));
+		if (capability == null || capability instanceof EmptyBucketStorage)
 			return -1;
-		if (capability instanceof FluidBucketWrapper) {
+		if (capability instanceof FullItemFluidStorage) {
 			Item filledBucket = availableFluid.getFluid()
 				.getBucket();
 			if (filledBucket == null || filledBucket == Items.AIR)
 				return -1;
-			if (!((FluidBucketWrapper) capability).getFluid()
-				.isEmpty())
+			if (!((FullItemFluidStorage) capability).isResourceBlank())
 				return -1;
 			return 1000;
 		}
 
-		int filled = capability.fill(availableFluid, FluidAction.SIMULATE);
+		long filled = CreateTransferUtil.simulateInsertFluid(capability, availableFluid);
 		return filled == 0 ? -1 : filled;
 	}
 
@@ -108,7 +113,7 @@ public class GenericItemFilling {
 		return false;
 	}
 
-	public static ItemStack fillItem(Level world, int requiredAmount, ItemStack stack, FluidStack availableFluid) {
+	public static ItemStack fillItem(Level world, long requiredAmount, ItemStack stack, FluidStack availableFluid) {
 		FluidStack toFill = availableFluid.copy();
 		toFill.setAmount(requiredAmount);
 		availableFluid.shrink(requiredAmount);
@@ -128,11 +133,11 @@ public class GenericItemFilling {
 
 		ItemStack split = stack.copy();
 		split.setCount(1);
-		IFluidHandlerItem capability = split.getCapability(Capabilities.FluidHandler.ITEM);
+		Storage<FluidVariant> capability = FluidStorage.ITEM.find(stack, new MutableContainerItemContext(stack));
 		if (capability == null)
 			return ItemStack.EMPTY;
-		capability.fill(toFill, FluidAction.EXECUTE);
-		ItemStack container = capability.getContainer()
+		TransferUtil.insertFluid(capability, toFill);
+		ItemStack container = stack
 			.copy();
 		stack.shrink(1);
 		return container;

@@ -364,7 +364,7 @@ public class VirtualRenderWorld extends Level implements VisualizationLevel {
 		return level.potionBrewing();
 	}
 
-	@Override
+	/*@Override
 	public void setDayTimeFraction(float v) {
 		level.setDayTimeFraction(v);
 	}
@@ -382,7 +382,7 @@ public class VirtualRenderWorld extends Level implements VisualizationLevel {
 	@Override
 	public float getDayTimePerTick() {
 		return level.getDayTimePerTick();
-	}
+	}*/
 
 	// ADDITIONAL OVERRRIDES
 

@@ -9,32 +9,36 @@ import java.util.stream.Stream;
 
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.createmod.catnip.data.IntAttached;
+import net.createmod.catnip.data.LongAttached;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
 
 public class CountedItemStackList {
 
 	Map<Item, Set<ItemStackEntry>> items = new HashMap<>();
 
-	public CountedItemStackList(IItemHandler inventory, FilteringBehaviour filteringBehaviour) {
-		for (int slot = 0; slot < inventory.getSlots(); slot++) {
-			ItemStack extractItem = inventory.getStackInSlot(slot);
+	public CountedItemStackList(Storage<ItemVariant> inventory, FilteringBehaviour filteringBehaviour) {
+		for (StorageView<ItemVariant> view : inventory) {
+			ItemStack extractItem = CreateTransferUtil.getLimitedStack(view.getResource(), view.getAmount());
 			if (filteringBehaviour.test(extractItem))
 				add(extractItem);
 		}
 	}
 
-	public Stream<IntAttached<MutableComponent>> getTopNames(int limit) {
+	public Stream<LongAttached<MutableComponent>> getTopNames(int limit) {
 		return items.values()
 			.stream()
 			.flatMap(Collection::stream)
-			.sorted(IntAttached.comparator())
+			.sorted(LongAttached.comparator())
 			.limit(limit)
-			.map(entry -> IntAttached.with(entry.count(), entry.stack()
+			.map(entry -> LongAttached.with(entry.count(), entry.stack()
 				.getHoverName()
 				.copy()));
 	}
@@ -67,13 +71,13 @@ public class CountedItemStackList {
 		return items.get(stack.getItem());
 	}
 
-	public static class ItemStackEntry extends IntAttached<ItemStack> {
+	public static class ItemStackEntry extends LongAttached<ItemStack> {
 
 		public ItemStackEntry(ItemStack stack) {
 			this(stack, stack.getCount());
 		}
 
-		public ItemStackEntry(ItemStack stack, int amount) {
+		public ItemStackEntry(ItemStack stack, long amount) {
 			super(amount, stack);
 		}
 
@@ -85,11 +89,11 @@ public class CountedItemStackList {
 			return getSecond();
 		}
 
-		public void grow(int amount) {
+		public void grow(long amount) {
 			setFirst(getFirst() + amount);
 		}
 
-		public int count() {
+		public long count() {
 			return getFirst();
 		}
 

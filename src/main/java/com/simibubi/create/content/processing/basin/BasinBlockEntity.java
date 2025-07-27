@@ -30,6 +30,14 @@ import com.simibubi.create.foundation.item.SmartInventory;
 import com.simibubi.create.foundation.utility.BlockHelper;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CombinedInventoryStorage;
+
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.createmod.catnip.animation.AnimationTickHolder;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
@@ -39,6 +47,13 @@ import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.lang.LangBuilder;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -59,19 +74,11 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
-import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
-public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
+import org.jetbrains.annotations.Nullable;
+
+public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity {
 
 	private boolean areFluidsMoving;
 	LerpedFloat ingredientRotationSpeed;
@@ -87,8 +94,8 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 	private Couple<SmartInventory> invs;
 	private Couple<SmartFluidTankBehaviour> tanks;
 
-	protected IItemHandlerModifiable itemCapability;
-	protected IFluidHandler fluidCapability;
+	protected SlottedStackStorage itemCapability;
+	protected Storage<FluidVariant> fluidCapability;
 
 	List<Direction> disabledSpoutputs;
 	Direction preferredSpoutput;
@@ -107,7 +114,7 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		outputInventory = new BasinInventory(9, this).forbidInsertion()
 			.withMaxStackSize(64);
 		areFluidsMoving = false;
-		itemCapability = new CombinedInvWrapper(inputInventory, outputInventory);
+		itemCapability = new CombinedInventoryStorage(inputInventory, outputInventory);
 		contentsChanged = true;
 		ingredientRotation = LerpedFloat.angular()
 			.startWithValue(0);
@@ -125,17 +132,17 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		recipeBackupCheck = 20;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.BASIN.get(),
-				(be, context) -> be.itemCapability
-		);
-		event.registerBlockEntity(
-				Capabilities.FluidHandler.BLOCK,
-				AllBlockEntityTypes.BASIN.get(),
-				(be, context) -> be.fluidCapability
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		return itemCapability;
+	}
+
+	@Override
+	public @Nullable Storage<FluidVariant> getFluidStorage(@Nullable Direction side) {
+		return fluidCapability;
 	}
 
 	@Override
@@ -226,7 +233,7 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 	@Override
 	public void invalidate() {
 		super.invalidate();
-		invalidateCapabilities();
+		//invalidateCapabilities();
 	}
 
 	@Override
@@ -300,23 +307,22 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 			.isVertical())
 			return;
 
-		for (int slot = 0; slot < outputInventory.getSlots(); slot++) {
-			ItemStack extractItem = outputInventory.extractItem(slot, 64, true);
+		for (int slot = 0; slot < outputInventory.getSlotCount(); slot++) {
+			ItemStack extractItem = CreateTransferUtil.extractItem(outputInventory.getSlot(slot), 64, true);
 			if (extractItem.isEmpty())
 				continue;
 			if (acceptOutputs(ImmutableList.of(extractItem), Collections.emptyList(), true))
-				acceptOutputs(ImmutableList.of(outputInventory.extractItem(slot, 64, false)), Collections.emptyList(),
+				acceptOutputs(ImmutableList.of(CreateTransferUtil.extractItem(outputInventory.getSlot(slot), 64, false)), Collections.emptyList(),
 					false);
 		}
 
-		IFluidHandler handler = outputTank.getCapability();
-		for (int slot = 0; slot < handler.getTanks(); slot++) {
-			FluidStack fs = handler.getFluidInTank(slot)
-				.copy();
+		SlottedStorage<FluidVariant> handler = outputTank.getCapability();
+		for (int slot = 0; slot < handler.getSlotCount(); slot++) {
+			FluidStack fs = new FluidStack(handler.getSlot(slot));
 			if (fs.isEmpty())
 				continue;
 			if (acceptOutputs(Collections.emptyList(), ImmutableList.of(fs), true)) {
-				handler.drain(fs, FluidAction.EXECUTE);
+				CreateTransferUtil.extractFluid(handler, fs, false);
 				acceptOutputs(Collections.emptyList(), ImmutableList.of(fs), false);
 			}
 		}
@@ -374,12 +380,12 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		if (filter != null && filter.isRecipeFilter())
 			filter = null; // Do not test spout outputs against the recipe filter
 
-		IItemHandler targetInv = be == null ? null
-			: Optional.ofNullable(level.getCapability(Capabilities.ItemHandler.BLOCK, be.getBlockPos(), direction.getOpposite()))
+		Storage<ItemVariant> targetInv = be == null ? null
+			: Optional.ofNullable(TransferUtil.getItemStorage(level, be.getBlockPos(), direction.getOpposite()))
 			.orElse(inserter == null ? null : inserter.getInventory());
 
-		IFluidHandler targetTank = be == null ? null
-			: level.getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), direction.getOpposite());
+		Storage<FluidVariant> targetTank = be == null ? null
+			: TransferUtil.getFluidStorage(level, be.getBlockPos(), direction.getOpposite());
 
 		boolean update = false;
 
@@ -396,7 +402,7 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 			if (targetInv == null)
 				break;
 
-			ItemStack remainder = ItemHandlerHelper.insertItemStacked(targetInv, itemStack, true);
+			ItemStack remainder = CreateTransferUtil.insertItemStacked(targetInv, itemStack, true);
 			if (remainder.getCount() == itemStack.getCount())
 				continue;
 			if (filter != null && !filter.test(itemStack))
@@ -406,7 +412,7 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 				visualizedOutputItems.add(IntAttached.withZero(itemStack));
 			update = true;
 
-			remainder = ItemHandlerHelper.insertItemStacked(targetInv, itemStack.copy(), false);
+			remainder = CreateTransferUtil.insertItemStacked(targetInv, itemStack.copy(), false);
 			if (remainder.isEmpty())
 				iterator.remove();
 			else
@@ -426,12 +432,17 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 				break;
 
 			for (boolean simulate : Iterate.trueAndFalse) {
-				FluidAction action = simulate ? FluidAction.SIMULATE : FluidAction.EXECUTE;
-				int fill = targetTank instanceof SmartFluidTankBehaviour.InternalFluidHandler
-					? ((SmartFluidTankBehaviour.InternalFluidHandler) targetTank).forceFill(fluidStack.copy(), action)
-					: targetTank.fill(fluidStack.copy(), action);
-				if (fill != fluidStack.getAmount())
-					break;
+				try (Transaction transaction = TransferUtil.getTransaction()) {
+					long fill = targetTank instanceof SmartFluidTankBehaviour.InternalFluidHandler
+						? ((SmartFluidTankBehaviour.InternalFluidHandler) targetTank).forceFill(fluidStack.getVariant(), fluidStack.getAmount(), transaction)
+						: targetTank.insert(fluidStack.getVariant(), fluidStack.getAmount(), transaction);
+
+					if (!simulate)
+						transaction.commit();
+
+					if (fill != fluidStack.getAmount())
+						break;
+				}
 				if (simulate)
 					continue;
 
@@ -525,11 +536,11 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 
 			InvManipulationBehaviour inserter =
 				be == null ? null : BlockEntityBehaviour.get(level, be.getBlockPos(), InvManipulationBehaviour.TYPE);
-			IItemHandler targetInv = be == null ? null
-				: Optional.ofNullable(level.getCapability(Capabilities.ItemHandler.BLOCK, be.getBlockPos(), direction.getOpposite()))
+			Storage<ItemVariant> targetInv = be == null ? null
+				: Optional.ofNullable(TransferUtil.getItemStorage(level, be.getBlockPos(), direction.getOpposite()))
 				.orElse(inserter == null ? null : inserter.getInventory());
-			IFluidHandler targetTank = be == null ? null
-				: level.getCapability(Capabilities.FluidHandler.BLOCK, be.getBlockPos(), direction.getOpposite());
+			Storage<FluidVariant> targetTank = be == null ? null
+				: TransferUtil.getFluidStorage(level, be.getBlockPos(), direction.getOpposite());
 			boolean externalTankNotPresent = targetTank == null;
 
 			if (!outputItems.isEmpty() && targetInv == null)
@@ -554,8 +565,8 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 			return true;
 		}
 
-		IItemHandler targetInv = outputInventory;
-		IFluidHandler targetTank = outputTank.getCapability();
+		Storage<ItemVariant> targetInv = outputInventory;
+		SlottedStorage<FluidVariant> targetTank = outputTank.getCapability();
 
 		if (targetInv == null && !outputItems.isEmpty())
 			return false;
@@ -572,21 +583,24 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 	}
 
 	private boolean acceptFluidOutputsIntoBasin(List<FluidStack> outputFluids, boolean simulate,
-												IFluidHandler targetTank) {
+												Storage<FluidVariant> targetTank) {
 		for (FluidStack fluidStack : outputFluids) {
-			FluidAction action = simulate ? FluidAction.SIMULATE : FluidAction.EXECUTE;
-			int fill = targetTank instanceof SmartFluidTankBehaviour.InternalFluidHandler
-				? ((SmartFluidTankBehaviour.InternalFluidHandler) targetTank).forceFill(fluidStack.copy(), action)
-				: targetTank.fill(fluidStack.copy(), action);
-			if (fill != fluidStack.getAmount())
-				return false;
+			try (Transaction transaction = TransferUtil.getTransaction()) {
+				long fill = targetTank instanceof SmartFluidTankBehaviour.InternalFluidHandler
+					? ((SmartFluidTankBehaviour.InternalFluidHandler) targetTank).forceFill(fluidStack.getVariant(), fluidStack.getAmount(), transaction)
+					: targetTank.insert(fluidStack.getVariant(), fluidStack.getAmount(), transaction);
+				if (!simulate)
+					transaction.commit();
+				if (fill != fluidStack.getAmount())
+					return false;
+			}
 		}
 		return true;
 	}
 
-	private boolean acceptItemOutputsIntoBasin(List<ItemStack> outputItems, boolean simulate, IItemHandler targetInv) {
+	private boolean acceptItemOutputsIntoBasin(List<ItemStack> outputItems, boolean simulate, Storage<ItemVariant> targetInv) {
 		for (ItemStack itemStack : outputItems) {
-			if (!ItemHandlerHelper.insertItemStacked(targetInv, itemStack.copy(), simulate)
+			if (!CreateTransferUtil.insertItemStacked(targetInv, itemStack.copy(), simulate)
 				.isEmpty())
 				return false;
 		}
@@ -740,7 +754,7 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 
 		boolean isEmpty = true;
 
-		for (int i = 0; i < itemCapability.getSlots(); i++) {
+		for (int i = 0; i < itemCapability.getSlotCount(); i++) {
 			ItemStack stackInSlot = itemCapability.getStackInSlot(i);
 			if (stackInSlot.isEmpty())
 				continue;
@@ -754,8 +768,8 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		}
 
 		LangBuilder mb = CreateLang.translate("generic.unit.millibuckets");
-		for (int i = 0; i < fluidCapability.getTanks(); i++) {
-			FluidStack fluidStack = fluidCapability.getFluidInTank(i);
+		for (StorageView<FluidVariant> view : fluidCapability) {
+			FluidStack fluidStack = new FluidStack(view);
 			if (fluidStack.isEmpty())
 				continue;
 			CreateLang.text("")

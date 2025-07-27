@@ -6,7 +6,14 @@ import com.simibubi.create.content.kinetics.base.KineticBlock;
 import com.simibubi.create.content.kinetics.simpleRelays.ICogWheel;
 import com.simibubi.create.foundation.block.IBE;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.createmod.catnip.data.Iterate;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -26,11 +33,6 @@ import net.minecraft.world.level.pathfinder.PathComputationType;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class MillstoneBlock extends KineticBlock implements IBE<MillstoneBlockEntity>, ICogWheel {
 
@@ -57,8 +59,8 @@ public class MillstoneBlock extends KineticBlock implements IBE<MillstoneBlockEn
 
 		withBlockEntityDo(level, pos, millstone -> {
 			boolean emptyOutput = true;
-			IItemHandlerModifiable inv = millstone.outputInv;
-			for (int slot = 0; slot < inv.getSlots(); slot++) {
+			SlottedStackStorage inv = millstone.outputInv;
+			for (int slot = 0; slot < inv.getSlotCount(); slot++) {
 				ItemStack stackInSlot = inv.getStackInSlot(slot);
 				if (!stackInSlot.isEmpty())
 					emptyOutput = false;
@@ -69,7 +71,7 @@ public class MillstoneBlock extends KineticBlock implements IBE<MillstoneBlockEn
 
 			if (emptyOutput) {
 				inv = millstone.inputInv;
-				for (int slot = 0; slot < inv.getSlots(); slot++) {
+				for (int slot = 0; slot < inv.getSlotCount(); slot++) {
 					player.getInventory()
 						.placeItemBackInInventory(inv.getStackInSlot(slot));
 					inv.setStackInSlot(slot, ItemStack.EMPTY);
@@ -102,12 +104,12 @@ public class MillstoneBlock extends KineticBlock implements IBE<MillstoneBlockEn
 		if (millstone == null)
 			return;
 
-		IItemHandler capability = millstone.getLevel().getCapability(Capabilities.ItemHandler.BLOCK, millstone.getBlockPos(), null);
+		Storage<ItemVariant> capability = TransferUtil.getItemStorage(millstone.getLevel(), millstone.getBlockPos(), millstone, null);
 		if (capability == null)
 			return;
 
-		ItemStack remainder = capability
-			.insertItem(0, itemEntity.getItem(), false);
+		ItemStack remainder = CreateTransferUtil
+			.insertItem(capability, itemEntity.getItem(), false);
 		if (remainder.isEmpty())
 			itemEntity.discard();
 		if (remainder.getCount() < itemEntity.getItem()

@@ -14,8 +14,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public record WiFiEffectPacket(BlockPos pos) implements ClientboundPacketPayload {
 	public static final StreamCodec<ByteBuf, WiFiEffectPacket> STREAM_CODEC = BlockPos.STREAM_CODEC
@@ -27,7 +27,7 @@ public record WiFiEffectPacket(BlockPos pos) implements ClientboundPacketPayload
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void handle(LocalPlayer player) {
 		BlockEntity blockEntity = Minecraft.getInstance().level.getBlockEntity(pos);
 			if (blockEntity instanceof PackagerLinkBlockEntity plbe)

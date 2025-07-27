@@ -1,0 +1,16 @@
+{
+  "values": [
+    "create:blaze_burner",
+    "create:lit_blaze_burner",
+    "minecraft:magma_block",
+    "minecraft:lava",
+    {
+      "id": "#minecraft:campfires",
+      "required": false
+    },
+    {
+      "id": "#minecraft:fire",
+      "required": false
+    }
+  ]
+}

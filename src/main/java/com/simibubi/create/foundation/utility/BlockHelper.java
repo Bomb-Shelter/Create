@@ -21,6 +21,9 @@ import com.simibubi.create.content.processing.burner.BlazeBurnerBlock.HeatLevel;
 import com.simibubi.create.foundation.blockEntity.IMergeableBE;
 import com.simibubi.create.foundation.blockEntity.IMultiBlockEntityContainer;
 
+import io.github.fabricators_of_create.porting_lib.level.events.BlockDropsEvent;
+import io.github.fabricators_of_create.porting_lib.level.events.BlockEvent;
+import io.github.fabricators_of_create.porting_lib.util.PortingHooks;
 import net.createmod.catnip.nbt.NBTProcessors;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -45,6 +48,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.GameRules;
@@ -67,10 +71,6 @@ import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.chunk.LevelChunkSection;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.common.SpecialPlantable;
-import net.neoforged.neoforge.event.level.BlockDropsEvent;
-import net.neoforged.neoforge.event.level.BlockEvent;
 
 public class BlockHelper {
 	private static final List<IntegerProperty> COUNT_STATES = List.of(
@@ -218,7 +218,7 @@ public class BlockHelper {
 
 		if (player != null) {
 			BlockEvent.BreakEvent event = new BlockEvent.BreakEvent(world, pos, state, player);
-			NeoForge.EVENT_BUS.post(event);
+			event.sendEvent();
 			if (event.isCanceled())
 				return;
 
@@ -227,12 +227,12 @@ public class BlockHelper {
 		}
 
 		if (world instanceof ServerLevel serverLevel && world.getGameRules()
-			.getBoolean(GameRules.RULE_DOBLOCKDROPS) && !world.restoringBlockSnapshots
+			.getBoolean(GameRules.RULE_DOBLOCKDROPS) /*&& !world.restoringBlockSnapshots*/
 			&& (player == null || !player.isCreative())) {
 			List<ItemStack> drops = Block.getDrops(state, serverLevel, pos, blockEntity, player, usedTool);
 			if (player != null) {
 				BlockDropsEvent event = new BlockDropsEvent(serverLevel, pos, state, blockEntity, List.of(), player, usedTool);
-				NeoForge.EVENT_BUS.post(event);
+				event.sendEvent();
 				if (!event.isCanceled()) {
 					if ( event.getDroppedExperience() > 0)
 						state.getBlock().popExperience(serverLevel, pos, event.getDroppedExperience());
@@ -244,7 +244,7 @@ public class BlockHelper {
 			// Simulating IceBlock#playerDestroy. Not calling method directly as it would drop item
 			// entities as a side-effect
 			Registry<Enchantment> enchantmentRegistry = world.registryAccess().registryOrThrow(Registries.ENCHANTMENT);
-			if (state.getBlock() instanceof IceBlock && usedTool.getEnchantmentLevel(enchantmentRegistry.getHolderOrThrow(Enchantments.SILK_TOUCH)) == 0) {
+			if (state.getBlock() instanceof IceBlock && EnchantmentHelper.getItemEnchantmentLevel(enchantmentRegistry.getHolderOrThrow(Enchantments.SILK_TOUCH), usedTool) == 0) {
 				if (!world.dimensionType().ultraWarm()) {
 					BlockState below = world.getBlockState(pos.below());
 					if (below.blocksMotion() || below.liquid()) {
@@ -282,7 +282,7 @@ public class BlockHelper {
 		BlockState old = chunksection.setBlockState(SectionPos.sectionRelative(target.getX()),
 			SectionPos.sectionRelative(target.getY()), SectionPos.sectionRelative(target.getZ()), state);
 		chunk.setUnsaved(true);
-		world.markAndNotifyBlock(target, chunk, old, state, 82, 512);
+		world.port_lib$markAndNotifyBlock(target, chunk, old, state, 82, 512);
 
 		world.setBlock(target, state, 82);
 		world.neighborChanged(target, world.getBlockState(target.below())
@@ -331,10 +331,10 @@ public class BlockHelper {
 
 		if (block == Blocks.COMPOSTER) {
 			state = Blocks.COMPOSTER.defaultBlockState();
-		} else if (block != Blocks.SEA_PICKLE && block instanceof SpecialPlantable specialPlantable) {
+		} else if (block != Blocks.SEA_PICKLE && /*block instanceof SpecialPlantable specialPlantable*/ false) {
 			alreadyPlaced = true;
-			if (specialPlantable.canPlacePlantAtPosition(stack, world, target, null))
-				specialPlantable.spawnPlantAtPosition(stack, world, target, null);
+			/*if (specialPlantable.canPlacePlantAtPosition(stack, world, target, null))
+				specialPlantable.spawnPlantAtPosition(stack, world, target, null);*/
 		} else if (state.is(BlockTags.CAULDRONS)) {
 			state = Blocks.CAULDRON.defaultBlockState();
 		}

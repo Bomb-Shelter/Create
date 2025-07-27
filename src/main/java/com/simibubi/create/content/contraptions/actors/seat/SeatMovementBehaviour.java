@@ -64,7 +64,7 @@ public class SeatMovementBehaviour implements MovementBehaviour {
 		Vec3 position = VecHelper.getCenterOf(pos)
 			.add(0, slab ? .5f : 1f, 0);
 		toDismount.teleportTo(position.x, position.y, position.z);
-		toDismount.getPersistentData()
+		toDismount.getCustomData()
 			.remove("ContraptionDismountLocation");
 	}
 

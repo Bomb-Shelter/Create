@@ -3,21 +3,29 @@ package com.simibubi.create.compat.trainmap;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.simibubi.create.compat.Mods;
 
+import io.github.fabricators_of_create.porting_lib.event.client.MouseInputEvents;
+import io.github.fabricators_of_create.porting_lib.event.client.MouseInputEvents.Action;
+import io.github.fabricators_of_create.porting_lib.event.client.PreRenderTooltipCallback;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.screen.v1.ScreenEvents;
 import net.minecraft.client.Minecraft;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.event.InputEvent;
-import net.neoforged.neoforge.client.event.RenderTooltipEvent;
-import net.neoforged.neoforge.client.event.ScreenEvent;
+import net.fabricmc.api.EnvType;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
 
-@EventBusSubscriber(value = Dist.CLIENT)
 public class TrainMapEvents {
+	public static void init() {
+		ClientTickEvents.END_CLIENT_TICK.register(TrainMapEvents::tick);
+		MouseInputEvents.BEFORE_BUTTON.register(TrainMapEvents::mouseClick);
+		PreRenderTooltipCallback.EVENT.register((stack, poseStack, x, y, screenWidth, screenHeight, font, components) -> cancelTooltips());
+		ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
+			ScreenEvents.afterRender(screen).register((screen1, drawContext, mouseX, mouseY, tickDelta) -> {
+				renderGui(screen1, drawContext, mouseX, mouseY);
+			});
+		});
+	}
 
-	@SubscribeEvent
-	public static void tick(ClientTickEvent.Post event) {
-		Minecraft mc = Minecraft.getInstance();
+	public static void tick(Minecraft mc) {
 		if (mc.level == null)
 			return;
 
@@ -27,27 +35,29 @@ public class TrainMapEvents {
 			JourneyTrainMap.tick();
 	}
 
-	@SubscribeEvent
-	public static void mouseClick(InputEvent.MouseButton.Pre event) {
-		if (event.getAction() != InputConstants.PRESS)
-			return;
+	public static boolean mouseClick(int button, int modifiers, Action action) {
+		if (action != MouseInputEvents.Action.PRESS)
+			return false;
 
-		if (Mods.FTBCHUNKS.isLoaded())
-			FTBChunksTrainMap.mouseClick(event);
-		if (Mods.JOURNEYMAP.isLoaded())
-			JourneyTrainMap.mouseClick(event);
+		boolean value = false;
+		if (Mods.FTBCHUNKS.isLoaded() && FTBChunksTrainMap.mouseClick())
+			value = true;
+		if (Mods.JOURNEYMAP.isLoaded() && JourneyTrainMap.mouseClick())
+			value = true;
+
+		return value;
 	}
 
-	@SubscribeEvent
-	public static void cancelTooltips(RenderTooltipEvent.Pre event) {
+	public static boolean cancelTooltips() {
 		if (Mods.FTBCHUNKS.isLoaded())
-			FTBChunksTrainMap.cancelTooltips(event);
+			return FTBChunksTrainMap.cancelTooltips();
+
+		return false;
 	}
 
-	@SubscribeEvent
-	public static void renderGui(ScreenEvent.Render.Post event) {
+	public static void renderGui(Screen screen, GuiGraphics graphics, int oMouseX, int oMouseY) {
 		if (Mods.FTBCHUNKS.isLoaded())
-			FTBChunksTrainMap.renderGui(event);
+			FTBChunksTrainMap.renderGui(screen, graphics, oMouseX, oMouseY);
 	}
 
 }

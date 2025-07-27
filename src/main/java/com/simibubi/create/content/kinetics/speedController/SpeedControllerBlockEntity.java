@@ -18,14 +18,13 @@ import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollVa
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
-import dan200.computercraft.api.peripheral.PeripheralCapability;
+import dan200.computercraft.api.peripheral.PeripheralLookup;
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 public class SpeedControllerBlockEntity extends KineticBlockEntity {
 
@@ -40,13 +39,9 @@ public class SpeedControllerBlockEntity extends KineticBlockEntity {
 		hasBracket = false;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+	public static void registerCapabilities() {
 		if (Mods.COMPUTERCRAFT.isLoaded()) {
-			event.registerBlockEntity(
-					PeripheralCapability.get(),
-					AllBlockEntityTypes.ROTATION_SPEED_CONTROLLER.get(),
-					(be, context) -> be.computerBehaviour.getPeripheralCapability()
-			);
+			PeripheralLookup.get().registerForBlockEntity((be, context) -> be.computerBehaviour.getPeripheralCapability(), AllBlockEntityTypes.ROTATION_SPEED_CONTROLLER.get());
 		}
 	}
 

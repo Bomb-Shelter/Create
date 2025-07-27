@@ -7,6 +7,7 @@ import com.simibubi.create.content.kinetics.base.KineticBlockEntity;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.living.LivingDropsEvent;
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -17,11 +18,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.living.LivingDropsEvent;
-
-@EventBusSubscriber
 public class CrushingWheelBlockEntity extends KineticBlockEntity {
 	public CrushingWheelBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
@@ -57,7 +53,6 @@ public class CrushingWheelBlockEntity extends KineticBlockEntity {
 		fixControllers();
 	}
 
-	@SubscribeEvent
 	public static void handleCrushedMobDrops(LivingDropsEvent event) {
 		DamageSource damageSource = event.getSource();
 		if (damageSource == null || !damageSource.is(AllDamageTypes.CRUSH))
@@ -68,4 +63,7 @@ public class CrushingWheelBlockEntity extends KineticBlockEntity {
 		}
 	}
 
+	static {
+		LivingDropsEvent.EVENT.register(CrushingWheelBlockEntity::handleCrushedMobDrops);
+	}
 }

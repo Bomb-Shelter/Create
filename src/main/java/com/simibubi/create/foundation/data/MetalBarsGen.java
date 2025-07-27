@@ -24,7 +24,7 @@ import net.minecraft.world.level.block.IronBarsBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.material.MapColor;
 
-import net.neoforged.neoforge.client.model.generators.ModelFile;
+import io.github.fabricators_of_create.porting_lib.models.generators.ModelFile;
 
 public class MetalBarsGen {
 

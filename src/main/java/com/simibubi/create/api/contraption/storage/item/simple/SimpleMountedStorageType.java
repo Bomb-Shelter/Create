@@ -4,6 +4,11 @@ import java.util.Optional;
 
 import com.mojang.serialization.MapCodec;
 
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.Codec;
@@ -13,10 +18,6 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-
-import net.neoforged.neoforge.capabilities.Capabilities.ItemHandler;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
 
 public abstract class SimpleMountedStorageType<T extends SimpleMountedStorage> extends MountedItemStorageType<SimpleMountedStorage> {
 	protected SimpleMountedStorageType(MapCodec<T> codec) {
@@ -32,13 +33,13 @@ public abstract class SimpleMountedStorageType<T extends SimpleMountedStorage> e
 			.orElse(null);
 	}
 
-	protected IItemHandler getHandler(Level level, BlockEntity be) {
-		IItemHandler handler = level.getCapability(ItemHandler.BLOCK, be.getBlockPos(), null);
+	protected SlottedStackStorage getHandler(Level level, BlockEntity be) {
+		Storage<ItemVariant> handler = TransferUtil.getItemStorage(level, be.getBlockPos(), be, null);
 		// make sure the handler is modifiable so new contents can be moved over on disassembly
-		return handler instanceof IItemHandlerModifiable modifiable ? modifiable : null;
+		return handler instanceof SlottedStackStorage modifiable ? modifiable : null;
 	}
 
-	protected SimpleMountedStorage createStorage(IItemHandler handler) {
+	protected SimpleMountedStorage createStorage(SlottedStackStorage handler) {
 		return new SimpleMountedStorage(this, handler);
 	}
 

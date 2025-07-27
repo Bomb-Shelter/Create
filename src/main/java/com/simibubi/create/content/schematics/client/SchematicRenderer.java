@@ -6,11 +6,14 @@ import java.util.Map;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.foundation.render.BlockEntityRenderHelper;
 
+import com.simibubi.create.infrastructure.fabric.client.LayerFilteringBakedModel;
+
 import net.createmod.catnip.render.ShadedBlockSbbBuilder;
 import net.createmod.catnip.render.SuperByteBuffer;
 import net.createmod.catnip.render.SuperRenderTypeBuffer;
 import net.createmod.catnip.levelWrappers.SchematicLevel;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.ItemBlockRenderTypes;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.ModelBlockRenderer;
@@ -22,13 +25,12 @@ import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
-import net.neoforged.neoforge.client.model.data.ModelData;
 
 public class SchematicRenderer {
 
 	private static final ThreadLocal<ThreadLocalObjects> THREAD_LOCAL_OBJECTS = ThreadLocal.withInitial(ThreadLocalObjects::new);
 
-	private final Map<RenderType, SuperByteBuffer> bufferCache = new LinkedHashMap<>(getLayerCount());
+	private final Map<RenderType, SuperByteBuffer> bufferCache = new LinkedHashMap<>();
 	private boolean active;
 	private boolean changed;
 	protected SchematicLevel schematic;
@@ -56,14 +58,14 @@ public class SchematicRenderer {
 	public void render(PoseStack ms, SuperRenderTypeBuffer buffers) {
 		if (!active)
 			return;
-		
+
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.level == null || mc.player == null)
 			return;
 		if (changed)
 			redraw();
 		changed = false;
-		
+
 		bufferCache.forEach((layer, buffer) -> {
 			buffer.renderInto(ms, buffers.getBuffer(layer));
 		});
@@ -102,20 +104,25 @@ public class SchematicRenderer {
 
 			if (state.getRenderShape() == RenderShape.MODEL) {
 				BakedModel model = dispatcher.getBlockModel(state);
-				BlockEntity blockEntity = renderWorld.getBlockEntity(localPos);
-				ModelData modelData = blockEntity != null ? blockEntity.getModelData() : ModelData.EMPTY;
-				modelData = model.getModelData(renderWorld, pos, state, modelData);
 				long seed = state.getSeed(pos);
 				random.setSeed(seed);
-				if (model.getRenderTypes(state, random, modelData).contains(layer)) {
-					poseStack.pushPose();
-					poseStack.translate(localPos.getX(), localPos.getY(), localPos.getZ());
-
-					renderer.tesselateBlock(renderWorld, model, state, pos, poseStack, sbbBuilder, true,
-						random, seed, OverlayTexture.NO_OVERLAY, modelData, layer);
-
-					poseStack.popPose();
+				if (model.isVanillaAdapter()) {
+					if (ItemBlockRenderTypes.getChunkRenderType(state) != layer) {
+						continue;
+					}
+				} else {
+					model = LayerFilteringBakedModel.wrap(model, layer);
 				}
+				// FIXME HIGH LOGISTICS
+//				model = shadeSeparatingWrapper.wrapModel(model);
+
+				poseStack.pushPose();
+				poseStack.translate(localPos.getX(), localPos.getY(), localPos.getZ());
+
+				renderer.tesselateBlock(renderWorld, model, state, pos, poseStack, sbbBuilder, true, random,
+					seed, OverlayTexture.NO_OVERLAY);
+
+				poseStack.popPose();
 			}
 		}
 		ModelBlockRenderer.clearCache();
@@ -124,10 +131,11 @@ public class SchematicRenderer {
 		return sbbBuilder.end();
 	}
 
-	private static int getLayerCount() {
-		return RenderType.chunkBufferLayers()
-			.size();
-	}
+	// fabric: calling chunkBufferLayers early causes issues (#612), let the map handle its size on its own
+//	private static int getLayerCount() {
+//		return RenderType.chunkBufferLayers()
+//			.size();
+//	}
 
 	private static class ThreadLocalObjects {
 		public final PoseStack poseStack = new PoseStack();

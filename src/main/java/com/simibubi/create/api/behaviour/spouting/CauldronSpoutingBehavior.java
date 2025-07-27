@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 
-import net.neoforged.neoforge.fluids.FluidStack;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 /**
  * {@link BlockSpoutingBehaviour} for empty cauldrons. Mods can register their fluids
@@ -29,7 +29,7 @@ public enum CauldronSpoutingBehavior implements BlockSpoutingBehaviour {
 	});
 
 	@Override
-	public int fillBlock(Level level, BlockPos pos, SpoutBlockEntity spout, FluidStack availableFluid, boolean simulate) {
+	public long fillBlock(Level level, BlockPos pos, SpoutBlockEntity spout, FluidStack availableFluid, boolean simulate) {
 		CauldronInfo info = CAULDRON_INFO.get(availableFluid.getFluid());
 		if (info == null)
 			return 0;

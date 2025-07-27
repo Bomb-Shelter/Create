@@ -1,5 +1,6 @@
 package com.simibubi.create.foundation.item;
 
+import net.fabricmc.fabric.api.registry.FuelRegistry;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeType;
@@ -13,11 +14,12 @@ public class CombustibleItem extends Item {
 
 	public void setBurnTime(int burnTime) {
 		this.burnTime = burnTime;
+		FuelRegistry.INSTANCE.add(this, burnTime);
 	}
 
-	@Override
+	/*@Override
 	public int getBurnTime(ItemStack itemStack, RecipeType<?> recipeType) {
 		return this.burnTime;
-	}
-	
+	}*/
+
 }

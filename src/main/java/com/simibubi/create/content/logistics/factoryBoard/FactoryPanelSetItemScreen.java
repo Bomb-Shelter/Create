@@ -33,21 +33,21 @@ public class FactoryPanelSetItemScreen extends AbstractSimiContainerScreen<Facto
 		setWindowSize(bgWidth, bgHeight + AllGuiTextures.PLAYER_INVENTORY.getHeight());
 		super.init();
 		clearWidgets();
-		int x = getGuiLeft();
-		int y = getGuiTop();
+		int x = leftPos;
+		int y = topPos;
 
 
 		confirmButton = new IconButton(x + bgWidth - 40, y + bgHeight - 25, AllIcons.I_CONFIRM);
 		confirmButton.withCallback(() -> minecraft.player.closeContainer());
 		addRenderableWidget(confirmButton);
-		
+
 		extraAreas = List.of(new Rect2i(x + bgWidth, y + bgHeight - 30, 40, 20));
 	}
 
 	@Override
 	protected void renderBg(GuiGraphics pGuiGraphics, float pPartialTick, int pMouseX, int pMouseY) {
-		int x = getGuiLeft();
-		int y = getGuiTop();
+		int x = leftPos;
+		int y = topPos;
 		AllGuiTextures.FACTORY_GAUGE_SET_ITEM.render(pGuiGraphics, x - 5, y);
 		renderPlayerInventory(pGuiGraphics, x + 5, y + 94);
 
@@ -60,7 +60,7 @@ public class FactoryPanelSetItemScreen extends AbstractSimiContainerScreen<Facto
 			.scale(3)
 			.render(pGuiGraphics, x + 180, y + 48);
 	}
-	
+
 	@Override
 	public List<Rect2i> getExtraAreas() {
 		return extraAreas;

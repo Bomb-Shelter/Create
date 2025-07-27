@@ -119,7 +119,7 @@ public class ToolboxScreen extends AbstractSimiContainerScreen<ToolboxMenu> {
 				hoveredToolboxSlot = slot;
 				RenderSystem.disableDepthTest();
 				RenderSystem.colorMask(true, true, true, false);
-				int slotColor = this.getSlotColor(baseIndex);
+				int slotColor = -2130706433;
 				graphics.fillGradient(i, j, i + 16, j + 16, slotColor, slotColor);
 				RenderSystem.colorMask(true, true, true, true);
 				RenderSystem.enableDepthTest();

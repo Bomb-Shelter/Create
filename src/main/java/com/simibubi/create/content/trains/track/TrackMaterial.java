@@ -26,8 +26,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class TrackMaterial {
 	public static final Map<ResourceLocation, TrackMaterial> ALL = new HashMap<>();
@@ -50,10 +50,10 @@ public class TrackMaterial {
 	@Nullable
 	private final TrackMaterial.TrackType.TrackBlockFactory customFactory;
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	protected TrackModelHolder modelHolder;
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public TrackModelHolder getModelHolder() {
 		return modelHolder;
 	}
@@ -165,7 +165,7 @@ public class TrackMaterial {
 		return TrackMaterial.ANDESITE;
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public record TrackModelHolder(PartialModel tie, PartialModel leftSegment, PartialModel rightSegment) {
 		static final TrackModelHolder DEFAULT = new TrackModelHolder(AllPartialModels.TRACK_TIE,
 			AllPartialModels.TRACK_SEGMENT_LEFT, AllPartialModels.TRACK_SEGMENT_RIGHT);

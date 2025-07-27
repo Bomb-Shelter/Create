@@ -17,6 +17,7 @@ import com.tterrag.registrate.providers.ProviderType;
 import com.tterrag.registrate.providers.RegistrateTagsProvider;
 
 import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -26,7 +27,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Fluids;
 
-import net.neoforged.neoforge.common.Tags;
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
 
 public class CreateRegistrateTags {
 	private static final CreateRegistrate REGISTRATE = Create.registrate();
@@ -211,7 +212,7 @@ public class CreateRegistrateTags {
 
 		prov.tag(Tags.Items.ENCHANTABLES).addTag(AllItemTags.PRESSURIZED_AIR_SOURCES.tag);
 
-		prov.tag(ItemTags.TRIMMABLE_ARMOR)
+		/*prov.tag(ItemTags.TRIMMABLE_ARMOR)
 			.remove(
 				AllItems.COPPER_DIVING_BOOTS.getId(),
 				AllItems.COPPER_BACKTANK.getId(),
@@ -219,7 +220,7 @@ public class CreateRegistrateTags {
 				AllItems.NETHERITE_DIVING_BOOTS.getId(),
 				AllItems.NETHERITE_BACKTANK.getId(),
 				AllItems.NETHERITE_DIVING_HELMET.getId()
-			);
+			);*/
 
 		prov.tag(ItemTags.DURABILITY_ENCHANTABLE)
 			.addTag(AllItemTags.SANDPAPER.tag);
@@ -275,6 +276,10 @@ public class CreateRegistrateTags {
 		prov.tag(AllFluidTags.FAN_PROCESSING_CATALYSTS_SPLASHING.tag)
 			.add(Fluids.WATER, Fluids.FLOWING_WATER);
 
+		// Fabric
+		prov.tag(AllFluidTags.DIVING_FLUIDS.tag)
+			.addTag(FluidTags.WATER);
+
 		// VALIDATE
 
 		for (AllFluidTags tag : AllFluidTags.values()) {
@@ -291,7 +296,7 @@ public class CreateRegistrateTags {
 			.add(EntityType.BLAZE);
 
 		prov.tag(AllEntityTags.IGNORE_SEAT.tag)
-			.addTag(net.neoforged.neoforge.common.Tags.EntityTypes.CAPTURING_NOT_SUPPORTED);
+			.addTag(io.github.fabricators_of_create.porting_lib.tags.Tags.EntityTypes.CAPTURING_NOT_SUPPORTED);
 
 		// VALIDATE
 

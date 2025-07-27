@@ -2,6 +2,18 @@ package com.simibubi.create.content.fluids;
 
 import static net.minecraft.world.level.block.state.properties.BlockStateProperties.WATERLOGGED;
 
+import com.simibubi.create.infrastructure.fabric.transfer.FinalCommitSnapshot;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+
+import net.minecraft.world.level.material.Fluid;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.AllFluids;
@@ -32,9 +44,7 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class OpenEndedPipe extends FlowSource {
 
@@ -46,7 +56,7 @@ public class OpenEndedPipe extends FlowSource {
 	private BlockPos outputPos;
 	private boolean wasPulling;
 
-	private final ICapabilityProvider<IFluidHandler> fluidHandlerProvider = ICapabilityProvider.of(() -> fluidHandler);
+	private final ICapabilityProvider<Storage<FluidVariant>> fluidHandlerProvider = ICapabilityProvider.of(() -> fluidHandler);
 
 	public OpenEndedPipe(BlockFace face) {
 		super(face);
@@ -81,7 +91,7 @@ public class OpenEndedPipe extends FlowSource {
 
 	@Override
 	@Nullable
-	public ICapabilityProvider<IFluidHandler> provideHandler() {
+	public ICapabilityProvider<Storage<FluidVariant>> provideHandler() {
 		return fluidHandlerProvider;
 	}
 
@@ -227,66 +237,62 @@ public class OpenEndedPipe extends FlowSource {
 		}
 
 		@Override
-		public int fill(FluidStack resource, FluidAction action) {
+		public long insert(FluidVariant resource, long maxAmount, TransactionContext transaction) {
 			// Never allow being filled when a source is attached
 			if (world == null)
 				return 0;
 			if (!world.isLoaded(outputPos))
 				return 0;
-			if (resource.isEmpty())
+			if (resource.isBlank() || maxAmount <= 0)
 				return 0;
-			if (!provideFluidToSpace(resource, true))
+			FluidStack stack = new FluidStack(resource, maxAmount);
+			if (!provideFluidToSpace(stack, true))
 				return 0;
 
 			FluidStack containedFluidStack = getFluid();
 			boolean hasBlockState = FluidHelper.hasBlockState(containedFluidStack.getFluid());
 
-			if (!containedFluidStack.isEmpty() && !FluidStack.isSameFluidSameComponents(containedFluidStack, resource))
+			if (!containedFluidStack.isEmpty() && !FluidStack.isSameFluidSameComponents(containedFluidStack, stack))
 				setFluid(FluidStack.EMPTY);
 			if (wasPulling)
 				wasPulling = false;
 
 			OpenPipeEffectHandler effectHandler = OpenPipeEffectHandler.REGISTRY.get(resource.getFluid());
 			if (effectHandler != null && !hasBlockState)
-				resource = FluidHelper.copyStackWithAmount(resource, 1);
+				stack = FluidHelper.copyStackWithAmount(stack, 1);
 
-			int fill = super.fill(resource, action);
-			if (action.simulate())
-				return fill;
+			long fill = super.insert(resource, maxAmount, transaction);
 
-			if (effectHandler != null && !resource.isEmpty()) {
-				// resource should be copied before giving it to the handler.
-				// if hasBlockState is false, it was already copied above.
-				FluidStack exposed = hasBlockState ? resource.copy() : resource;
-				effectHandler.apply(world, aoe, exposed);
-			}
+			FluidStack finalStack = stack;
+			new FinalCommitSnapshot(maxAmount, () -> {
+				if (effectHandler != null && !finalStack.isEmpty()) {
+					// resource should be copied before giving it to the handler.
+					// if hasBlockState is false, it was already copied above.
+					FluidStack exposed = hasBlockState ? finalStack.copy() : finalStack;
+					effectHandler.apply(world, aoe, exposed);
+				}
 
-			if (getFluidAmount() == 1000 || !hasBlockState)
-				if (provideFluidToSpace(containedFluidStack, false))
-					setFluid(FluidStack.EMPTY);
+				if (getFluidAmount() == 1000 || !hasBlockState)
+					if (provideFluidToSpace(containedFluidStack, false))
+						setFluid(FluidStack.EMPTY);
+			}).updateSnapshots(transaction);
 			return fill;
 		}
 
 		@Override
-		public FluidStack drain(FluidStack resource, FluidAction action) {
-			return drainInner(resource.getAmount(), resource, action);
+		public long extract(FluidVariant extractedVariant, long maxAmount, TransactionContext transaction) {
+			return drainInner(maxAmount, new FluidStack(extractedVariant, maxAmount), transaction);
 		}
 
-		@Override
-		public FluidStack drain(int maxDrain, FluidAction action) {
-			return drainInner(maxDrain, null, action);
-		}
-
-		private FluidStack drainInner(int amount, @Nullable FluidStack filter, FluidAction action) {
-			FluidStack empty = FluidStack.EMPTY;
+		private long drainInner(long amount, @Nullable FluidStack filter, TransactionContext transaction) {
 			boolean filterPresent = filter != null;
 
 			if (world == null)
-				return empty;
+				return 0;
 			if (!world.isLoaded(outputPos))
-				return empty;
+				return 0;
 			if (amount == 0)
-				return empty;
+				return 0;
 			if (amount > 1000) {
 				amount = 1000;
 				if (filterPresent)
@@ -296,25 +302,34 @@ public class OpenEndedPipe extends FlowSource {
 			if (!wasPulling)
 				wasPulling = true;
 
-			FluidStack drainedFromInternal = filterPresent ? super.drain(filter, action) : super.drain(amount, action);
-			if (!drainedFromInternal.isEmpty())
+			long drainedFromInternal = filterPresent ? super.extract(filter.getVariant(), amount, transaction) : super.extract(super.iterator().next().getResource(), amount, transaction);
+			if (drainedFromInternal > 0)
 				return drainedFromInternal;
 
-			FluidStack drainedFromWorld = removeFluidFromSpace(action.simulate());
+			FluidStack drainedFromWorld = removeFluidFromSpace(true);
+			(new FinalCommitSnapshot(amount, () -> removeFluidFromSpace(false)))
+				.updateSnapshots(transaction);
 			if (drainedFromWorld.isEmpty())
-				return FluidStack.EMPTY;
+				return 0;
 			if (filterPresent && !FluidStack.isSameFluidSameComponents(drainedFromWorld, filter))
-				return FluidStack.EMPTY;
+				return 0;
 
-			int remainder = drainedFromWorld.getAmount() - amount;
+			long remainder = drainedFromWorld.getAmount() - amount;
 			drainedFromWorld.setAmount(amount);
 
-			if (!action.simulate() && remainder > 0) {
-				if (!getFluid().isEmpty() && !FluidStack.isSameFluidSameComponents(getFluid(), drainedFromWorld))
-					setFluid(FluidStack.EMPTY);
-				super.fill(FluidHelper.copyStackWithAmount(drainedFromWorld, remainder), FluidAction.EXECUTE);
-			}
-			return drainedFromWorld;
+			(new FinalCommitSnapshot(amount, () -> {
+				if (remainder > 0) {
+					if (!getFluid().isEmpty() && !FluidStack.isSameFluidSameComponents(getFluid(), drainedFromWorld))
+						setFluid(FluidStack.EMPTY);
+
+					try (Transaction tr = TransferUtil.getTransaction()) {
+						super.insert(drainedFromWorld.getVariant(), remainder, tr);
+						tr.commit();
+					}
+				}
+			}))
+				.updateSnapshots(transaction);
+			return drainedFromWorld.getAmount();
 		}
 
 	}

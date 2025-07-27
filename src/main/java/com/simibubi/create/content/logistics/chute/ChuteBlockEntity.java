@@ -3,9 +3,19 @@ package com.simibubi.create.content.logistics.chute;
 import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 
 import javax.annotation.ParametersAreNonnullByDefault;
+
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -56,19 +66,13 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
 /*
  * Commented Code: Chutes create air streams and act similarly to encased fans
  * (Unfinished)
  */
-public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation { // , IAirCurrentSource {
+public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity { // , IAirCurrentSource {
 
 	// public AirCurrent airCurrent;
 
@@ -89,7 +93,7 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 
 	VersionedInventoryTrackerBehaviour invVersionTracker;
 
-	private final EnumMap<Direction, BlockCapabilityCache<IItemHandler, @Nullable Direction>> capCaches = new EnumMap<>(Direction.class);
+	private final EnumMap<Direction, Map<Storage<ItemVariant>, @Nullable Direction>> capCaches = new EnumMap<>(Direction.class);
 
 	public ChuteBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
@@ -102,12 +106,12 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		updateAirFlow = true;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.CHUTE.get(),
-				(be, context) -> be.itemHandler
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		return this.itemHandler;
 	}
 
 	@Override
@@ -341,7 +345,7 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		handleInput(grabCapability(Direction.DOWN), 0);
 	}
 
-	private void handleInput(@Nullable IItemHandler inv, float startLocation) {
+	private void handleInput(@Nullable Storage<ItemVariant> inv, float startLocation) {
 		if (inv == null)
 			return;
 		if (!canActivate())
@@ -369,13 +373,13 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 
 		if (level == null || direction == null || !this.canActivate())
 			return false;
-		IItemHandler capBelow = grabCapability(Direction.DOWN);
+		Storage<ItemVariant> capBelow = grabCapability(Direction.DOWN);
 		if (capBelow != null) {
 			if (level.isClientSide && !isVirtual())
 				return false;
 			if (invVersionTracker.stillWaiting(capBelow))
 				return false;
-			ItemStack remainder = ItemHandlerHelper.insertItemStacked(capBelow, item, simulate);
+			ItemStack remainder = CreateTransferUtil.insertItemStacked(capBelow, item, simulate);
 			ItemStack held = getItem();
 			if (!simulate)
 				setItem(remainder, itemPosition.getValue(0));
@@ -425,14 +429,14 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 			return false;
 
 		if (AbstractChuteBlock.isOpenChute(getBlockState())) {
-			IItemHandler capAbove = grabCapability(Direction.UP);
+			Storage<ItemVariant> capAbove = grabCapability(Direction.UP);
 			if (capAbove != null) {
 				if (level.isClientSide && !isVirtual() && !ChuteBlock.isChute(stateAbove))
 					return false;
 				int countBefore = item.getCount();
 				if (invVersionTracker.stillWaiting(capAbove))
 					return false;
-				ItemStack remainder = ItemHandlerHelper.insertItemStacked(capAbove, item, simulate);
+				ItemStack remainder = CreateTransferUtil.insertItemStacked(capAbove, item, simulate);
 				if (!simulate)
 					item = remainder;
 				if (countBefore != remainder.getCount())
@@ -498,7 +502,7 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 		return true;
 	}
 
-	private @Nullable IItemHandler grabCapability(@NotNull Direction side) {
+	private @Nullable Storage<ItemVariant> grabCapability(@NotNull Direction side) {
 		BlockPos pos = this.worldPosition.relative(side);
 		if (level == null)
 			return null;
@@ -507,7 +511,9 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 			if (side != Direction.DOWN || !(be instanceof SmartChuteBlockEntity) || getItemMotion() > 0)
 				return null;
 		}
-		if (capCaches.get(side) == null) {
+		return ItemStorage.SIDED.find(level, pos, null, be, side.getOpposite());
+		// Fabric TODO: how the fuck
+		/*if (capCaches.get(side) == null) {
 			if (level instanceof ServerLevel serverLevel) {
 				BlockCapabilityCache<IItemHandler, @Nullable Direction> cache = BlockCapabilityCache.create(
 						Capabilities.ItemHandler.BLOCK,
@@ -522,7 +528,7 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 			}
 		} else {
 			return capCaches.get(side).getCapability();
-		}
+		}*/
 	}
 
 	public void setItem(ItemStack stack) {
@@ -541,8 +547,8 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 
 	@Override
 	public void invalidate() {
-		if (itemHandler != null)
-			invalidateCapabilities();
+		//if (itemHandler != null)
+			//invalidateCapabilities();
 		capCaches.clear();
 		super.invalidate();
 	}

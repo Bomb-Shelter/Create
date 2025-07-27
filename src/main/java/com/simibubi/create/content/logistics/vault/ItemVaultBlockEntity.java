@@ -13,7 +13,13 @@ import com.simibubi.create.foundation.blockEntity.behaviour.inventory.VersionedI
 import com.simibubi.create.foundation.utility.SameSizeCombinedInvWrapper;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.NeighborChangeListeningBlock;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.core.Direction;
@@ -30,15 +36,12 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
-public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBlockEntityContainer.Inventory {
+import org.jetbrains.annotations.Nullable;
 
-	protected ICapabilityProvider<IItemHandler> itemCapability = null;
+public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBlockEntityContainer.Inventory, SidedStorageBlockEntity {
+
+	protected ICapabilityProvider<Storage<ItemVariant>> itemCapability = null;
 	protected InventoryIdentifier invId;
 
 	protected ItemStackHandler inventory;
@@ -64,17 +67,15 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 		length = 1;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.ITEM_VAULT.get(),
-				(be, context) -> {
-					be.initCapability();
-					if (be.itemCapability == null)
-						return null;
-					return be.itemCapability.getCapability();
-				}
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		this.initCapability();
+		if (this.itemCapability == null)
+			return null;
+		return this.itemCapability.getCapability();
 	}
 
 	@Override
@@ -167,11 +168,12 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 		}
 
 		BlockState blockstate = level.getBlockState(updatePos);
-		blockstate.onNeighborChange(level, updatePos, provokingPos);
+		if (blockstate.getBlock() instanceof NeighborChangeListeningBlock neighborChangeListeningBlock)
+			neighborChangeListeningBlock.onNeighborChange(blockstate, level, updatePos, provokingPos);
 		if (blockstate.isRedstoneConductor(level, updatePos)) {
 			updatePos.move(direction);
 			blockstate = level.getBlockState(updatePos);
-			if (blockstate.getWeakChanges(level, updatePos)) {
+			if (blockstate.is(Blocks.COMPARATOR)) {
 				level.neighborChanged(blockstate, updatePos, provokingBlock, provokingPos, false);
 			}
 		}
@@ -234,7 +236,7 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 		}
 
 		itemCapability = null;
-		invalidateCapabilities();
+		//invalidateCapabilities();
 		setChanged();
 		sendData();
 	}
@@ -247,7 +249,7 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 			return;
 		this.controller = controller;
 		itemCapability = null;
-		invalidateCapabilities();
+		//invalidateCapabilities();
 		setChanged();
 		sendData();
 	}
@@ -324,8 +326,8 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 	}
 
 	public void applyInventoryToBlock(ItemStackHandler handler) {
-		for (int i = 0; i < inventory.getSlots(); i++)
-			inventory.setStackInSlot(i, i < handler.getSlots() ? handler.getStackInSlot(i) : ItemStack.EMPTY);
+		for (int i = 0; i < inventory.getSlotCount(); i++)
+			inventory.setStackInSlot(i, i < handler.getSlotCount() ? handler.getStackInSlot(i) : ItemStack.EMPTY);
 	}
 
 	private void initCapability() {
@@ -348,7 +350,7 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 		}
 
 		boolean alongZ = ItemVaultBlock.getVaultBlockAxis(getBlockState()) == Axis.Z;
-		IItemHandlerModifiable[] invs = new IItemHandlerModifiable[length * radius * radius];
+		SlottedStackStorage[] invs = new SlottedStackStorage[length * radius * radius];
 		for (int yOffset = 0; yOffset < length; yOffset++) {
 			for (int xOffset = 0; xOffset < radius; xOffset++) {
 				for (int zOffset = 0; zOffset < radius; zOffset++) {
@@ -386,7 +388,7 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 			level.setBlock(getBlockPos(), state.setValue(ItemVaultBlock.LARGE, radius > 2), 6);
 		}
 		itemCapability = null;
-		invalidateCapabilities();
+		//invalidateCapabilities();
 		setChanged();
 	}
 

@@ -8,6 +8,8 @@ import com.simibubi.create.content.contraptions.mounted.MountedContraption;
 import com.simibubi.create.content.trains.entity.CarriageContraption;
 import com.simibubi.create.foundation.utility.BlockHelper;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
 import net.createmod.catnip.nbt.NBTHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -185,7 +187,7 @@ public class BlockBreakingMovementBehaviour implements MovementBehaviour {
 
 		float breakSpeed = getBlockBreakingSpeed(context);
 		destroyProgress += Mth.clamp((int) (breakSpeed / blockHardness), 1, 10 - destroyProgress);
-		world.playSound(null, breakingPos, stateToBreak.getSoundType(world, breakingPos, null)
+		world.playSound(null, breakingPos, CreateFabricUtil.getSoundType(stateToBreak, world, breakingPos, null)
 			.getHitSound(), SoundSource.NEUTRAL, .25f, 1);
 
 		if (destroyProgress >= 10) {

@@ -13,6 +13,8 @@ import com.simibubi.create.foundation.block.ProperWaterloggedBlock;
 import com.simibubi.create.foundation.utility.BlockHelper;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -43,7 +45,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.EntityCollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import net.neoforged.neoforge.common.util.FakePlayer;
+import net.fabricmc.fabric.api.entity.FakePlayer;
 
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
@@ -108,10 +110,10 @@ public class SeatBlock extends Block implements ProperWaterloggedBlock {
 		sitDown(entity.level(), pos, entity);
 	}
 
-	@Override
+	/*@Override
 	public PathType getBlockPathType(BlockState state, BlockGetter world, BlockPos pos, @Nullable Mob entity) {
 		return PathType.RAIL;
-	}
+	}*/
 
 	@Override
 	public VoxelShape getShape(BlockState p_220053_1_, BlockGetter p_220053_2_, BlockPos p_220053_3_,
@@ -132,7 +134,7 @@ public class SeatBlock extends Block implements ProperWaterloggedBlock {
 		if (player.isShiftKeyDown() || player instanceof FakePlayer)
 			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 
-		DyeColor color = DyeColor.getColor(stack);
+		DyeColor color = CreateFabricUtil.getColor(stack);
 		if (color != null && color != this.color) {
 			if (level.isClientSide)
 				return ItemInteractionResult.SUCCESS;

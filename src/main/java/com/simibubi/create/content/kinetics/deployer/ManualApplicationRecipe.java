@@ -10,6 +10,10 @@ import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.advancement.CreateAdvancement;
 import com.simibubi.create.foundation.utility.BlockHelper;
 
+import com.simibubi.create.infrastructure.fabric.CreateRecipeWrapper;
+
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.resources.ResourceLocation;
@@ -29,15 +33,11 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-import net.neoforged.neoforge.items.wrapper.RecipeWrapper;
-
-@EventBusSubscriber
 public class ManualApplicationRecipe extends ItemApplicationRecipe {
+	static {
+		RightClickBlock.EVENT.register(ManualApplicationRecipe::manualApplicationRecipesApplyInWorld);
+	}
 
-	@SubscribeEvent
 	public static void manualApplicationRecipesApplyInWorld(PlayerInteractEvent.RightClickBlock event) {
 		Level level = event.getLevel();
 		ItemStack heldItem = event.getItemStack();
@@ -51,8 +51,8 @@ public class ManualApplicationRecipe extends ItemApplicationRecipe {
 		if (event.isCanceled())
 			return;
 
-		RecipeType<Recipe<RecipeWrapper>> type = AllRecipeTypes.ITEM_APPLICATION.getType();
-		Optional<RecipeHolder<Recipe<RecipeWrapper>>> foundRecipe = level.getRecipeManager()
+		RecipeType<Recipe<CreateRecipeWrapper>> type = AllRecipeTypes.ITEM_APPLICATION.getType();
+		Optional<RecipeHolder<Recipe<CreateRecipeWrapper>>> foundRecipe = level.getRecipeManager()
 			.getAllRecipesFor(type)
 			.stream()
 			.filter(r -> {

@@ -11,10 +11,15 @@ import com.simibubi.create.content.contraptions.actors.seat.SeatEntity;
 import com.simibubi.create.content.logistics.BigItemStack;
 import com.simibubi.create.content.logistics.packager.InventorySummary;
 import com.simibubi.create.content.logistics.packagerLink.LogisticallyLinkedBehaviour.RequestType;
+import com.simibubi.create.content.logistics.stockTicker.StockTickerBlockEntity.StockTickerData;
 import com.simibubi.create.content.logistics.tableCloth.ShoppingListItem;
 import com.simibubi.create.content.logistics.tableCloth.ShoppingListItem.ShoppingList;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.EntityInteractSpecific;
 import net.createmod.catnip.data.Couple;
 import net.createmod.catnip.data.Iterate;
 import net.minecraft.ChatFormatting;
@@ -29,15 +34,12 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
 
-@EventBusSubscriber
 public class StockTickerInteractionHandler {
+	public static void init() {
+		EntityInteractSpecific.EVENT.register(StockTickerInteractionHandler::interactWithLogisticsManager);
+	}
 
-	@SubscribeEvent
 	public static void interactWithLogisticsManager(PlayerInteractEvent.EntityInteractSpecific event) {
 		Entity entity = event.getTarget();
 		Player player = event.getEntity();
@@ -82,11 +84,7 @@ public class StockTickerInteractionHandler {
 				stbe.behaviour.mayAdministrate(player) && Create.LOGISTICS.isLockable(stbe.behaviour.freqId);
 			boolean isCurrentlyLocked = Create.LOGISTICS.isLocked(stbe.behaviour.freqId);
 
-			sp.openMenu(stbe.new RequestMenuProvider(), buf -> {
-				buf.writeBoolean(showLockOption);
-				buf.writeBoolean(isCurrentlyLocked);
-				buf.writeBlockPos(targetPos);
-			});
+			sp.openMenu(stbe.new RequestMenuProvider(new StockTickerData(showLockOption, isCurrentlyLocked, targetPos)));
 			stbe.getRecentSummary()
 				.divideAndSendTo(sp, targetPos);
 		}
@@ -137,7 +135,7 @@ public class StockTickerInteractionHandler {
 		int occupiedSlots = 0;
 		for (BigItemStack entry : paymentEntries.getStacksByCount())
 			occupiedSlots += Mth.ceil(entry.count / (float) entry.stack.getMaxStackSize());
-		for (int i = 0; i < tickerBE.receivedPayments.getSlots(); i++)
+		for (int i = 0; i < tickerBE.receivedPayments.getSlotCount(); i++)
 			if (tickerBE.receivedPayments.getStackInSlot(i)
 				.isEmpty())
 				occupiedSlots--;
@@ -186,7 +184,7 @@ public class StockTickerInteractionHandler {
 			if (simulate)
 				continue;
 
-			toTransfer.forEach(s -> ItemHandlerHelper.insertItemStacked(tickerBE.receivedPayments, s, false));
+			toTransfer.forEach(s -> CreateTransferUtil.insertItemStacked(tickerBE.receivedPayments, s, false));
 		}
 
 		tickerBE.broadcastPackageRequest(RequestType.PLAYER, order, null, ShoppingListItem.getAddress(mainHandItem));

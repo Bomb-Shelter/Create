@@ -9,6 +9,7 @@ import com.simibubi.create.content.fluids.transfer.GenericItemEmptying;
 import com.simibubi.create.content.logistics.box.PackageItem;
 import com.simibubi.create.content.logistics.item.filter.attribute.ItemAttribute;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import net.createmod.catnip.data.Pair;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
@@ -16,8 +17,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class FilterItemStack {
 	private final ItemStack filterItemStack;
@@ -25,7 +25,7 @@ public class FilterItemStack {
 	private FluidStack filterFluidStack;
 
 	public static FilterItemStack of(ItemStack filter) {
-		if (!filter.isComponentsPatchEmpty()) {
+		if (!filter.getComponentsPatch().isEmpty()) {
 			if (AllItems.FILTER.isIn(filter)) {
 				trimFilterComponents(filter);
 				return new ListFilterItemStack(filter);
@@ -106,7 +106,7 @@ public class FilterItemStack {
 		if (!matchNBT)
 			return filterFluidStack.getFluid()
 				.isSame(stack.getFluid());
-		return net.neoforged.neoforge.fluids.FluidStack.isSameFluidSameComponents(filterFluidStack, stack);
+		return io.github.fabricators_of_create.porting_lib.fluids.FluidStack.isSameFluidSameComponents(filterFluidStack, stack);
 	}
 
 	//
@@ -138,7 +138,7 @@ public class FilterItemStack {
 
 			containedItems = new ArrayList<>();
 			ItemStackHandler items = FilterItem.getFilterItems(filter);
-			for (int i = 0; i < items.getSlots(); i++) {
+			for (int i = 0; i < items.getSlotCount(); i++) {
 				ItemStack stackInSlot = items.getStackInSlot(i);
 				if (!stackInSlot.isEmpty())
 					containedItems.add(FilterItemStack.of(stackInSlot));

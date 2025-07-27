@@ -3,17 +3,16 @@ package com.simibubi.create.content.logistics.itemHatch;
 import com.simibubi.create.AllBlocks;
 import com.simibubi.create.Create;
 
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.common.util.TriState;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent.RightClickBlock;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickBlock;
+import net.fabricmc.fabric.api.util.TriState;
 
 
-@EventBusSubscriber(modid = Create.ID)
 public class ItemHatchHandler {
+	public static void init() {
+		RightClickBlock.EVENT.register(ItemHatchHandler::useOnItemHatchIgnoresSneak);
+	}
 
-	@SubscribeEvent(priority = EventPriority.LOW)
+	//@SubscribeEvent(priority = EventPriority.LOW)
 	public static void useOnItemHatchIgnoresSneak(RightClickBlock event) {
 		if (event.getUseItem() == TriState.DEFAULT && AllBlocks.ITEM_HATCH.has(event.getLevel()
 			.getBlockState(event.getPos())))

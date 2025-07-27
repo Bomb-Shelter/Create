@@ -5,13 +5,13 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerDestroyItemEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import net.neoforged.neoforge.event.EventHooks;
 
 public abstract class AbstractBlockBreakQueue {
 	protected Consumer<BlockPos> makeCallbackFor(Level world, float effectChance, ItemStack toDamage,
@@ -21,7 +21,7 @@ public abstract class AbstractBlockBreakQueue {
 			BlockHelper.destroyBlockAs(world, pos, playerEntity, toDamage, effectChance,
 				stack -> drop.accept(pos, stack));
 			if (toDamage.isEmpty() && !usedTool.isEmpty())
-				EventHooks.onPlayerDestroyItem(playerEntity, usedTool, InteractionHand.MAIN_HAND);
+				new PlayerDestroyItemEvent(playerEntity, usedTool, InteractionHand.MAIN_HAND).sendEvent();
 		};
 	}
 

@@ -15,6 +15,7 @@ import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BehaviourType;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.data.WorldAttached;
 import net.minecraft.core.BlockPos;
@@ -25,8 +26,6 @@ import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.state.BlockState;
-
-import net.neoforged.neoforge.fluids.FluidStack;
 
 public abstract class FluidTransportBehaviour extends BlockEntityBehaviour {
 

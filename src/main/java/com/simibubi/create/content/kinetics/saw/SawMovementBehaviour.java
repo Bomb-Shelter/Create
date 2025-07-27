@@ -2,6 +2,8 @@ package com.simibubi.create.content.kinetics.saw;
 
 import java.util.Optional;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.simibubi.create.content.contraptions.behaviour.MovementContext;
@@ -25,9 +27,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class SawMovementBehaviour extends BlockBreakingMovementBehaviour {
 
@@ -82,7 +83,7 @@ public class SawMovementBehaviour extends BlockBreakingMovementBehaviour {
 	}
 
 	public void dropItemFromCutTree(MovementContext context, BlockPos pos, ItemStack stack) {
-		ItemStack remainder = ItemHandlerHelper.insertItem(context.contraption.getStorage().getAllItems(), stack, false);
+		ItemStack remainder = CreateTransferUtil.insertItem(context.contraption.getStorage().getAllItems(), stack, false);
 		if (remainder.isEmpty())
 			return;
 
@@ -105,7 +106,7 @@ public class SawMovementBehaviour extends BlockBreakingMovementBehaviour {
 	}
 
 	@Override
-	@OnlyIn(value = Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void renderInContraption(MovementContext context, VirtualRenderWorld renderWorld,
 		ContraptionMatrices matrices, MultiBufferSource buffer) {
 		SawRenderer.renderInContraption(context, renderWorld, matrices, buffer);

@@ -2,6 +2,8 @@ package com.simibubi.create.foundation.utility;
 
 import java.util.function.Supplier;
 
+import io.github.fabricators_of_create.porting_lib.core.util.ServerLifecycleHooks;
+
 import org.jetbrains.annotations.Nullable;
 
 import net.createmod.catnip.platform.CatnipServices;
@@ -9,8 +11,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.MinecraftServer;
-
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 public final class GlobalRegistryAccess {
 	private static Supplier<@Nullable RegistryAccess> supplier;

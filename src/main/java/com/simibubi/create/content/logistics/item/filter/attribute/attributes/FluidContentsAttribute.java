@@ -5,6 +5,13 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
+import io.github.fabricators_of_create.porting_lib.transfer.MutableContainerItemContext;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.mojang.serialization.MapCodec;
@@ -21,9 +28,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.Fluid;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.fluids.capability.IFluidHandlerItem;
-
 public record FluidContentsAttribute(@Nullable Fluid fluid) implements ItemAttribute {
 	public static final MapCodec<FluidContentsAttribute> CODEC = BuiltInRegistries.FLUID.byNameCodec()
 			.xmap(FluidContentsAttribute::new, FluidContentsAttribute::fluid)
@@ -35,11 +39,11 @@ public record FluidContentsAttribute(@Nullable Fluid fluid) implements ItemAttri
 	private static List<Fluid> extractFluids(ItemStack stack) {
 		List<Fluid> fluids = new ArrayList<>();
 
-		IFluidHandlerItem capability = stack.getCapability(Capabilities.FluidHandler.ITEM);
+		Storage<FluidVariant> capability = FluidStorage.ITEM.find(stack, new MutableContainerItemContext(stack));
 
 		if (capability != null) {
-			for (int i = 0; i < capability.getTanks(); i++) {
-				fluids.add(capability.getFluidInTank(i).getFluid());
+			for (StorageView<FluidVariant> view : capability) {
+				fluids.add(view.getResource().getFluid());
 			}
 		}
 

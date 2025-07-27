@@ -7,6 +7,7 @@ import com.simibubi.create.content.equipment.wrench.IWrenchable;
 import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.WeakPowerCheckingBlock;
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -27,7 +28,7 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
 
-public class SignalBlock extends Block implements IBE<SignalBlockEntity>, IWrenchable {
+public class SignalBlock extends Block implements IBE<SignalBlockEntity>, IWrenchable, WeakPowerCheckingBlock {
 
 	public static final EnumProperty<SignalType> TYPE = EnumProperty.create("type", SignalType.class);
 	public static final BooleanProperty POWERED = BlockStateProperties.POWERED;

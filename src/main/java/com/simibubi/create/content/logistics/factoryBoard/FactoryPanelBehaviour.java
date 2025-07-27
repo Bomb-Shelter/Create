@@ -13,6 +13,8 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+
 import org.jetbrains.annotations.NotNull;
 import org.joml.Math;
 
@@ -81,10 +83,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public class FactoryPanelBehaviour extends FilteringBehaviour implements MenuProvider {
+public class FactoryPanelBehaviour extends FilteringBehaviour implements ExtendedScreenHandlerFactory<FactoryPanelPosition> {
 
 	public static final BehaviourType<FactoryPanelBehaviour> TOP_LEFT = new BehaviourType<>();
 	public static final BehaviourType<FactoryPanelBehaviour> TOP_RIGHT = new BehaviourType<>();
@@ -606,7 +608,7 @@ public class FactoryPanelBehaviour extends FilteringBehaviour implements MenuPro
 			// Open screen for setting an item through JEI
 			if (heldItem.isEmpty()) {
 				if (!isClientSide && player instanceof ServerPlayer sp)
-					sp.openMenu(this, buf -> FactoryPanelPosition.STREAM_CODEC.encode(buf, getPanelPosition()));
+					sp.openMenu(this);
 				return;
 			}
 
@@ -625,6 +627,11 @@ public class FactoryPanelBehaviour extends FilteringBehaviour implements MenuPro
 		// Open configuration screen
 		if (isClientSide)
 			CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> displayScreen(player));
+	}
+
+	@Override
+	public FactoryPanelPosition getScreenOpeningData(ServerPlayer player) {
+		return getPanelPosition();
 	}
 
 	public void enable() {
@@ -1027,7 +1034,7 @@ public class FactoryPanelBehaviour extends FilteringBehaviour implements MenuPro
 		};
 	}
 
-	@OnlyIn(value = Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void displayScreen(Player player) {
 		if (player instanceof LocalPlayer)
 			ScreenOpener.open(new FactoryPanelScreen(this));

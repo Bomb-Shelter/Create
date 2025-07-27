@@ -18,6 +18,7 @@ import net.createmod.catnip.data.WorldAttached;
 import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.outliner.Outliner;
 import net.createmod.catnip.theme.Color;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -28,12 +29,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RenderHighlightEvent;
 
-@EventBusSubscriber(Dist.CLIENT)
 public class ChainConveyorInteractionHandler {
 
 	public static WorldAttached<Cache<BlockPos, List<ChainConveyorShape>>> loadedChains =
@@ -163,12 +159,16 @@ public class ChainConveyorInteractionHandler {
 		ms.popPose();
 	}
 
-	@SubscribeEvent
+	static {
+		WorldRenderEvents.BEFORE_BLOCK_OUTLINE.register((context, hitResult) -> selectedLift == null || selectedShape == null);
+	}
+
+	/*@SubscribeEvent
 	public static void hideVanillaBlockSelection(RenderHighlightEvent.Block event) {
 		if (selectedLift == null || selectedShape == null)
 			return;
 
 		event.setCanceled(true);
-	}
+	}*/
 
 }

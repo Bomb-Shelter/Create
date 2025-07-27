@@ -11,6 +11,8 @@ import java.util.WeakHashMap;
 
 import com.simibubi.create.api.behaviour.movement.MovementBehaviour;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableFloat;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -64,8 +66,8 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class ContraptionCollider {
 
@@ -295,7 +297,7 @@ public class ContraptionCollider {
 						movingInteractionBehaviour.handleEntityCollision(entity, pos, contraptionEntity);
 
 					bounce = BlockHelper.getBounceMultiplier(blockState.getBlock());
-					slide = Math.max(0, blockState.getFriction(contraption.world, pos, entity) - .6f);
+					slide = Math.max(0, CreateFabricUtil.getFriction(blockState, contraption.world, pos, entity) - .6f);
 				}
 			}
 
@@ -406,7 +408,7 @@ public class ContraptionCollider {
 
 	private static int packetCooldown = 0;
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private static void saveClientPlayerFromClipping(AbstractContraptionEntity contraptionEntity,
 		Vec3 contraptionMotion) {
 		LocalPlayer entity = Minecraft.getInstance().player;
@@ -445,7 +447,7 @@ public class ContraptionCollider {
 			safetyLock.setLeft(null);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public static void lockPacketReceived(int contraptionId, int remotePlayerId, double suggestedOffset) {
 		ClientLevel level = Minecraft.getInstance().level;
 		if (!(level.getEntity(contraptionId) instanceof ControlledContraptionEntity contraptionEntity))
@@ -456,7 +458,7 @@ public class ContraptionCollider {
 			.put(player, suggestedOffset);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private static void saveRemotePlayerFromClipping(Player entity, AbstractContraptionEntity contraptionEntity,
 		Vec3 contraptionMotion) {
 		if (entity.isPassenger())
@@ -470,7 +472,7 @@ public class ContraptionCollider {
 				locksOnThisContraption.remove(entity);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private static boolean savePlayerFromClipping(Player entity, AbstractContraptionEntity contraptionEntity,
 		Vec3 contraptionMotion, double yStartOffset) {
 		AABB bb = entity.getBoundingBox()
@@ -507,7 +509,7 @@ public class ContraptionCollider {
 		if (!entity.onGround())
 			return entityMotion;
 
-		CompoundTag persistentData = entity.getPersistentData();
+		CompoundTag persistentData = entity.getCustomData();
 		if (persistentData.contains("ContraptionGrounded")) {
 			persistentData.remove("ContraptionGrounded");
 			return entityMotion;
@@ -529,7 +531,7 @@ public class ContraptionCollider {
 
 		DamageSource source = CreateDamageSources.runOver(world, contraptionEntity);
 		double damage = diffMotion.length();
-		if (entity.getClassification(false) == MobCategory.MONSTER)
+		if (entity.getType().getCategory() == MobCategory.MONSTER)
 			damage *= 2;
 
 		if (entity instanceof Player p && (p.isCreative() || p.isSpectator()))
@@ -648,7 +650,7 @@ public class ContraptionCollider {
 		return isClient.booleanValue() ? PlayerType.CLIENT : PlayerType.REMOTE;
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private static boolean isClientPlayerEntity(Entity entity) {
 		return entity instanceof LocalPlayer;
 	}

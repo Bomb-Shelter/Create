@@ -16,6 +16,9 @@ import com.simibubi.create.content.logistics.box.PackageStyles.PackageStyle;
 import com.simibubi.create.content.logistics.stockTicker.PackageOrderWithCrafts;
 import com.simibubi.create.foundation.item.ItemHelper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import net.createmod.catnip.codecs.stream.CatnipStreamCodecBuilders;
 import net.createmod.catnip.data.Glob;
 import net.createmod.catnip.math.VecHelper;
@@ -49,8 +52,6 @@ import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
-import net.neoforged.neoforge.items.ItemStackHandler;
 
 public class PackageItem extends Item {
 
@@ -91,7 +92,7 @@ public class PackageItem extends Item {
 
 	public static ItemStack containing(List<ItemStack> stacks) {
 		ItemStackHandler newInv = new ItemStackHandler(9);
-		stacks.forEach(s -> ItemHandlerHelper.insertItemStacked(newInv, s, false));
+		stacks.forEach(s -> CreateTransferUtil.insertItemStacked(newInv, s, false));
 		return containing(newInv);
 	}
 
@@ -211,7 +212,7 @@ public class PackageItem extends Item {
 		int visibleNames = 0;
 		int skippedNames = 0;
 		ItemStackHandler contents = getContents(stack);
-		for (int i = 0; i < contents.getSlots(); i++) {
+		for (int i = 0; i < contents.getSlotCount(); i++) {
 			ItemStack itemstack = contents.getStackInSlot(i);
 			if (itemstack.isEmpty())
 				continue;
@@ -255,7 +256,7 @@ public class PackageItem extends Item {
 		playerIn.setItemInHand(handIn, box.getCount() <= 1 ? ItemStack.EMPTY : box.copyWithCount(box.getCount() - 1));
 
 		if (!worldIn.isClientSide()) {
-			for (int i = 0; i < contents.getSlots(); i++) {
+			for (int i = 0; i < contents.getSlotCount(); i++) {
 				ItemStack itemstack = contents.getStackInSlot(i);
 				if (itemstack.isEmpty())
 					continue;

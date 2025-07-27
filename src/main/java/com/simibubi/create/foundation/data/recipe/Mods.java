@@ -2,6 +2,9 @@ package com.simibubi.create.foundation.data.recipe;
 
 import java.util.function.Consumer;
 
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 
 /**
@@ -72,6 +75,18 @@ public enum Mods {
 	ARS_E("ars_elemental", b -> b.omitWoodSuffix())
 
 	;
+
+	public static final StreamCodec<RegistryFriendlyByteBuf, Mods> STREAM_CODEC = StreamCodec.composite(
+		ByteBufCodecs.STRING_UTF8, Mods::getId,
+		id -> {
+			for (Mods mod : Mods.values()) {
+				if (mod.id.equals(id))
+					return mod;
+			}
+
+			return null;
+		}
+	);
 
 	private final String id;
 

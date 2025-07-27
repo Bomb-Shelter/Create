@@ -2,23 +2,22 @@ package com.simibubi.create.content.logistics.box;
 
 import com.simibubi.create.foundation.mixin.accessor.MinecraftAccessor;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.player.AttackEntityEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.entity.player.Player;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-@EventBusSubscriber(value = Dist.CLIENT)
 public class PackageClientInteractionHandler {
 
 	// In vanilla, punching an entity doesnt reset the attack timer. This leads to
 	// accidentally breaking blocks behind an armorstand or package when punching it
 	// in creative mode
+	public static void init() {
+		AttackEntityEvent.EVENT.register(PackageClientInteractionHandler::onPlayerPunchPackage);
+	}
 
-	@SubscribeEvent
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public static void onPlayerPunchPackage(AttackEntityEvent event) {
 		Player attacker = event.getEntity();
 		if (!attacker.level()

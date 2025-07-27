@@ -1,5 +1,7 @@
 package com.simibubi.create.content.trains.track;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomLandingEffectsBlock;
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomRunningEffectsBlock;
 import net.minecraft.world.level.pathfinder.PathType;
 
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +31,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-public class FakeTrackBlock extends Block implements EntityBlock, ProperWaterloggedBlock {
+public class FakeTrackBlock extends Block implements EntityBlock, ProperWaterloggedBlock, CustomRunningEffectsBlock, CustomLandingEffectsBlock {
 
 	public FakeTrackBlock(Properties p_49795_) {
 		super(p_49795_.randomTicks()
@@ -48,11 +50,11 @@ public class FakeTrackBlock extends Block implements EntityBlock, ProperWaterlog
 		return RenderShape.ENTITYBLOCK_ANIMATED;
 	}
 
-	@Override
+	/*@Override
 	public @Nullable PathType getBlockPathType(BlockState state, BlockGetter level, BlockPos pos,
 											   @Nullable Mob mob) {
 		return PathType.DAMAGE_OTHER;
-	}
+	}*/
 
 	@Override
 	protected void createBlockStateDefinition(Builder<Block, BlockState> pBuilder) {

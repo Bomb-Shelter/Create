@@ -5,6 +5,7 @@ import static com.simibubi.create.AllTags.NameSpace.CURIOS;
 import static com.simibubi.create.AllTags.NameSpace.MOD;
 import static com.simibubi.create.AllTags.NameSpace.QUARK;
 import static com.simibubi.create.AllTags.NameSpace.TIC;
+import static com.simibubi.create.AllTags.NameSpace.TRINKETS;
 
 import com.simibubi.create.api.contraption.ContraptionType;
 import com.simibubi.create.api.contraption.storage.item.MountedItemStorage;
@@ -61,7 +62,8 @@ public class AllTags {
 		TIC("tconstruct"),
 		QUARK("quark"),
 		GS("galosphere"),
-		CURIOS("curios");
+		CURIOS("curios"),
+		TRINKETS("trinkets");
 
 		public final String id;
 		public final boolean optionalDefault;
@@ -146,7 +148,7 @@ public class AllTags {
 			if (optional) {
 				tag = optionalTag(BuiltInRegistries.BLOCK, id);
 			} else {
-				tag = BlockTags.create(id);
+				tag = TagKey.create(Registries.BLOCK, id);
 			}
 			this.alwaysDatagen = alwaysDatagen;
 		}
@@ -205,7 +207,8 @@ public class AllTags {
 		LUMIERE(MOD, "stone_types/galosphere/lumiere"),
 
 		UA_CORAL(MOD, "upgrade_aquatic/coral"),
-		CURIOS_HEAD(CURIOS, "head");
+		CURIOS_HEAD(CURIOS, "head"),
+		TRINKETS_HEAD(TRINKETS, "head/hat");
 
 		public final TagKey<Item> tag;
 		public final boolean alwaysDatagen;
@@ -231,7 +234,7 @@ public class AllTags {
 			if (optional) {
 				tag = optionalTag(BuiltInRegistries.ITEM, id);
 			} else {
-				tag = ItemTags.create(id);
+				tag = TagKey.create(Registries.ITEM, id);
 			}
 			this.alwaysDatagen = alwaysDatagen;
 		}
@@ -260,6 +263,9 @@ public class AllTags {
 		FAN_PROCESSING_CATALYSTS_SMOKING(MOD, "fan_processing_catalysts/smoking"),
 		FAN_PROCESSING_CATALYSTS_SPLASHING(MOD, "fan_processing_catalysts/splashing"),
 
+		// Fabric
+		DIVING_FLUIDS
+
 		;
 
 		public final TagKey<Fluid> tag;
@@ -286,7 +292,7 @@ public class AllTags {
 			if (optional) {
 				tag = optionalTag(BuiltInRegistries.FLUID, id);
 			} else {
-				tag = FluidTags.create(id);
+				tag = TagKey.create(Registries.FLUID, id);
 			}
 			this.alwaysDatagen = alwaysDatagen;
 		}

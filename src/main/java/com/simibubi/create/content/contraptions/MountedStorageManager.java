@@ -9,6 +9,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CombinedInventoryStorage;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.google.common.collect.ImmutableMap;
@@ -48,10 +53,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.wrapper.CombinedInvWrapper;
-
 public class MountedStorageManager {
 	// builders used during assembly, null afterward
 	// ImmutableMap.Builder is not used because it will throw with duplicate keys, not override them
@@ -71,8 +72,8 @@ public class MountedStorageManager {
 	private ImmutableMap<BlockPos, SyncedMountedStorage> syncedItems;
 	private ImmutableMap<BlockPos, SyncedMountedStorage> syncedFluids;
 
-	private List<IItemHandlerModifiable> externalHandlers;
-	protected CombinedInvWrapper allItems;
+	private List<SlottedStackStorage> externalHandlers;
+	protected CombinedInventoryStorage allItems;
 
 	// ticks until storage can sync again
 	private int syncCooldown;
@@ -347,22 +348,22 @@ public class MountedStorageManager {
 		}
 	}
 
-	public void attachExternal(IItemHandlerModifiable externalStorage) {
+	public void attachExternal(SlottedStackStorage externalStorage) {
 		this.externalHandlers.add(externalStorage);
-		IItemHandlerModifiable[] all = new IItemHandlerModifiable[this.externalHandlers.size() + 1];
+		SlottedStackStorage[] all = new SlottedStackStorage[this.externalHandlers.size() + 1];
 		all[0] = this.items;
 		for (int i = 0; i < this.externalHandlers.size(); i++) {
 			all[i + 1] = this.externalHandlers.get(i);
 		}
 
-		this.allItems = new CombinedInvWrapper(all);
+		this.allItems = new CombinedInventoryStorage(all);
 	}
 
 	/**
 	 * The primary way to access a contraption's inventory. Includes all
 	 * non-internal mounted storages as well as all external storage.
 	 */
-	public CombinedInvWrapper getAllItems() {
+	public CombinedInventoryStorage getAllItems() {
 		this.assertInitialized();
 		return this.allItems;
 	}

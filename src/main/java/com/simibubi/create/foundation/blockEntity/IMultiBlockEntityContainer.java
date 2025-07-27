@@ -2,13 +2,17 @@ package com.simibubi.create.foundation.blockEntity;
 
 import javax.annotation.Nullable;
 
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.IFluidTank;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public interface IMultiBlockEntityContainer {
 
@@ -69,7 +73,7 @@ public interface IMultiBlockEntityContainer {
 
 		default void setTankSize(int tank, int blocks) {}
 
-		default IFluidTank getTank(int tank) { return null; }
+		default SingleSlotStorage<FluidVariant> getTank(int tank) { return null; }
 
 		default FluidStack getFluid(int tank) {	return FluidStack.EMPTY; }
 	}

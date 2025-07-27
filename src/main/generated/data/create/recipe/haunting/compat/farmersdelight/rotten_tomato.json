@@ -1,0 +1,24 @@
+{
+  "type": "create:haunting",
+  "ingredients": [
+    {
+      "fabric:type": "create:simple_datagen",
+      "ingredients": [
+        {
+          "item": "farmersdelight:tomato"
+        }
+      ]
+    }
+  ],
+  "porting_lib:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "farmersdelight"
+    }
+  ],
+  "results": [
+    {
+      "id": "farmersdelight:rotten_tomato"
+    }
+  ]
+}

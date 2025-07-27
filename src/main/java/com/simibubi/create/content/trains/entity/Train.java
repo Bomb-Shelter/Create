@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -16,6 +17,15 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
+
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+
+import net.fabricmc.fabric.api.registry.FuelRegistry;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableObject;
@@ -78,11 +88,7 @@ import net.minecraft.world.level.Level.ExplosionInteraction;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class Train {
 	public static final StreamCodec<RegistryFriendlyByteBuf, Train> STREAM_CODEC = CatnipLargerStreamCodecs.composite(
@@ -244,27 +250,27 @@ public class Train {
 				if (shouldActivate)
 					break;
 
-				IItemHandlerModifiable inv = carriage.storage.getAllItems();
+				SlottedStackStorage inv = carriage.storage.getAllItems();
 				if (inv != null) {
-					for (int slot = 0; slot < inv.getSlots(); slot++) {
+					for (int slot = 0; slot < inv.getSlotCount(); slot++) {
 						if (shouldActivate)
 							break;
-						ItemStack extractItem = inv.extractItem(slot, 1, true);
-						if (extractItem.isEmpty())
+						long extracted = CreateTransferUtil.simulateExtractAnyItem(inv.getSlot(slot), 1);
+						if (extracted <= 0)
 							continue;
-						shouldActivate |= filter.test(level, extractItem);
+						shouldActivate |= filter.test(level, inv.getStackInSlot(slot));
 					}
 				}
 
-				IFluidHandler tank = carriage.storage.getFluids();
+				SlottedStorage<FluidVariant> tank = carriage.storage.getFluids();
 				if (tank != null) {
-					for (int slot = 0; slot < tank.getTanks(); slot++) {
+					for (int slot = 0; slot < tank.getSlotCount(); slot++) {
 						if (shouldActivate)
 							break;
-						FluidStack drain = tank.drain(1, FluidAction.SIMULATE);
-						if (drain.isEmpty())
+						long drain = CreateTransferUtil.simulateExtractAny(tank.getSlot(slot), 1);
+						if (drain <= 0)
 							continue;
-						shouldActivate |= filter.test(level, drain);
+						shouldActivate |= filter.test(level, new FluidStack(tank.getSlot(slot)));
 					}
 				}
 			}
@@ -1121,21 +1127,22 @@ public class Train {
 		for (int index = 0; index < carriageCount; index++) {
 			int i = iterateFromBack ? carriageCount - 1 - index : index;
 			Carriage carriage = carriages.get(i);
-			IItemHandlerModifiable fuelItems = carriage.storage.getFuelItems();
+			SlottedStackStorage fuelItems = carriage.storage.getFuelItems();
 			if (fuelItems == null)
 				continue;
 
-			for (int slot = 0; slot < fuelItems.getSlots(); slot++) {
-				ItemStack stack = fuelItems.extractItem(slot, 1, true);
-				int burnTime = stack.getBurnTime(null);
+			for (int slot = 0; slot < fuelItems.getSlotCount(); slot++) {
+				var slotView = fuelItems.getSlot(slot);
+				var stack = CreateTransferUtil.getLimitedStack(slotView.getResource(), slotView.getAmount());
+				int burnTime = Objects.requireNonNullElse(FuelRegistry.INSTANCE.get(stack.getItem()), 0);
 				if (burnTime <= 0)
 					continue;
 
-				stack = fuelItems.extractItem(slot, 1, false);
-				fuelTicks += burnTime * stack.getCount();
-				ItemStack containerItem = stack.getCraftingRemainingItem();
+				long extracted = CreateTransferUtil.extractAnyItem(slotView, 1);
+				fuelTicks += burnTime * extracted;
+				ItemStack containerItem = stack.getItem().getCraftingRemainingItem().getDefaultInstance();
 				if (!containerItem.isEmpty())
-					ItemHandlerHelper.insertItemStacked(fuelItems, containerItem, false);
+					CreateTransferUtil.insertItemStacked(fuelItems, containerItem, false);
 				return;
 			}
 		}

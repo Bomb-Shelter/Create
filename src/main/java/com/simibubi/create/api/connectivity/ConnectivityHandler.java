@@ -11,6 +11,16 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.simibubi.create.content.fluids.tank.CreativeFluidTankBlockEntity;
@@ -24,9 +34,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
-import net.neoforged.neoforge.fluids.FluidStack;
-import net.neoforged.neoforge.fluids.IFluidTank;
-import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
 public class ConnectivityHandler {
 
@@ -155,11 +163,11 @@ public class ConnectivityHandler {
 		BlockPos origin = be.getBlockPos();
 
 		// optional fluid handling
-		IFluidTank beTank = null;
+		SingleSlotStorage<FluidVariant> beTank = null;
 		FluidStack fluid = FluidStack.EMPTY;
 		if (be instanceof IMultiBlockEntityContainer.Fluid ifluid && ifluid.hasTank()) {
 			beTank = ifluid.getTank(0);
-			fluid = beTank.getFluid();
+			fluid = new FluidStack(beTank.iterator().next());
 		}
 		Direction.Axis axis = be.getMainConnectionAxis();
 
@@ -246,8 +254,8 @@ public class ConnectivityHandler {
 					extraData = be.modifyExtraData(extraData);
 
 					if (part instanceof IMultiBlockEntityContainer.Fluid ifluidPart && ifluidPart.hasTank()) {
-						IFluidTank tankAt = ifluidPart.getTank(0);
-						FluidStack fluidAt = tankAt.getFluid();
+						SingleSlotStorage<FluidVariant> tankAt = ifluidPart.getTank(0);
+						FluidStack fluidAt = new FluidStack(tankAt.iterator().next());
 						if (!fluidAt.isEmpty()) {
 							// making this generic would be a rather large mess, unfortunately
 							if (beTank != null && fluid.isEmpty()
@@ -257,10 +265,10 @@ public class ConnectivityHandler {
 							}
 							if (be instanceof IMultiBlockEntityContainer.Fluid ifluidBE && ifluidBE.hasTank()
 								&& beTank != null) {
-								beTank.fill(fluidAt, IFluidHandler.FluidAction.EXECUTE);
+								CreateTransferUtil.insertFluid(beTank, fluidAt, false);
 							}
 						}
-						tankAt.drain(tankAt.getCapacity(), IFluidHandler.FluidAction.EXECUTE);
+						CreateTransferUtil.extractFluid(tankAt, tankAt.getCapacity(), false);
 					}
 
 					splitMultiAndInvalidate(part, cache, false);
@@ -336,18 +344,18 @@ public class ConnectivityHandler {
 
 					if (!toDistribute.isEmpty() && partAt != be) {
 						FluidStack copy = toDistribute.copy();
-						IFluidTank tank =
+						SingleSlotStorage<FluidVariant> tank =
 							(partAt instanceof IMultiBlockEntityContainer.Fluid ifluidPart ? ifluidPart.getTank(0) : null);
 						// making this generic would be a rather large mess, unfortunately
 						if (tank instanceof CreativeFluidTankBlockEntity.CreativeSmartFluidTank creativeTank) {
 							if (creativeTank.isEmpty())
 								creativeTank.setContainedFluid(toDistribute);
 						} else {
-							int split = Math.min(maxCapacity, toDistribute.getAmount());
+							long split = Math.min(maxCapacity, toDistribute.getAmount());
 							copy.setAmount(split);
 							toDistribute.shrink(split);
 							if (tank != null)
-								tank.fill(copy, IFluidHandler.FluidAction.EXECUTE);
+								CreateTransferUtil.insertFluid(tank, copy, false);
 						}
 					}
 					if (tryReconnect) {
@@ -360,10 +368,10 @@ public class ConnectivityHandler {
 			}
 		}
 
-		if (be instanceof IMultiBlockEntityContainer.Inventory inv && inv.hasInventory())
-			be.getLevel().invalidateCapabilities(be.getBlockPos());
-		if (be instanceof IMultiBlockEntityContainer.Fluid fluid && fluid.hasTank())
-			be.getLevel().invalidateCapabilities(be.getBlockPos());
+		//if (be instanceof IMultiBlockEntityContainer.Inventory inv && inv.hasInventory())
+			//be.getLevel().invalidateCapabilities(be.getBlockPos());
+		//if (be instanceof IMultiBlockEntityContainer.Fluid fluid && fluid.hasTank())
+			//be.getLevel().invalidateCapabilities(be.getBlockPos());
 
 		if (tryReconnect)
 			formMulti(be.getType(), level, cache == null ? new SearchCache<>() : cache, frontier);

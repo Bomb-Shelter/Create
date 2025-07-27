@@ -11,6 +11,10 @@ import javax.annotation.Nullable;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.simibubi.create.foundation.mixin.accessor.FluidInteractionRegistryAccessor;
 
+import io.github.fabricators_of_create.porting_lib.fluids.FluidInteractionRegistry.FluidInteraction;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidInteractionRegistry.HasFluidInteraction;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidInteractionRegistry.InteractionInformation;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidType;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.data.Pair;
 import net.minecraft.core.BlockPos;
@@ -21,10 +25,6 @@ import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
-import net.neoforged.neoforge.fluids.FluidInteractionRegistry.FluidInteraction;
-import net.neoforged.neoforge.fluids.FluidInteractionRegistry.HasFluidInteraction;
-import net.neoforged.neoforge.fluids.FluidInteractionRegistry.InteractionInformation;
-import net.neoforged.neoforge.fluids.FluidType;
 
 public class CobbleGenOptimisation {
 
@@ -92,7 +92,7 @@ public class CobbleGenOptimisation {
 		ServerLevel owLevel = level.getServer().getLevel(Level.OVERWORLD);
 		if (owLevel == null)
 			owLevel = level;
-		
+
 		if (cachedLevel == null || cachedLevel.getLevel() != owLevel)
 			cachedLevel = new CobbleGenLevel(level);
 

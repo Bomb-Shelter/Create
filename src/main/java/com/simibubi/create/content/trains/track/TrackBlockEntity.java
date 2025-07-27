@@ -18,8 +18,9 @@ import com.simibubi.create.foundation.blockEntity.IMergeableBE;
 import com.simibubi.create.foundation.blockEntity.RemoveBlockEntityPacket;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
+
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomRenderBoundingBoxBlockEntity;
 import net.createmod.catnip.platform.CatnipServices;
-import com.simibubi.create.foundation.utility.DistExecutor;
 import dev.engine_room.flywheel.lib.visualization.VisualizationHelper;
 import net.createmod.catnip.data.Pair;
 import net.createmod.catnip.nbt.NBTHelper;
@@ -45,9 +46,10 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.model.data.ModelData;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
+import org.jetbrains.annotations.Nullable;
 
 public class TrackBlockEntity extends SmartBlockEntity implements TransformableBlockEntity, IMergeableBE {
 
@@ -224,7 +226,7 @@ public class TrackBlockEntity extends SmartBlockEntity implements TransformableB
 		boolean smoothingPreviously = tilt.smoothingAngle.isPresent();
 		tilt.smoothingAngle = Optional.ofNullable(tag.contains("Smoothing") ? tag.getDouble("Smoothing") : null);
 		if (smoothingPreviously != tilt.smoothingAngle.isPresent() && clientPacket) {
-			requestModelDataUpdate();
+			//requestModelDataUpdate();
 			level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), 16);
 		}
 
@@ -242,9 +244,9 @@ public class TrackBlockEntity extends SmartBlockEntity implements TransformableB
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public AABB getRenderBoundingBox() {
-		return AABB.INFINITE;
+		return CustomRenderBoundingBoxBlockEntity.INFINITE_EXTENT_AABB;
 	}
 
 	@Override
@@ -345,21 +347,20 @@ public class TrackBlockEntity extends SmartBlockEntity implements TransformableB
 	}
 
 	@Override
-	public ModelData getModelData() {
+	public @Nullable Object getRenderData() {
 		if (!isTilted())
-			return super.getModelData();
-		return ModelData.builder()
-			.with(TrackBlockEntityTilt.ASCENDING_PROPERTY, tilt.smoothingAngle.get())
-			.build();
+			return super.getRenderData();
+
+		return tilt.smoothingAngle.get();
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private void registerToCurveInteractionUnsafe() {
 		TrackBlockOutline.TRACKS_WITH_TURNS.get(level)
 			.put(worldPosition, this);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private void removeFromCurveInteractionUnsafe() {
 		TrackBlockOutline.TRACKS_WITH_TURNS.get(level)
 			.remove(worldPosition);

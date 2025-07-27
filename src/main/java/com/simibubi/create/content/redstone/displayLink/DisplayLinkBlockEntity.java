@@ -16,9 +16,9 @@ import com.simibubi.create.content.logistics.factoryBoard.FactoryPanelSupportBeh
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 
+import dan200.computercraft.api.peripheral.PeripheralLookup;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.nbt.NBTHelper;
-import dan200.computercraft.api.peripheral.PeripheralCapability;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -29,8 +29,6 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 public class DisplayLinkBlockEntity extends LinkWithBulbBlockEntity  implements TransformableBlockEntity {
 
@@ -53,13 +51,9 @@ public class DisplayLinkBlockEntity extends LinkWithBulbBlockEntity  implements 
 		targetLine = 0;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
+	public static void registerCapabilities() {
 		if (Mods.COMPUTERCRAFT.isLoaded()) {
-			event.registerBlockEntity(
-					PeripheralCapability.get(),
-					AllBlockEntityTypes.DISPLAY_LINK.get(),
-					(be, context) -> be.computerBehaviour.getPeripheralCapability()
-			);
+			PeripheralLookup.get().registerForBlockEntity((be, context) -> be.computerBehaviour.getPeripheralCapability(), AllBlockEntityTypes.DISPLAY_LINK.get());
 		}
 	}
 

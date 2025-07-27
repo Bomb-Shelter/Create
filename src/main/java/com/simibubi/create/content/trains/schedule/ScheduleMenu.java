@@ -2,6 +2,9 @@ package com.simibubi.create.content.trains.schedule;
 
 import com.simibubi.create.foundation.gui.menu.GhostItemMenu;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlotItemHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.Container;
@@ -11,20 +14,13 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemStackHandler;
-import net.neoforged.neoforge.items.SlotItemHandler;
 
-public class ScheduleMenu extends GhostItemMenu<ItemStack> {
+public class ScheduleMenu extends GhostItemMenu<ItemStack, ItemStack> {
 
 	public boolean slotsActive = true;
 	public int targetSlotsActive = 1;
 
 	static final int slots = 2;
-
-	public ScheduleMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
-		super(type, id, inv, extraData);
-	}
 
 	public ScheduleMenu(MenuType<?> type, int id, Inventory inv, ItemStack contentHolder) {
 		super(type, id, inv, contentHolder);
@@ -47,8 +43,8 @@ public class ScheduleMenu extends GhostItemMenu<ItemStack> {
 	}
 
 	@Override
-	protected ItemStack createOnClient(RegistryFriendlyByteBuf extraData) {
-		return ItemStack.STREAM_CODEC.decode(extraData);
+	protected ItemStack createOnClient(ItemStack extraData) {
+		return extraData;
 	}
 
 	@Override
@@ -92,7 +88,7 @@ public class ScheduleMenu extends GhostItemMenu<ItemStack> {
 
 		private int targetIndex;
 
-		public InactiveItemHandlerSlot(IItemHandler itemHandler, int targetIndex, int index, int xPosition,
+		public InactiveItemHandlerSlot(SlottedStackStorage itemHandler, int targetIndex, int index, int xPosition,
 			int yPosition) {
 			super(itemHandler, index, xPosition, yPosition);
 			this.targetIndex = targetIndex;

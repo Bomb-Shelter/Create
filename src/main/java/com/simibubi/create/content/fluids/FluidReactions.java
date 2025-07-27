@@ -2,6 +2,8 @@ package com.simibubi.create.content.fluids;
 
 import com.simibubi.create.AllFluids;
 import com.simibubi.create.api.event.PipeCollisionEvent;
+import com.simibubi.create.api.event.PipeCollisionEvent.Flow;
+import com.simibubi.create.api.event.PipeCollisionEvent.Spill;
 import com.simibubi.create.foundation.advancement.AdvancementBehaviour;
 import com.simibubi.create.foundation.advancement.AllAdvancements;
 import com.simibubi.create.foundation.fluid.FluidHelper;
@@ -15,14 +17,13 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.level.material.Fluids;
-import net.neoforged.bus.api.EventPriority;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.fluids.FluidStack;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
-@EventBusSubscriber
 public class FluidReactions {
+	public static void init() {
+		Flow.EVENT.register(FluidReactions::handlePipeFlowCollisionFallback);
+		Spill.EVENT.register(FluidReactions::handlePipeSpillCollisionFallback);
+	}
 
 	public static void handlePipeFlowCollision(Level level, BlockPos pos, FluidStack fluid, FluidStack fluid2) {
 		Fluid f1 = fluid.getFluid();
@@ -32,12 +33,12 @@ public class FluidReactions {
 		BlockHelper.destroyBlock(level, pos, 1);
 
 		PipeCollisionEvent.Flow event = new PipeCollisionEvent.Flow(level, pos, f1, f2, null);
-		NeoForge.EVENT_BUS.post(event);
+		event.sendEvent();
 		if (event.getState() != null)
 			level.setBlockAndUpdate(pos, event.getState());
 	}
 
-	@SubscribeEvent(priority = EventPriority.HIGH)
+	//@SubscribeEvent(priority = EventPriority.HIGH)
 	public static void handlePipeFlowCollisionFallback(PipeCollisionEvent.Flow event) {
 		Fluid f1 = event.getFirstFluid();
 		Fluid f2 = event.getSecondFluid();
@@ -62,13 +63,13 @@ public class FluidReactions {
 		Fluid wf = worldFluid.getType();
 
 		PipeCollisionEvent.Spill event = new PipeCollisionEvent.Spill(level, pos, wf, pf, null);
-		NeoForge.EVENT_BUS.post(event);
+		event.sendEvent();
 		if (event.getState() != null) {
 			level.setBlockAndUpdate(pos, event.getState());
 		}
 	}
 
-	@SubscribeEvent(priority = EventPriority.HIGH)
+	//@SubscribeEvent(priority = EventPriority.HIGH)
 	public static void handlePipeSpillCollisionFallback(PipeCollisionEvent.Spill event) {
 		Fluid pf = event.getPipeFluid();
 		Fluid wf = event.getWorldFluid();

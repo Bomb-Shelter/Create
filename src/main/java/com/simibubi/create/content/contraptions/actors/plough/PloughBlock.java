@@ -6,9 +6,9 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.serialization.MapCodec;
 import com.simibubi.create.content.contraptions.actors.AttachedActorBlock;
 
+import net.fabricmc.fabric.api.entity.FakePlayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
-import net.neoforged.neoforge.common.util.FakePlayer;
 
 import org.jetbrains.annotations.NotNull;
 

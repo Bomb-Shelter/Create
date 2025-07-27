@@ -8,8 +8,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
-import javax.annotation.Nullable;
-
 import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.AllSoundEvents;
 import com.simibubi.create.api.equipment.goggles.IHaveHoveringInformation;
@@ -28,6 +26,10 @@ import com.simibubi.create.foundation.utility.CreateLang;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.platform.CatnipServices;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -35,7 +37,12 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
@@ -46,13 +53,12 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.IItemHandler;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
-public class StockTickerBlockEntity extends StockCheckingBlockEntity implements IHaveHoveringInformation {
+import org.jetbrains.annotations.Nullable;
+
+public class StockTickerBlockEntity extends StockCheckingBlockEntity implements IHaveHoveringInformation, SidedStorageBlockEntity {
 
 	// Player-interface Feature
 	protected List<List<BigItemStack>> lastClientsideStockSnapshot;
@@ -75,12 +81,12 @@ public class StockTickerBlockEntity extends StockCheckingBlockEntity implements 
 		hiddenCategoriesByPlayer = new HashMap<>();
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-			Capabilities.ItemHandler.BLOCK,
-			AllBlockEntityTypes.STOCK_TICKER.get(),
-			(be, context) -> be.receivedPayments
-		);
+	public static void registerCapabilities() {
+	}
+
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		return this.receivedPayments;
 	}
 
 	public void refreshClientStockSnapshot() {
@@ -214,7 +220,7 @@ public class StockTickerBlockEntity extends StockCheckingBlockEntity implements 
 	}
 
 	@Override
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public boolean addToTooltip(List<Component> tooltip, boolean isPlayerSneaking) {
 		if (receivedPayments.isEmpty())
 			return false;
@@ -226,7 +232,7 @@ public class StockTickerBlockEntity extends StockCheckingBlockEntity implements 
 			.forGoggles(tooltip);
 
 		InventorySummary summary = new InventorySummary();
-		for (int i = 0; i < receivedPayments.getSlots(); i++)
+		for (int i = 0; i < receivedPayments.getSlotCount(); i++)
 			summary.add(receivedPayments.getStackInSlot(i));
 		for (BigItemStack entry : summary.getStacksByCount())
 			CreateLang.builder()
@@ -257,7 +263,7 @@ public class StockTickerBlockEntity extends StockCheckingBlockEntity implements 
 		level.addParticle(new WiFiParticle.Data(), vec3.x, vec3.y, vec3.z, 1, 1, 1);
 	}
 
-	public class CategoryMenuProvider implements MenuProvider {
+	public class CategoryMenuProvider implements ExtendedScreenHandlerFactory<BlockPos> {
 
 		@Override
 		public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
@@ -269,9 +275,18 @@ public class StockTickerBlockEntity extends StockCheckingBlockEntity implements 
 			return Component.empty();
 		}
 
+		@Override
+		public BlockPos getScreenOpeningData(ServerPlayer player) {
+			return getBlockPos();
+		}
 	}
 
-	public class RequestMenuProvider implements MenuProvider {
+	public class RequestMenuProvider implements ExtendedScreenHandlerFactory<StockTickerData> {
+		private final StockTickerData data;
+
+		public RequestMenuProvider(StockTickerData data) {
+			this.data = data;
+		}
 
 		@Override
 		public AbstractContainerMenu createMenu(int pContainerId, Inventory pPlayerInventory, Player pPlayer) {
@@ -283,6 +298,18 @@ public class StockTickerBlockEntity extends StockCheckingBlockEntity implements 
 			return Component.empty();
 		}
 
+		@Override
+		public StockTickerData getScreenOpeningData(ServerPlayer player) {
+			return data;
+		}
 	}
 
+	public record StockTickerData(boolean showLockOption, boolean isCurrentlyLocked, BlockPos targetPos) {
+		public static final StreamCodec<RegistryFriendlyByteBuf, StockTickerData> STREAM_CODEC = StreamCodec.composite(
+			ByteBufCodecs.BOOL, StockTickerData::showLockOption,
+			ByteBufCodecs.BOOL, StockTickerData::isCurrentlyLocked,
+			BlockPos.STREAM_CODEC, StockTickerData::targetPos,
+			StockTickerData::new
+		);
+	}
 }

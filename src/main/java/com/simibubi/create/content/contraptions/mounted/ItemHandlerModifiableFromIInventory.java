@@ -3,17 +3,24 @@ package com.simibubi.create.content.contraptions.mounted;
 import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+import com.simibubi.create.infrastructure.fabric.transfer.SingleSlotStorageImpl;
+
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.Container;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.IItemHandlerModifiable;
 
 
 @MethodsReturnNonnullByDefault
 @ParametersAreNonnullByDefault
-public class ItemHandlerModifiableFromIInventory implements IItemHandlerModifiable {
-	private final Container inventory;
+public class ItemHandlerModifiableFromIInventory /*implements SlottedStackStorage*/ {
+	// Fabric: don't need to spend time on this tbh
+	/*private final Container inventory;
 
 	public ItemHandlerModifiableFromIInventory(Container inventory) {
 		this.inventory = inventory;
@@ -25,13 +32,25 @@ public class ItemHandlerModifiableFromIInventory implements IItemHandlerModifiab
 	}
 
 	@Override
-	public int getSlots() {
+	public int getSlotCount() {
 		return inventory.getContainerSize();
+	}
+
+	@Override
+	public SingleSlotStorage<ItemVariant> getSlot(int slot) {
+		var stack = inventory.getItem(slot);
+		return new SingleSlotStorageImpl<>(ItemVariant.of(stack), stack.getCount(), inventory.getMaxStackSize(stack));
 	}
 
 	@Override
 	public ItemStack getStackInSlot(int slot) {
 		return inventory.getItem(slot);
+	}
+
+	@Override
+	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
+		if (maxAmount == 0)
+			return 0;
 	}
 
 	@Override
@@ -123,8 +142,8 @@ public class ItemHandlerModifiableFromIInventory implements IItemHandlerModifiab
 	}
 
 	@Override
-	public boolean isItemValid(int slot, ItemStack stack) {
-		return inventory.canPlaceItem(slot, stack);
+	public boolean isItemValid(int slot, ItemVariant resource, int count) {
+		return inventory.canPlaceItem(slot, resource.toStack(count));
 	}
 
 	private void validateSlotIndex(int slot)
@@ -136,5 +155,5 @@ public class ItemHandlerModifiableFromIInventory implements IItemHandlerModifiab
 	private int getStackLimit(int slot, ItemStack stack)
 	{
 		return Math.min(getSlotLimit(slot), stack.getOrDefault(DataComponents.MAX_STACK_SIZE, 64));
-	}
+	}*/
 }

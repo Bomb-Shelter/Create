@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 
+import io.github.fabricators_of_create.porting_lib.client_events.event.client.RenderHandEvent;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.player.LocalPlayer;
@@ -16,8 +17,6 @@ import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.client.event.RenderHandEvent;
 
 public abstract class ShootableGadgetRenderHandler {
 
@@ -65,8 +64,8 @@ public abstract class ShootableGadgetRenderHandler {
 
 	protected abstract void transformHand(PoseStack ms, float flip, float equipProgress, float recoil, float pt);
 
-	public void registerListeners(IEventBus bus) {
-		bus.addListener(this::onRenderPlayerHand);
+	public void registerListeners() {
+		RenderHandEvent.EVENT.register(this::onRenderPlayerHand);
 	}
 
 	protected void onRenderPlayerHand(RenderHandEvent event) {

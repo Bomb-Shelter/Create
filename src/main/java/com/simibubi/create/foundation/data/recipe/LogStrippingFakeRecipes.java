@@ -8,6 +8,8 @@ import com.simibubi.create.content.kinetics.deployer.ManualApplicationRecipe;
 import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
+import com.simibubi.create.infrastructure.fabric.CreateFabricUtil;
+
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -47,7 +49,7 @@ public class LogStrippingFakeRecipes {
 			return;
 		BlockState state = blockItem.getBlock()
 			.defaultBlockState();
-		BlockState strippedState = AxeItem.getAxeStrippingState(state);
+		BlockState strippedState = CreateFabricUtil.getAxeStrippingState(state);
 		if (strippedState == null)
 			return;
 		Item resultItem = strippedState.getBlock()

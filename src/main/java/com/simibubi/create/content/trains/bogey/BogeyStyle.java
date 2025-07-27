@@ -23,8 +23,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class BogeyStyle {
 	public final ResourceLocation id;
@@ -36,7 +36,7 @@ public class BogeyStyle {
 	public final CompoundTag defaultData;
 	private final Map<BogeySizes.BogeySize, Supplier<? extends AbstractBogeyBlock<?>>> sizes;
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private Map<BogeySizes.BogeySize, SizeRenderer> sizeRenderers;
 
 	public BogeyStyle(ResourceLocation id, ResourceLocation cycleGroup, Component displayName,
@@ -81,7 +81,7 @@ public class BogeyStyle {
 				.orElse((AbstractBogeyBlock) getBlockForSize(currentSize));
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public void render(BogeySize size, float partialTick, PoseStack poseStack, MultiBufferSource buffers, int light, int overlay, float wheelAngle, @Nullable CompoundTag bogeyData, boolean inContraption) {
 		if (bogeyData == null)
 			bogeyData = new CompoundTag();
@@ -94,7 +94,7 @@ public class BogeyStyle {
 		}
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	@Nullable
 	public BogeyVisual createVisual(BogeySize size, VisualizationContext ctx, float partialTick, boolean inContraption) {
 		SizeRenderer renderer = sizeRenderers.get(size);
@@ -104,7 +104,7 @@ public class BogeyStyle {
 		return null;
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	public record SizeRenderer(BogeyRenderer renderer, BogeyVisualizer visualizer) {
 	}
 

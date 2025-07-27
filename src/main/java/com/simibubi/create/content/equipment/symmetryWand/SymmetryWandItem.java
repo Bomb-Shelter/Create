@@ -20,9 +20,12 @@ import com.simibubi.create.foundation.item.render.SimpleCustomRenderer;
 import com.simibubi.create.foundation.utility.BlockHelper;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
+import io.github.fabricators_of_create.porting_lib.level.BlockSnapshot;
+import io.github.fabricators_of_create.porting_lib.level.events.BlockEvent.EntityPlaceEvent;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.gui.ScreenOpener;
 import net.createmod.catnip.platform.CatnipServices;
+import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
@@ -43,16 +46,14 @@ import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.CollisionContext;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
-import net.neoforged.neoforge.client.extensions.common.IClientItemExtensions;
-import net.neoforged.neoforge.common.util.BlockSnapshot;
-import net.neoforged.neoforge.event.EventHooks;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 
 public class SymmetryWandItem extends Item {
 
 	public SymmetryWandItem(Properties properties) {
 		super(properties);
+		CatnipServices.PLATFORM.executeOnClientOnly(() -> this::initializeClient);
 	}
 
 	@Nonnull
@@ -146,7 +147,7 @@ public class SymmetryWandItem extends Item {
 		return new InteractionResultHolder<>(InteractionResult.SUCCESS, wand);
 	}
 
-	@OnlyIn(Dist.CLIENT)
+	@Environment(EnvType.CLIENT)
 	private void openWandGUI(ItemStack wand, InteractionHand hand) {
 		ScreenOpener.open(new SymmetryWandScreen(wand, hand));
 	}
@@ -236,7 +237,9 @@ public class SymmetryWandItem extends Item {
 				world.setBlockAndUpdate(position, blockState);
 
 				wand.set(AllDataComponents.SYMMETRY_WAND_SIMULATE, true);
-				boolean placeInterrupted = EventHooks.onBlockPlace(player, blocksnapshot, Direction.UP);
+				var event = new EntityPlaceEvent(blocksnapshot, blocksnapshot.getLevel().getBlockState(blocksnapshot.getPos().relative(Direction.UP)), player);
+				event.sendEvent();
+				boolean placeInterrupted = event.isCanceled();
 				wand.set(AllDataComponents.SYMMETRY_WAND_SIMULATE, false);
 
 				if (placeInterrupted) {
@@ -311,10 +314,9 @@ public class SymmetryWandItem extends Item {
 		return false;
 	}
 
-	@Override
-	@OnlyIn(Dist.CLIENT)
-	public void initializeClient(Consumer<IClientItemExtensions> consumer) {
-		consumer.accept(SimpleCustomRenderer.create(this, new SymmetryWandItemRenderer()));
+	@Environment(EnvType.CLIENT)
+	public void initializeClient() {
+		BuiltinItemRendererRegistry.INSTANCE.register(this, SimpleCustomRenderer.create(this, new SymmetryWandItemRenderer()));
 	}
 
 }

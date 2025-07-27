@@ -54,8 +54,8 @@ public class PackagePortScreen extends AbstractSimiContainerScreen<PackagePortMe
 		super.init();
 		clearWidgets();
 
-		int x = getGuiLeft();
-		int y = getGuiTop();
+		int x = leftPos;
+		int y = topPos;
 
 		Consumer<String> onTextChanged;
 		onTextChanged = s -> addressBox.setX(nameBoxX(s, addressBox));
@@ -100,7 +100,7 @@ public class PackagePortScreen extends AbstractSimiContainerScreen<PackagePortMe
 	}
 
 	private int nameBoxX(String s, EditBox nameBox) {
-		return getGuiLeft() + background.getWidth() / 2 - (Math.min(font.width(s), nameBox.getWidth()) + 10) / 2;
+		return leftPos + background.getWidth() / 2 - (Math.min(font.width(s), nameBox.getWidth()) + 10) / 2;
 	}
 
 	@Override
@@ -112,8 +112,8 @@ public class PackagePortScreen extends AbstractSimiContainerScreen<PackagePortMe
 
 	@Override
 	protected void renderBg(GuiGraphics graphics, float pPartialTick, int pMouseX, int pMouseY) {
-		int x = getGuiLeft();
-		int y = getGuiTop();
+		int x = leftPos;
+		int y = topPos;
 
 		AllGuiTextures header = frogMode ? AllGuiTextures.FROGPORT_HEADER : AllGuiTextures.POSTBOX_HEADER;
 		header.render(graphics, x, y - header.getHeight());

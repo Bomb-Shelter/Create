@@ -7,6 +7,8 @@ import com.mojang.datafixers.util.Pair;
 import com.simibubi.create.AllAttachmentTypes;
 import com.simibubi.create.content.contraptions.minecart.capability.MinecartController;
 
+import com.simibubi.create.infrastructure.fabric.MinecartUtil;
+
 import net.createmod.catnip.math.VecHelper;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
@@ -54,7 +56,7 @@ public class MinecartSim2020 {
 			return Mth.equal(furnace.xPush, 0)
 				&& Mth.equal(furnace.zPush, 0);
 
-		MinecartController controller = c.getData(AllAttachmentTypes.MINECART_CONTROLLER);
+		MinecartController controller = c.getAttachedOrCreate(AllAttachmentTypes.MINECART_CONTROLLER);
 		if (controller != MinecartController.EMPTY)
 			return !controller.isStalled();
 		return true;
@@ -81,22 +83,22 @@ public class MinecartSim2020 {
 		actualY = cartPos.getY() + 1;
 
 		BaseRailBlock abstractrailblock = (BaseRailBlock) trackState.getBlock();
-		RailShape railshape = abstractrailblock.getRailDirection(trackState, cart.level(), cartPos, cart);
+		RailShape railshape = trackState.getValue(abstractrailblock.getShapeProperty());
 		switch (railshape) {
 		case ASCENDING_EAST:
-			forcedMovement = forcedMovement.add(-1 * cart.getSlopeAdjustment(), 0.0D, 0.0D);
+			forcedMovement = forcedMovement.add(-1 * MinecartUtil.getSlopeAdjustment(cart), 0.0D, 0.0D);
 			actualY++;
 			break;
 		case ASCENDING_WEST:
-			forcedMovement = forcedMovement.add(cart.getSlopeAdjustment(), 0.0D, 0.0D);
+			forcedMovement = forcedMovement.add(MinecartUtil.getSlopeAdjustment(cart), 0.0D, 0.0D);
 			actualY++;
 			break;
 		case ASCENDING_NORTH:
-			forcedMovement = forcedMovement.add(0.0D, 0.0D, cart.getSlopeAdjustment());
+			forcedMovement = forcedMovement.add(0.0D, 0.0D, MinecartUtil.getSlopeAdjustment(cart));
 			actualY++;
 			break;
 		case ASCENDING_SOUTH:
-			forcedMovement = forcedMovement.add(0.0D, 0.0D, -1 * cart.getSlopeAdjustment());
+			forcedMovement = forcedMovement.add(0.0D, 0.0D, -1 * MinecartUtil.getSlopeAdjustment(cart));
 			actualY++;
 		default:
 			break;

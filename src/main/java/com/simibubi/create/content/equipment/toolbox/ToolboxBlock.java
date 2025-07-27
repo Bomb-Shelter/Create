@@ -4,6 +4,12 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
 
 import java.util.Optional;
 
+import io.github.fabricators_of_create.porting_lib.util.TagUtil;
+import net.fabricmc.fabric.api.entity.FakePlayer;
+
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerType;
+import net.minecraft.server.level.ServerPlayer;
+
 import org.jetbrains.annotations.NotNull;
 
 import com.mojang.serialization.MapCodec;
@@ -42,8 +48,6 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
-
-import net.neoforged.neoforge.common.util.FakePlayer;
 
 public class ToolboxBlock extends HorizontalDirectionalBlock implements SimpleWaterloggedBlock, IBE<ToolboxBlockEntity> {
 
@@ -141,7 +145,7 @@ public class ToolboxBlock extends HorizontalDirectionalBlock implements SimpleWa
 		if (player == null || player.isCrouching())
 			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 
-		DyeColor color = DyeColor.getColor(stack);
+		DyeColor color = TagUtil.getColorFromStack(stack);
 		if (color != null && color != this.color) {
 			if (level.isClientSide)
 				return ItemInteractionResult.SUCCESS;
@@ -157,7 +161,7 @@ public class ToolboxBlock extends HorizontalDirectionalBlock implements SimpleWa
 			return ItemInteractionResult.SUCCESS;
 
 		withBlockEntityDo(level, pos,
-			toolbox -> player.openMenu(toolbox, toolbox::sendToMenu));
+			toolbox -> player.openMenu(toolbox));
 		return ItemInteractionResult.SUCCESS;
 	}
 

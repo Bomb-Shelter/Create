@@ -2,7 +2,10 @@ package com.simibubi.create.content.fluids;
 
 import com.simibubi.create.Create;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickItem;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
+import net.fabricmc.fabric.api.event.client.player.ClientPreAttackCallback;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionResult;
@@ -15,18 +18,17 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
-@EventBusSubscriber
 public class FluidBottleItemHook extends Item {
 
 	private FluidBottleItemHook(Properties p) {
 		super(p);
 	}
 
-	@SubscribeEvent
+	public static void init() {
+		RightClickItem.EVENT.register(FluidBottleItemHook::preventWaterBottlesFromCreatesFluids);
+	}
+
 	public static void preventWaterBottlesFromCreatesFluids(PlayerInteractEvent.RightClickItem event) {
 		ItemStack itemStack = event.getItemStack();
 		if (itemStack.isEmpty())

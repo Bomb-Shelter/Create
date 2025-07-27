@@ -6,6 +6,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.animatedContainer.An
 import com.simibubi.create.foundation.gui.menu.MenuBase;
 import com.simibubi.create.foundation.item.SmartInventory;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlotItemHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -16,12 +17,11 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.neoforged.neoforge.items.SlotItemHandler;
 
-public class PackagePortMenu extends MenuBase<PackagePortBlockEntity> {
+public class PackagePortMenu extends MenuBase<PackagePortBlockEntity, BlockPos> {
 
-	public PackagePortMenu(MenuType<?> type, int id, Inventory inv, RegistryFriendlyByteBuf extraData) {
-		super(type, id, inv, extraData);
+	public PackagePortMenu(MenuType<?> type, int id, Inventory inv, BlockPos extraData) {
+		super(type, id, inv, extraData, true);
 	}
 
 	public PackagePortMenu(MenuType<?> type, int id, Inventory inv, PackagePortBlockEntity be) {
@@ -35,8 +35,7 @@ public class PackagePortMenu extends MenuBase<PackagePortBlockEntity> {
 	}
 
 	@Override
-	protected PackagePortBlockEntity createOnClient(RegistryFriendlyByteBuf extraData) {
-		BlockPos readBlockPos = extraData.readBlockPos();
+	protected PackagePortBlockEntity createOnClient(BlockPos readBlockPos) {
 		ClientLevel world = Minecraft.getInstance().level;
 		BlockEntity blockEntity = world.getBlockEntity(readBlockPos);
 		if (blockEntity instanceof PackagePortBlockEntity ppbe)
@@ -51,7 +50,7 @@ public class PackagePortMenu extends MenuBase<PackagePortBlockEntity> {
 			return ItemStack.EMPTY;
 
 		ItemStack stack = clickedSlot.getItem();
-		int size = contentHolder.inventory.getSlots();
+		int size = contentHolder.inventory.getSlotCount();
 		boolean success = false;
 		if (index < size) {
 			success = !moveItemStackTo(stack, size, slots.size(), false);

@@ -6,6 +6,14 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import io.github.fabricators_of_create.porting_lib.core.event.entity.player.PlayerEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerEvents;
+import io.github.fabricators_of_create.porting_lib.level.BlockSnapshot;
+import io.github.fabricators_of_create.porting_lib.level.events.BlockEvent.EntityPlaceEvent;
+import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+
+import net.minecraft.world.level.block.BaseRailBlock;
+
 import org.apache.commons.lang3.tuple.Pair;
 
 import com.simibubi.create.AllBlocks;
@@ -51,11 +59,6 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
-
-import net.neoforged.neoforge.common.extensions.IBaseRailBlockExtension;
-import net.neoforged.neoforge.common.util.BlockSnapshot;
-import net.neoforged.neoforge.event.EventHooks;
-import net.neoforged.neoforge.items.IItemHandler;
 
 public class DeployerMovementBehaviour implements MovementBehaviour {
 
@@ -148,7 +151,7 @@ public class DeployerMovementBehaviour implements MovementBehaviour {
 		ItemStack contextStack = requiredItems.isEmpty() ? ItemStack.EMPTY : requiredItems.get(0).stack;
 
 		if (!context.contraption.hasUniversalCreativeCrate) {
-			IItemHandler itemHandler = context.contraption.getStorage().getAllItems();
+			SlottedStackStorage itemHandler = context.contraption.getStorage().getAllItems();
 			for (ItemRequirement.StackRequirement required : requiredItems) {
 				ItemStack stack = ItemHelper
 					.extract(itemHandler, required::matches, ExtractionCountMode.EXACTLY,
@@ -165,9 +168,11 @@ public class DeployerMovementBehaviour implements MovementBehaviour {
 		BlockSnapshot blocksnapshot = BlockSnapshot.create(world.dimension(), world, pos);
 		BlockHelper.placeSchematicBlock(world, blockState, pos, contextStack, data);
 
-		if (EventHooks.onBlockPlace(player, blocksnapshot, Direction.UP))
+		var event = new EntityPlaceEvent(blocksnapshot, blocksnapshot.getLevel().getBlockState(blocksnapshot.getPos().relative(Direction.UP)), player);
+		event.sendEvent();
+		if (event.isCanceled())
 			blocksnapshot.restore(Block.UPDATE_CLIENTS);
-		else if (blockState.getBlock() instanceof IBaseRailBlockExtension || blockState.getBlock() instanceof ITrackBlock)
+		else if (blockState.getBlock() instanceof BaseRailBlock || blockState.getBlock() instanceof ITrackBlock)
 			player.placedTracks = true;
 	}
 

@@ -10,6 +10,8 @@ import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+import net.minecraft.network.codec.StreamCodec;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import com.simibubi.create.content.trains.entity.Carriage.DimensionalCarriageEntity;
@@ -28,6 +30,14 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
 public class CarriageSyncData {
+	public static final StreamCodec<FriendlyByteBuf, CarriageSyncData> STREAM_CODEC = StreamCodec.of(
+		(buf, value) -> value.write(buf),
+		(buf) -> {
+			var value = new CarriageSyncData();
+			value.read(buf);
+			return value;
+		}
+	);
 
 	public List<Pair<Couple<Integer>, Float>> wheelLocations;
 	public Pair<Vec3, Couple<Vec3>> fallbackLocations;

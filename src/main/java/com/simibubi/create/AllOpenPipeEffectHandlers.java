@@ -8,9 +8,8 @@ import com.simibubi.create.impl.effect.PotionEffectHandler;
 import com.simibubi.create.impl.effect.TeaEffectHandler;
 import com.simibubi.create.impl.effect.WaterEffectHandler;
 
+import io.github.fabricators_of_create.porting_lib.tags.Tags;
 import net.minecraft.tags.FluidTags;
-
-import net.neoforged.neoforge.common.Tags;
 
 public class AllOpenPipeEffectHandlers {
 	public static void registerDefaults() {

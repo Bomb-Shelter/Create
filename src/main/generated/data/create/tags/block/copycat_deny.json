@@ -1,0 +1,16 @@
+{
+  "values": [
+    {
+      "id": "#minecraft:cauldrons",
+      "required": false
+    },
+    {
+      "id": "#minecraft:saplings",
+      "required": false
+    },
+    {
+      "id": "#minecraft:climbable",
+      "required": false
+    }
+  ]
+}

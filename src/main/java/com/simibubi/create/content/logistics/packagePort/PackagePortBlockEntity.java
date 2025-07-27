@@ -10,14 +10,20 @@ import com.simibubi.create.content.equipment.clipboard.ClipboardOverrides.Clipbo
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.blockEntity.behaviour.animatedContainer.AnimatedContainerBehaviour;
+import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.foundation.item.SmartInventory;
 import com.simibubi.create.foundation.utility.CreateLang;
 
 import net.createmod.catnip.codecs.CatnipCodecUtils;
+import net.fabricmc.fabric.api.entity.FakePlayer;
+import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
@@ -28,20 +34,18 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import net.neoforged.neoforge.common.util.FakePlayer;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemHandlerHelper;
+import org.jetbrains.annotations.Nullable;
 
-public abstract class PackagePortBlockEntity extends SmartBlockEntity implements MenuProvider {
+public abstract class PackagePortBlockEntity extends SmartBlockEntity implements ExtendedScreenHandlerFactory<BlockPos> {
 
 	public boolean acceptsPackages;
 	public String addressFilter;
 	public PackagePortTarget target;
 	public SmartInventory inventory;
 
-	protected AnimatedContainerBehaviour<PackagePortMenu> openTracker;
+	protected AnimatedContainerBehaviour<BlockPos, PackagePortMenu> openTracker;
 
-	protected IItemHandler itemHandler;
+	protected Storage<ItemVariant> itemHandler;
 
 	public PackagePortBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
@@ -52,7 +56,7 @@ public abstract class PackagePortBlockEntity extends SmartBlockEntity implements
 	}
 
 	public boolean isBackedUp() {
-		for (int i = 0; i < inventory.getSlots(); i++)
+		for (int i = 0; i < inventory.getSlotCount(); i++)
 			if (inventory.getStackInSlot(i)
 				.isEmpty())
 				return false;
@@ -109,7 +113,7 @@ public abstract class PackagePortBlockEntity extends SmartBlockEntity implements
 		if (target != null)
 			target.deregister(this, level, worldPosition);
 		super.destroy();
-		for (int i = 0; i < inventory.getSlots(); i++)
+		for (int i = 0; i < inventory.getSlotCount(); i++)
 			drop(inventory.getStackInSlot(i));
 	}
 
@@ -145,9 +149,13 @@ public abstract class PackagePortBlockEntity extends SmartBlockEntity implements
 			addAddressToClipboard(player, mainHandItem);
 			return ItemInteractionResult.SUCCESS;
 		}
-
-		player.openMenu(this, worldPosition);
+		player.openMenu(this);
 		return ItemInteractionResult.SUCCESS;
+	}
+
+	@Override
+	public BlockPos getScreenOpeningData(ServerPlayer player) {
+		return this.worldPosition;
 	}
 
 	protected void onOpenedManually() {};
@@ -198,7 +206,7 @@ public abstract class PackagePortBlockEntity extends SmartBlockEntity implements
 	}
 
 	public int getComparatorOutput() {
-		return ItemHandlerHelper.calcRedstoneFromInventory(inventory);
+		return ItemHelper.calcRedstoneFromInventory(inventory);
 	}
 
 }

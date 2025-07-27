@@ -20,18 +20,18 @@ import com.simibubi.create.content.schematics.SchematicExport;
 import com.simibubi.create.content.schematics.SchematicExport.SchematicExportResult;
 import com.simibubi.create.content.schematics.client.SchematicAndQuillHandler;
 
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.ChatFormatting;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
-import net.neoforged.fml.loading.FMLPaths;
 
 /**
  * This command allows for quick exporting of GameTests.
  * It is only registered in a client development environment. It is not safe in production or multiplayer.
  */
 public class CreateTestCommand {
-	private static final Path gametests = FMLPaths.GAMEDIR.get()
+	private static final Path gametests = FabricLoader.getInstance().getGameDir()
 			.getParent()
 			.resolve("src/main/resources/data/create/structure/gametest")
 			.toAbsolutePath();

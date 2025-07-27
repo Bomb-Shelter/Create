@@ -1,5 +1,6 @@
 package com.simibubi.create.content.decoration;
 
+import io.github.fabricators_of_create.porting_lib.blocks.extensions.FlammableBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -14,7 +15,7 @@ import net.minecraft.world.level.block.state.StateDefinition.Builder;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.Property;
 
-public class CardboardBlock extends Block {
+public class CardboardBlock extends Block implements FlammableBlock {
 
 	public static final Property<Axis> HORIZONTAL_AXIS = BlockStateProperties.HORIZONTAL_AXIS;
 

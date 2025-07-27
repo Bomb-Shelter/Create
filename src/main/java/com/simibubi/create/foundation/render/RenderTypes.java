@@ -8,16 +8,15 @@ import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.simibubi.create.Create;
 
+import net.fabricmc.fabric.api.client.rendering.v1.CoreShaderRegistrationCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.CoreShaderRegistrationCallback.RegistrationContext;
 import net.minecraft.Util;
 import net.minecraft.client.renderer.RenderStateShard;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.ShaderInstance;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceProvider;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.client.event.RegisterShadersEvent;
+import net.fabricmc.api.EnvType;
 
 public class RenderTypes extends RenderStateShard {
 	public static final RenderStateShard.ShaderStateShard GLOWING_SHADER = new RenderStateShard.ShaderStateShard(() -> Shaders.glowingShader);
@@ -141,15 +140,15 @@ public class RenderTypes extends RenderStateShard {
 		super(null, null, null);
 	}
 
-	@EventBusSubscriber(value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
+	public static void init() {
+		CoreShaderRegistrationCallback.EVENT.register(Shaders::onRegisterShaders);
+	}
+
 	private static class Shaders {
 		private static ShaderInstance glowingShader;
 
-		@SubscribeEvent
-		public static void onRegisterShaders(RegisterShadersEvent event) throws IOException {
-			ResourceProvider resourceProvider = event.getResourceProvider();
-			event.registerShader(new ShaderInstance(resourceProvider, Create.asResource("glowing_shader"),
-				DefaultVertexFormat.NEW_ENTITY), shader -> glowingShader = shader);
+		public static void onRegisterShaders(RegistrationContext context) throws IOException {
+			context.register(Create.asResource("glowing_shader"), DefaultVertexFormat.NEW_ENTITY, instance -> glowingShader = instance);
 		}
 	}
 }

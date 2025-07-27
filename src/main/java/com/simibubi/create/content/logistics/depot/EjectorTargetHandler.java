@@ -1,5 +1,8 @@
 package com.simibubi.create.content.logistics.depot;
 
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.LeftClickBlock;
+import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.RightClickBlock;
 import net.createmod.catnip.platform.CatnipServices;
 
 import org.joml.Vector3f;
@@ -35,14 +38,10 @@ import net.minecraft.world.phys.HitResult.Type;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.fabricmc.api.EnvType;
 
 import java.util.Objects;
 
-@EventBusSubscriber(value = Dist.CLIENT)
 public class EjectorTargetHandler {
 
 	static BlockPos currentSelection;
@@ -50,7 +49,11 @@ public class EjectorTargetHandler {
 	static long lastHoveredBlockPos = -1;
 	static EntityLauncher launcher;
 
-	@SubscribeEvent
+	static {
+		RightClickBlock.EVENT.register(EjectorTargetHandler::rightClickingBlocksSelectsThem);
+		LeftClickBlock.EVENT.register(EjectorTargetHandler::leftClickingBlocksDeselectsThem);
+	}
+
 	public static void rightClickingBlocksSelectsThem(PlayerInteractEvent.RightClickBlock event) {
 		if (currentItem == null)
 			return;
@@ -72,7 +75,6 @@ public class EjectorTargetHandler {
 		event.setCancellationResult(InteractionResult.SUCCESS);
 	}
 
-	@SubscribeEvent
 	public static void leftClickingBlocksDeselectsThem(PlayerInteractEvent.LeftClickBlock event) {
 		if (currentItem == null)
 			return;

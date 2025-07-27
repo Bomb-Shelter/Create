@@ -22,8 +22,6 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
-import net.neoforged.neoforge.common.NeoForgeMod;
-
 public class GirderPlacementHelper implements IPlacementHelper {
 
 	@Override

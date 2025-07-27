@@ -7,6 +7,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
+import com.simibubi.create.infrastructure.fabric.transfer.FinalCommitSnapshot;
+
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 
@@ -43,11 +51,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
-import net.neoforged.neoforge.items.IItemHandler;
-
-public class MechanicalCrafterBlockEntity extends KineticBlockEntity {
+public class MechanicalCrafterBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity {
 
 	enum Phase {
 		IDLE, ACCEPTING, ASSEMBLING, EXPORTING, WAITING, CRAFTING, INSERTING;
@@ -70,16 +74,22 @@ public class MechanicalCrafterBlockEntity extends KineticBlockEntity {
 		}
 
 		@Override
-		public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
+		public long insertSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
 			if (blockEntity.phase != Phase.IDLE)
-				return stack;
+				return 0;
 			if (blockEntity.covered)
-				return stack;
-			ItemStack insertItem = super.insertItem(slot, stack, simulate);
-			if (insertItem.getCount() != stack.getCount() && !simulate)
-				blockEntity.getLevel()
-					.playSound(null, blockEntity.getBlockPos(), SoundEvents.ITEM_FRAME_ADD_ITEM, SoundSource.BLOCKS, .25f, .5f);
-			return insertItem;
+				return 0;
+
+			long inserted = super.insertSlot(slot, resource, maxAmount, transaction);
+
+			if (inserted != maxAmount) {
+				(new FinalCommitSnapshot(maxAmount, () -> {
+					blockEntity.getLevel()
+						.playSound(null, blockEntity.getBlockPos(), SoundEvents.ITEM_FRAME_ADD_ITEM, SoundSource.BLOCKS, .25f, .5f);
+				})).updateSnapshots(transaction);
+			}
+
+			return inserted;
 		}
 
 	}
@@ -88,7 +98,7 @@ public class MechanicalCrafterBlockEntity extends KineticBlockEntity {
 	protected GroupedItems groupedItems = new GroupedItems();
 	protected ConnectedInput input = new ConnectedInput();
 	@Nullable
-	protected IItemHandler invCap;
+	protected Storage<ItemVariant> invCap;
 	protected boolean reRender;
 	protected Phase phase;
 	protected int countDown;
@@ -112,15 +122,15 @@ public class MechanicalCrafterBlockEntity extends KineticBlockEntity {
 		wasPoweredBefore = true;
 	}
 
-	public static void registerCapabilities(RegisterCapabilitiesEvent event) {
-		event.registerBlockEntity(
-				Capabilities.ItemHandler.BLOCK,
-				AllBlockEntityTypes.MECHANICAL_CRAFTER.get(),
-				(be, context) -> be.getInvCapability()
-		);
+	public static void registerCapabilities() {
 	}
 
-	protected IItemHandler getInvCapability() {
+	@Override
+	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
+		return getInvCapability();
+	}
+
+	protected Storage<ItemVariant> getInvCapability() {
 		if (invCap == null) {
 			invCap = input.getItemHandler(getLevel(), getBlockPos());
 		}
@@ -238,7 +248,7 @@ public class MechanicalCrafterBlockEntity extends KineticBlockEntity {
 	@Override
 	public void invalidate() {
 		super.invalidate();
-		invalidateCapabilities();
+		//invalidateCapabilities();
 	}
 
 	public int getCountDownSpeed() {
@@ -286,8 +296,8 @@ public class MechanicalCrafterBlockEntity extends KineticBlockEntity {
 					List<ItemStack> containers = new ArrayList<>();
 					groupedItems.grid.values()
 						.forEach(stack -> {
-							if (stack.hasCraftingRemainingItem())
-								containers.add(stack.getCraftingRemainingItem()
+							if (stack.getItem().hasCraftingRemainingItem())
+								containers.add(stack.getItem().getCraftingRemainingItem().getDefaultInstance()
 									.copy());
 						});
 
@@ -545,7 +555,7 @@ public class MechanicalCrafterBlockEntity extends KineticBlockEntity {
 		reRender = true;
 		sendData();
 		invCap = null;
-		invalidateCapabilities();
+		//invalidateCapabilities();
 	}
 
 	public Inventory getInventory() {

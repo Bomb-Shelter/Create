@@ -77,12 +77,16 @@ import com.simibubi.create.infrastructure.config.CRecipes;
 import mezz.jei.api.IModPlugin;
 import mezz.jei.api.JeiPlugin;
 import mezz.jei.api.constants.RecipeTypes;
+import mezz.jei.api.fabric.constants.FabricTypes;
+import mezz.jei.api.fabric.ingredients.fluids.IJeiFluidIngredient;
+import mezz.jei.api.fabric.ingredients.fluids.JeiFluidIngredient;
 import mezz.jei.api.gui.drawable.IDrawable;
 import mezz.jei.api.helpers.IPlatformFluidHelper;
-import mezz.jei.api.neoforge.NeoForgeTypes;
+import mezz.jei.api.ingredients.IIngredientTypeWithSubtypes;
 import mezz.jei.api.recipe.category.IRecipeCategory;
 import mezz.jei.api.registration.IExtraIngredientRegistration;
 import mezz.jei.api.registration.IGuiHandlerRegistration;
+import mezz.jei.api.registration.IModIngredientRegistration;
 import mezz.jei.api.registration.IRecipeCatalystRegistration;
 import mezz.jei.api.registration.IRecipeCategoryRegistration;
 import mezz.jei.api.registration.IRecipeRegistration;
@@ -91,6 +95,8 @@ import mezz.jei.api.registration.ISubtypeRegistration;
 import mezz.jei.api.runtime.IIngredientManager;
 import mezz.jei.api.runtime.IJeiRuntime;
 import net.createmod.catnip.config.ConfigBase.ConfigBool;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Holder.Reference;
@@ -112,7 +118,8 @@ import net.minecraft.world.item.crafting.ShapedRecipe;
 import net.minecraft.world.item.crafting.SmokingRecipe;
 import net.minecraft.world.level.ItemLike;
 import net.minecraft.world.level.block.Blocks;
-import net.neoforged.neoforge.fluids.FluidStack;
+import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
+import net.minecraft.world.level.material.Fluid;
 
 @JeiPlugin
 @SuppressWarnings("unused")
@@ -367,8 +374,8 @@ public class CreateJEI implements IModPlugin {
 	public <T> void registerFluidSubtypes(ISubtypeRegistration registration, IPlatformFluidHelper<T> platformFluidHelper) {
 		PotionFluidSubtypeInterpreter interpreter = new PotionFluidSubtypeInterpreter();
 		PotionFluid potionFluid = AllFluids.POTION.get();
-		registration.registerSubtypeInterpreter(NeoForgeTypes.FLUID_STACK, potionFluid.getSource(), interpreter);
-		registration.registerSubtypeInterpreter(NeoForgeTypes.FLUID_STACK, potionFluid.getFlowing(), interpreter);
+		registration.registerSubtypeInterpreter(FabricTypes.FLUID_STACK, potionFluid.getSource(), interpreter);
+		registration.registerSubtypeInterpreter(FabricTypes.FLUID_STACK, potionFluid.getFlowing(), interpreter);
 	}
 
 	@Override
@@ -377,7 +384,7 @@ public class CreateJEI implements IModPlugin {
 		List<Reference<Potion>> potions = registryAccess.lookupOrThrow(Registries.POTION)
 			.listElements()
 			.toList();
-		Collection<FluidStack> potionFluids = new ArrayList<>(potions.size() * 3);
+		Collection<IJeiFluidIngredient> potionFluids = new ArrayList<>(potions.size() * 3);
 		Set<Set<Holder<MobEffect>>> visitedEffects = new HashSet<>();
 		for (Reference<Potion> potion : potions) {
 			// @goshante: Ingame potion fluids always have Bottle tag that specifies
@@ -398,9 +405,9 @@ public class CreateJEI implements IModPlugin {
 					continue;
 			}
 
-			potionFluids.add(PotionFluid.of(1000, potionContents, PotionFluid.BottleType.REGULAR));
+			potionFluids.add(CreateRecipeCategory.jeiFromFabric(PotionFluid.of(1000, potionContents, PotionFluid.BottleType.REGULAR)));
 		}
-		registration.addExtraIngredients(NeoForgeTypes.FLUID_STACK, potionFluids);
+		registration.addExtraIngredients(FabricTypes.FLUID_STACK, potionFluids);
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
