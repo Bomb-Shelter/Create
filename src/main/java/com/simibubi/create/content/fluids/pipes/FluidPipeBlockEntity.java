@@ -7,9 +7,12 @@ import com.simibubi.create.content.contraptions.StructureTransform;
 import com.simibubi.create.content.decoration.bracket.BracketedBlockEntityBehaviour;
 import com.simibubi.create.content.fluids.FluidPropagator;
 import com.simibubi.create.content.fluids.FluidTransportBehaviour;
+import com.simibubi.create.content.fluids.FluidTransportBehaviour.AttachmentTypes;
+import com.simibubi.create.content.fluids.PipeAttachmentModel;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 
+import net.createmod.catnip.data.Iterate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.BlockAndTintGetter;
@@ -17,7 +20,22 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
+import org.jetbrains.annotations.Nullable;
+
 public class FluidPipeBlockEntity extends SmartBlockEntity implements TransformableBlockEntity {
+	@Nullable
+	public static AttachmentTypes[] getAttachments(BlockEntity be) {
+		FluidTransportBehaviour behavior = BlockEntityBehaviour.get(be, FluidTransportBehaviour.TYPE);
+		if (behavior == null)
+			return null;
+		AttachmentTypes[] attachments = new AttachmentTypes[6];
+		for (int i = 0; i < Iterate.directions.length; i++) {
+			attachments[i] = behavior.getRenderedRimAttachment(
+				be.getLevel(), be.getBlockPos(), be.getBlockState(), Iterate.directions[i]
+			);
+		}
+		return attachments;
+	}
 
 	public FluidPipeBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
 		super(type, pos, state);
@@ -40,6 +58,11 @@ public class FluidPipeBlockEntity extends SmartBlockEntity implements Transforma
 
 	private boolean canHaveBracket(BlockState state) {
 		return !(state.getBlock() instanceof EncasedPipeBlock);
+	}
+
+	@Override
+	public @Nullable Object getRenderData() {
+		return getAttachments(this);
 	}
 
 	class StandardPipeFluidTransportBehaviour extends FluidTransportBehaviour {

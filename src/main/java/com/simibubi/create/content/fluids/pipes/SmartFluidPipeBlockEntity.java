@@ -24,6 +24,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.AttachFace;
 import net.minecraft.world.phys.Vec3;
 
+import org.jetbrains.annotations.Nullable;
+
 public class SmartFluidPipeBlockEntity extends SmartBlockEntity {
 
 	private FilteringBehaviour filter;
@@ -38,6 +40,11 @@ public class SmartFluidPipeBlockEntity extends SmartBlockEntity {
 		behaviours.add(filter = new FilteringBehaviour(this, new SmartPipeFilterSlot()).forFluids()
 			.withCallback(this::onFilterChanged));
 		registerAwardables(behaviours, FluidPropagator.getSharedTriggers());
+	}
+
+	@Override
+	public @Nullable Object getRenderData() {
+		return FluidPipeBlockEntity.getAttachments(this);
 	}
 
 	private void onFilterChanged(ItemStack newFilter) {

@@ -16,6 +16,8 @@ import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
+import org.jetbrains.annotations.Nullable;
+
 public class StraightPipeBlockEntity extends SmartBlockEntity {
 
 	public StraightPipeBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
@@ -27,6 +29,11 @@ public class StraightPipeBlockEntity extends SmartBlockEntity {
 		behaviours.add(new StraightPipeFluidTransportBehaviour(this));
 		behaviours.add(new BracketedBlockEntityBehaviour(this));
 		registerAwardables(behaviours, FluidPropagator.getSharedTriggers());
+	}
+
+	@Override
+	public @Nullable Object getRenderData() {
+		return FluidPipeBlockEntity.getAttachments(this);
 	}
 
 	public static class StraightPipeFluidTransportBehaviour extends FluidTransportBehaviour {

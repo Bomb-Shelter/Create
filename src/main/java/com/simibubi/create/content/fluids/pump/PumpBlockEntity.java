@@ -11,6 +11,8 @@ import java.util.Set;
 
 import javax.annotation.Nullable;
 
+import com.simibubi.create.content.fluids.pipes.FluidPipeBlockEntity;
+
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
@@ -58,6 +60,11 @@ public class PumpBlockEntity extends KineticBlockEntity {
 		behaviours.add(new PumpFluidTransferBehaviour(this));
 		registerAwardables(behaviours, FluidPropagator.getSharedTriggers());
 		registerAwardables(behaviours, AllAdvancements.PUMP);
+	}
+
+	@Override
+	public @Nullable Object getRenderData() {
+		return FluidPipeBlockEntity.getAttachments(this);
 	}
 
 	@Override
