@@ -395,7 +395,7 @@ public class ClientEvents {
 
 				if (type == Types.AIR) {
 					RemainingAirOverlay.INSTANCE.render(guiGraphics, timer);
-				} else if (type == Types.PLAYER_HEALTH) {
+				} else if (type == Types.CROSSHAIRS) {
 					TrainHUD.OVERLAY.render(guiGraphics, timer);
 
 					CreateClient.VALUE_SETTINGS_HANDLER.render(guiGraphics, timer);

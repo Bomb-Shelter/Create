@@ -154,8 +154,11 @@ public class RemovedGuiUtils {
 
 		final int zLevel = 400;
 		var newBorder = RenderTooltipBorderColorCallback.EVENT.invoker().onTooltipBorderColor(stack, borderColorStart, borderColorEnd);
-		borderColorStart = newBorder.getBorderColorStart();
-		borderColorEnd = newBorder.getBorderColorEnd();
+
+		if (newBorder != null) { // can i get rid of this
+			borderColorStart = newBorder.getBorderColorStart();
+			borderColorEnd = newBorder.getBorderColorEnd();
+		}
 
 		pStack.pushPose();
 		Matrix4f mat = pStack.last()
