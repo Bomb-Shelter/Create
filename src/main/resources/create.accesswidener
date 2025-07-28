@@ -68,7 +68,6 @@ accessible class net/minecraft/world/item/crafting/Ingredient$ItemValue
 accessible method net/minecraft/world/item/crafting/Ingredient$ItemValue <init> (Lnet/minecraft/world/item/ItemStack;)V
 accessible field net/minecraft/world/entity/Mob targetSelector Lnet/minecraft/world/entity/ai/goal/GoalSelector;
 accessible class net/minecraft/client/particle/ParticleEngine$SpriteParticleRegistration
-accessible field io/github/fabricators_of_create/porting_lib/transfer/item/SlotItemHandler index I
 accessible field net/minecraft/world/item/BucketItem content Lnet/minecraft/world/level/material/Fluid;
 accessible field net/minecraft/client/gui/screens/Screen renderables Ljava/util/List;
 accessible method net/minecraft/world/level/block/Block popExperience (Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/core/BlockPos;I)V
