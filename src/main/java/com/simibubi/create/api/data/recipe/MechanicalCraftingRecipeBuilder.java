@@ -10,9 +10,9 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.simibubi.create.content.kinetics.crafter.MechanicalCraftingRecipe;
 
-import io.github.fabricators_of_create.porting_lib.conditions.ICondition;
-import io.github.fabricators_of_create.porting_lib.conditions.ModLoadedCondition;
-import io.github.fabricators_of_create.porting_lib.conditions.NotCondition;
+import io.github.fabricators_of_create.porting_lib.resources.conditions.ICondition;
+import io.github.fabricators_of_create.porting_lib.resources.conditions.ModLoadedCondition;
+import io.github.fabricators_of_create.porting_lib.resources.conditions.NotCondition;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.ResourceLocation;

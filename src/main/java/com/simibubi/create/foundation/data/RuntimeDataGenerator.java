@@ -7,9 +7,9 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.github.fabricators_of_create.porting_lib.conditions.PortingLibConditions;
+import io.github.fabricators_of_create.porting_lib.resources.conditions.PortingLibConditions;
 
-import io.github.fabricators_of_create.porting_lib.conditions.WithConditions;
+import io.github.fabricators_of_create.porting_lib.resources.conditions.WithConditions;
 
 import org.jetbrains.annotations.ApiStatus;
 

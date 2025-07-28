@@ -2,7 +2,7 @@ package com.simibubi.create.impl.registry;
 
 import java.util.function.Function;
 
-import io.github.fabricators_of_create.porting_lib.event.common.TagsUpdatedEvent;
+import io.github.fabricators_of_create.porting_lib.resources.events.TagsUpdatedEvent;
 
 import org.jetbrains.annotations.Nullable;
 

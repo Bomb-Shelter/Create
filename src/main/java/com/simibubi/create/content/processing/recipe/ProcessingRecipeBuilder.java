@@ -13,9 +13,9 @@ import com.simibubi.create.foundation.fluid.FluidIngredient;
 import com.simibubi.create.foundation.recipe.IRecipeTypeInfo;
 import com.tterrag.registrate.util.DataIngredient;
 
-import io.github.fabricators_of_create.porting_lib.conditions.ICondition;
-import io.github.fabricators_of_create.porting_lib.conditions.ModLoadedCondition;
-import io.github.fabricators_of_create.porting_lib.conditions.NotCondition;
+import io.github.fabricators_of_create.porting_lib.resources.conditions.ICondition;
+import io.github.fabricators_of_create.porting_lib.resources.conditions.ModLoadedCondition;
+import io.github.fabricators_of_create.porting_lib.resources.conditions.NotCondition;
 import net.fabricmc.fabric.api.recipe.v1.ingredient.CustomIngredient;
 import net.minecraft.core.NonNullList;
 import net.minecraft.data.recipes.RecipeOutput;

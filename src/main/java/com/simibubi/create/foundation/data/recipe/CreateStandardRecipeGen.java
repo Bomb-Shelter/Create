@@ -20,10 +20,10 @@ import java.util.function.UnaryOperator;
 
 import javax.annotation.ParametersAreNonnullByDefault;
 
-import io.github.fabricators_of_create.porting_lib.conditions.ICondition;
+import io.github.fabricators_of_create.porting_lib.resources.conditions.ICondition;
 
-import io.github.fabricators_of_create.porting_lib.conditions.ModLoadedCondition;
-import io.github.fabricators_of_create.porting_lib.conditions.NotCondition;
+import io.github.fabricators_of_create.porting_lib.resources.conditions.ModLoadedCondition;
+import io.github.fabricators_of_create.porting_lib.resources.conditions.NotCondition;
 
 import org.jetbrains.annotations.Nullable;
 

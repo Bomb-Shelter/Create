@@ -7,8 +7,8 @@ import com.simibubi.create.AllTags;
 import com.simibubi.create.content.kinetics.millstone.MillingRecipe;
 import com.tterrag.registrate.util.entry.ItemEntry;
 
-import io.github.fabricators_of_create.porting_lib.conditions.NotCondition;
-import io.github.fabricators_of_create.porting_lib.conditions.TagEmptyCondition;
+import io.github.fabricators_of_create.porting_lib.resources.conditions.NotCondition;
+import io.github.fabricators_of_create.porting_lib.resources.conditions.TagEmptyCondition;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Item;

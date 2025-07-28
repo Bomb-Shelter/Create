@@ -14,8 +14,8 @@ import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
 import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 import com.simibubi.create.foundation.data.recipe.CompatMetals;
 
-import io.github.fabricators_of_create.porting_lib.conditions.NotCondition;
-import io.github.fabricators_of_create.porting_lib.conditions.TagEmptyCondition;
+import io.github.fabricators_of_create.porting_lib.resources.conditions.NotCondition;
+import io.github.fabricators_of_create.porting_lib.resources.conditions.TagEmptyCondition;
 import net.createmod.catnip.lang.Lang;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;

@@ -1,7 +1,8 @@
 package com.simibubi.create.impl.contraption.dispenser;
 
 import io.github.fabricators_of_create.porting_lib.core.util.ServerLifecycleHooks;
-import io.github.fabricators_of_create.porting_lib.event.common.TagsUpdatedEvent;
+
+import io.github.fabricators_of_create.porting_lib.resources.events.TagsUpdatedEvent;
 
 import org.jetbrains.annotations.Nullable;
 
