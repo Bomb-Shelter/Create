@@ -5,10 +5,10 @@ import java.util.function.Predicate;
 
 import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 
+import net.fabricmc.fabric.api.lookup.v1.block.BlockApiCache;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -40,22 +40,7 @@ public abstract class FlowSource {
 		Storage<FluidVariant> tank = tankCache.getCapability();
 		if (tank == null)
 			return FluidStack.EMPTY;
-		FluidStack immediateFluid = CreateTransferUtil.extractAnyFluid(tank, 1, true);
-		if (extractionPredicate.test(immediateFluid))
-			return immediateFluid;
-
-		for (StorageView<FluidVariant> view : tank) {
-			FluidStack contained = new FluidStack(view);
-			if (contained.isEmpty())
-				continue;
-			if (!extractionPredicate.test(contained))
-				continue;
-			FluidStack toExtract = contained.copy();
-			toExtract.setAmount(1);
-			return CreateTransferUtil.extractFluid(view, toExtract, true);
-		}
-
-		return FluidStack.EMPTY;
+		return CreateTransferUtil.extractFluidMatching(tank, extractionPredicate, 1, true);
 	}
 
 	// Layer III. PFIs need active attention to prevent them from disengaging early
@@ -82,28 +67,24 @@ public abstract class FlowSource {
 		}
 
 		public void manageSource(Level level, BlockEntity networkBE) {
-			// Fabric TODO: how?
-			/*if (fluidHandlerCache == null) {
+			if (fluidHandlerCache == null) {
 				BlockEntity blockEntity = level.getBlockEntity(location.getConnectedPos());
 				if (blockEntity != null) {
 					if (level instanceof ServerLevel serverLevel) {
-						fluidHandlerCache = ICapabilityProvider.of(BlockCapabilityCache.create(
-							Capabilities.FluidHandler.BLOCK,
+						fluidHandlerCache = ICapabilityProvider.of(BlockApiCache.create(
+							FluidStorage.SIDED,
 							serverLevel,
-							blockEntity.getBlockPos(),
-							location.getOppositeFace(),
-							() -> !networkBE.isRemoved(),
-							() -> fluidHandlerCache = EMPTY
-						));
+							blockEntity.getBlockPos()
+						), location.getOppositeFace());
 					} else if (level instanceof PonderLevel) {
-						fluidHandlerCache = ICapabilityProvider.of(() -> level.getCapability(
-							Capabilities.FluidHandler.BLOCK,
+						fluidHandlerCache = ICapabilityProvider.of(() -> FluidStorage.SIDED.find(
+							level,
 							blockEntity.getBlockPos(),
 							location.getOppositeFace()
 						));
 					}
 				}
-			}*/
+			}
 		}
 
 		@Override

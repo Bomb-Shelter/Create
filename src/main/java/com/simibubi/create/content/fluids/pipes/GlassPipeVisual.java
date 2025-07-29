@@ -4,10 +4,8 @@ import java.util.function.Consumer;
 
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
-import io.github.fabricators_of_create.porting_lib.fluids.FluidType;
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
-
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry;
+import net.fabricmc.fabric.api.transfer.v1.client.fluid.FluidVariantRendering;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -28,12 +26,9 @@ import dev.engine_room.flywheel.lib.visual.SimpleDynamicVisual;
 import dev.engine_room.flywheel.lib.visual.util.SmartRecycler;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.data.Iterate;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
-import net.minecraft.world.inventory.InventoryMenu;
-import net.minecraft.world.level.material.Fluid;
 
 public class GlassPipeVisual extends AbstractBlockEntityVisual<StraightPipeBlockEntity> implements SimpleDynamicVisual {
 
@@ -94,15 +89,12 @@ public class GlassPipeVisual extends AbstractBlockEntityVisual<StraightPipeBlock
 				}
 			}
 
-			Fluid fluid = fluidStack.getFluid();
-			FluidRenderHandler clientFluid = FluidRenderHandlerRegistry.INSTANCE.get(fluid);
-			FluidType fluidAttributes = fluid.getFluidType();
-			TextureAtlasSprite[] sprites = clientFluid.getFluidSprites(level, pos, fluid.defaultFluidState());
+			TextureAtlasSprite[] sprites = FluidVariantRendering.getSprites(fluidStack.getVariant());
 			TextureAtlasSprite flowTexture = sprites[1];
 
-			int color = clientFluid.getFluidColor(level, pos, fluid.defaultFluidState());
+			int color = FluidVariantRendering.getColor(fluidStack.getVariant(), level, pos);
 			int blockLightIn = (light >> 4) & 0xF;
-			int luminosity = Math.max(blockLightIn, fluidAttributes.getLightLevel(fluidStack));
+			int luminosity = Math.max(blockLightIn, FluidVariantAttributes.getLuminance(fluidStack.getVariant()));
 			int light = (this.light & 0xF00000) | luminosity << 4;
 
 			if (inbound)

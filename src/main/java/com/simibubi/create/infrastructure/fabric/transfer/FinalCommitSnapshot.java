@@ -8,6 +8,7 @@ public class FinalCommitSnapshot extends SnapshotParticipant<Long> {
 
 	public FinalCommitSnapshot(long amount, Runnable runnable) {
 		this.amount = amount;
+		this.runnable = runnable;
 	}
 
 	@Override

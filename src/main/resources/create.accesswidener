@@ -74,3 +74,6 @@ accessible method net/minecraft/world/level/block/Block popExperience (Lnet/mine
 accessible field net/minecraft/client/gui/screens/Screen narratables Ljava/util/List;
 accessible field net/minecraft/world/item/ItemStackLinkedSet TYPE_AND_TAG Lit/unimi/dsi/fastutil/Hash$Strategy;
 accessible class net/minecraft/data/tags/IntrinsicHolderTagsProvider$IntrinsicTagAppender
+
+accessible field net/minecraft/client/KeyMapping key Lcom/mojang/blaze3d/platform/InputConstants$Key;
+accessible field net/minecraft/client/KeyMapping clickCount I

@@ -1,23 +1,18 @@
 package com.simibubi.create.foundation.fluid;
 
-import java.util.function.Function;
-
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import dev.engine_room.flywheel.lib.transform.TransformStack;
-import io.github.fabricators_of_create.porting_lib.fluids.FluidType;
 import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.render.FluidRenderHelper;
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
-import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry;
-import net.minecraft.client.Minecraft;
+import net.fabricmc.fabric.api.transfer.v1.client.fluid.FluidVariantRendering;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributeHandler;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariantAttributes;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
-import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.material.Fluid;
 
 import net.fabricmc.api.EnvType;
@@ -34,17 +29,14 @@ public class FluidRenderer {
 	public static void renderFluidStream(FluidStack fluidStack, Direction direction, float radius, float progress,
 		boolean inbound, VertexConsumer builder, PoseStack ms, int light) {
 		Fluid fluid = fluidStack.getFluid();
-		FluidRenderHandler clientFluid = FluidRenderHandlerRegistry.INSTANCE.get(fluid);
-		FluidType fluidAttributes = fluid.getFluidType();
-		Function<ResourceLocation, TextureAtlasSprite> spriteAtlas = Minecraft.getInstance()
-			.getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
-		TextureAtlasSprite[] textures = clientFluid.getFluidSprites(null, null, fluid.defaultFluidState());
+		FluidVariantAttributeHandler fluidAttributes = FluidVariantAttributes.getHandlerOrDefault(fluid);
+		TextureAtlasSprite[] textures = FluidVariantRendering.getSprites(fluidStack.getVariant());
 		TextureAtlasSprite flowTexture = textures[1];
 		TextureAtlasSprite stillTexture = textures[0];
 
-		int color = clientFluid.getFluidColor(null, null, fluid.defaultFluidState());
+		int color = FluidVariantRendering.getColor(fluidStack.getVariant());
 		int blockLightIn = (light >> 4) & 0xF;
-		int luminosity = Math.max(blockLightIn, fluidAttributes.getLightLevel(fluidStack));
+		int luminosity = Math.max(blockLightIn, fluidAttributes.getLuminance(fluidStack.getVariant()));
 		light = (light & 0xF00000) | luminosity << 4;
 
 		if (inbound)

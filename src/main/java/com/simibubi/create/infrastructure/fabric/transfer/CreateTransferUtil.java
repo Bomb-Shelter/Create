@@ -2,13 +2,21 @@ package com.simibubi.create.infrastructure.fabric.transfer;
 
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageUtil;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.storage.TransferVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.ResourceAmount;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+import net.minecraft.CrashReport;
+import net.minecraft.ReportedException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
@@ -19,7 +27,12 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Predicate;
+
 public class CreateTransferUtil {
+
+	public static final long HONEY_BOTTLE = FluidConstants.BLOCK / 4;
+
 	public static <T> long simulateInsert(Storage<T> storage, T variant, long amount) {
 		if (!storage.supportsInsertion())
 			return 0;
@@ -60,6 +73,9 @@ public class CreateTransferUtil {
 	}
 
 	public static long extractAnyItem(StorageView<ItemVariant> storage, long maxAmount) {
+		// This is technically a porting lib bug, but I'm to lazy to patch it so we are just going to do a workaround
+		if (storage.isResourceBlank())
+			return 0;
 		try (Transaction t = TransferUtil.getTransaction()) {
 			var result = storage.extract(storage.getResource(), maxAmount, t);
 			t.commit();
@@ -156,6 +172,8 @@ public class CreateTransferUtil {
 	}
 
 	public static ItemStack extractItem(StorageView<ItemVariant> storage, long amount, boolean simulate) {
+		if (storage.isResourceBlank())
+			return ItemStack.EMPTY;
 		try (Transaction transaction = TransferUtil.getTransaction()) {
 			var resource = storage.getResource();
 			var inserted = storage.extract(resource, amount, transaction);
@@ -179,6 +197,40 @@ public class CreateTransferUtil {
 
 					return stack;
 				}
+			}
+		}
+
+		return FluidStack.EMPTY;
+	}
+
+	/**
+	 * Extract anything matching the given predicate, or null if none available.
+	 * based on {@link StorageUtil#extractAny(Storage, long, TransactionContext)}
+	 */
+	@Nullable
+	public static FluidStack extractFluidMatching(Storage<FluidVariant> storage, Predicate<FluidStack> predicate,
+																				   long maxAmount, boolean simulate) {
+		StoragePreconditions.notNegative(maxAmount);
+
+		if (storage == null) return null;
+		try (Transaction transaction = TransferUtil.getTransaction()) {
+			try {
+				for (StorageView<FluidVariant> view : storage.nonEmptyViews()) {
+					long amount = view.extract(view.getResource(), maxAmount, transaction);
+					FluidStack resource = new FluidStack(view.getResource(), amount);
+					if (predicate.test(resource)) { // only addition
+						if (amount > 0) return resource.copyWithAmount(amount);
+					}
+				}
+				if (!simulate)
+					transaction.commit();
+			} catch (Exception e) {
+				CrashReport report = CrashReport.forThrowable(e, "Extracting resources from storage");
+				report.addCategory("Extraction details")
+					.setDetail("Storage", storage::toString)
+					.setDetail("Max amount", maxAmount)
+					.setDetail("Transaction", transaction);
+				throw new ReportedException(report);
 			}
 		}
 

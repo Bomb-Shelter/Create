@@ -4,6 +4,9 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
 
 import com.simibubi.create.AllFluids;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -32,13 +35,13 @@ public class VanillaFluidTargets {
 			if (!simulate)
 				level.setBlock(pos, state.setValue(LEVEL_HONEY, 0), 3);
 			return new FluidStack(AllFluids.HONEY.get()
-				.getSource(), 250);
+				.getSource(), /*FluidConstants.BOTTLE*/ CreateTransferUtil.HONEY_BOTTLE); // Forge's value is 250 which is 20250 in droplets so 1000 / 250 = 4 and vice visa with droplets but bottle is 27000 so 81000 / 27000 = 3 so a whole block = 3 bottles instead of 4
 		}
 
 		if (state.is(Blocks.LAVA_CAULDRON)) {
 			if (!simulate)
 				level.setBlock(pos, Blocks.CAULDRON.defaultBlockState(), 3);
-			return new FluidStack(Fluids.LAVA, 1000);
+			return new FluidStack(Fluids.LAVA, FluidConstants.BLOCK);
 		}
 
 		if (state.is(Blocks.WATER_CAULDRON) && state.getBlock() instanceof LayeredCauldronBlock lcb) {
@@ -46,7 +49,7 @@ public class VanillaFluidTargets {
 				return FluidStack.EMPTY;
 			if (!simulate)
 				level.setBlock(pos, Blocks.CAULDRON.defaultBlockState(), 3);
-			return new FluidStack(Fluids.WATER, 1000);
+			return new FluidStack(Fluids.WATER, FluidConstants.BLOCK);
 		}
 
 		return FluidStack.EMPTY;

@@ -12,7 +12,10 @@ import java.util.function.UnaryOperator;
 
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.VecHelper;
+import net.fabricmc.fabric.api.renderer.v1.Renderer;
+import net.fabricmc.fabric.api.renderer.v1.RendererAccess;
 import net.fabricmc.fabric.api.renderer.v1.mesh.MutableQuadView;
+import net.fabricmc.fabric.api.renderer.v1.mesh.QuadEmitter;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.ItemOverrides;
@@ -125,16 +128,16 @@ public class BakedModelHelper {
 				continue;
 
 			BakedQuad newQuad = BakedQuadHelper.clone(quad);
-			int[] vertexData = newQuad.getVertices();
+			QuadEmitter emitter = RendererAccess.INSTANCE.getRenderer().meshBuilder().getEmitter();
+			emitter.fromVanilla(newQuad, RendererAccess.INSTANCE.getRenderer().materialFinder().find(), null);
 
 			for (int vertex = 0; vertex < 4; vertex++) {
-				float u = BakedQuadHelper.getU(vertexData, vertex);
-				float v = BakedQuadHelper.getV(vertexData, vertex);
-				BakedQuadHelper.setU(vertexData, vertex, newSprite.getU(getUnInterpolatedU(sprite, u)));
-				BakedQuadHelper.setV(vertexData, vertex, newSprite.getV(getUnInterpolatedV(sprite, v)));
+				float u = emitter.u(vertex);
+				float v = emitter.v(vertex);
+				emitter.uv(vertex, newSprite.getU(getUnInterpolatedU(sprite, u)), newSprite.getV(getUnInterpolatedV(sprite, v)));
 			}
 
-			newQuads.set(i, newQuad);
+			newQuads.set(i, emitter.toBakedQuad(newQuad.getSprite()));
 		}
 		return newQuads;
 	}

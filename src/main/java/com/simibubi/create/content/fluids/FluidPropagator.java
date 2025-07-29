@@ -200,11 +200,10 @@ public class FluidPropagator {
 	}
 
 	public static boolean hasFluidCapability(BlockGetter world, BlockPos pos, Direction side) {
-		BlockEntity blockEntity = world.getBlockEntity(pos);
-		if (blockEntity == null || blockEntity.getLevel() == null)
+		if (!(world instanceof Level level))
 			return false;
 		Storage<FluidVariant> capability =
-			FluidStorage.SIDED.find(blockEntity.getLevel(), blockEntity.getBlockPos(), blockEntity.getBlockState(), blockEntity, side);
+			FluidStorage.SIDED.find(level, pos, side);
 		return capability != null;
 	}
 

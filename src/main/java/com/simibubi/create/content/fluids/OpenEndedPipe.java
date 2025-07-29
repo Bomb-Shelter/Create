@@ -4,15 +4,12 @@ import static net.minecraft.world.level.block.state.properties.BlockStatePropert
 
 import com.simibubi.create.infrastructure.fabric.transfer.FinalCommitSnapshot;
 
-import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
-
-import net.minecraft.world.level.material.Fluid;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -141,7 +138,7 @@ public class OpenEndedPipe extends FlowSource {
 		if (fluidState.isEmpty() || !fluidState.isSource())
 			return empty;
 
-		FluidStack stack = new FluidStack(fluidState.getType(), 1000);
+		FluidStack stack = new FluidStack(fluidState.getType(), FluidConstants.BLOCK);
 
 		if (simulate)
 			return stack;
@@ -233,7 +230,7 @@ public class OpenEndedPipe extends FlowSource {
 	private class OpenEndFluidHandler extends FluidTank {
 
 		public OpenEndFluidHandler() {
-			super(1000);
+			super(FluidConstants.BUCKET);
 		}
 
 		@Override
@@ -272,7 +269,7 @@ public class OpenEndedPipe extends FlowSource {
 					effectHandler.apply(world, aoe, exposed);
 				}
 
-				if (getFluidAmount() == 1000 || !hasBlockState)
+				if (getFluidAmount() == FluidConstants.BLOCK || !hasBlockState)
 					if (provideFluidToSpace(containedFluidStack, false))
 						setFluid(FluidStack.EMPTY);
 			}).updateSnapshots(transaction);
@@ -293,8 +290,8 @@ public class OpenEndedPipe extends FlowSource {
 				return 0;
 			if (amount == 0)
 				return 0;
-			if (amount > 1000) {
-				amount = 1000;
+			if (amount > FluidConstants.BLOCK) {
+				amount = FluidConstants.BLOCK;
 				if (filterPresent)
 					filter = FluidHelper.copyStackWithAmount(filter, amount);
 			}
@@ -317,20 +314,33 @@ public class OpenEndedPipe extends FlowSource {
 			long remainder = drainedFromWorld.getAmount() - amount;
 			drainedFromWorld.setAmount(amount);
 
-			(new FinalCommitSnapshot(amount, () -> {
-				if (remainder > 0) {
-					if (!getFluid().isEmpty() && !FluidStack.isSameFluidSameComponents(getFluid(), drainedFromWorld))
-						setFluid(FluidStack.EMPTY);
-
-					try (Transaction tr = TransferUtil.getTransaction()) {
-						super.insert(drainedFromWorld.getVariant(), remainder, tr);
-						tr.commit();
-					}
-				}
-			}))
-				.updateSnapshots(transaction);
+			if (remainder > 0) {
+				if (!getFluid().isEmpty() && !FluidStack.isSameFluidSameComponents(getFluid(), drainedFromWorld))
+					setFluid(FluidStack.EMPTY);
+				super.insert(drainedFromWorld.getVariant(), remainder, transaction);
+			}
 			return drainedFromWorld.getAmount();
 		}
 
+		@Override
+		public boolean isResourceBlank() {
+			if (!super.isResourceBlank())
+				return false;
+			return removeFluidFromSpace(true).isEmpty();
+		}
+
+		@Override
+		public FluidVariant getResource() {
+			if (!super.isResourceBlank())
+				return super.getResource();
+			return removeFluidFromSpace(true).getVariant();
+		}
+
+		@Override
+		public long getAmount() {
+			if (super.getAmount() != 0)
+				return super.getAmount();
+			return removeFluidFromSpace(true).getAmount();
+		}
 	}
 }
