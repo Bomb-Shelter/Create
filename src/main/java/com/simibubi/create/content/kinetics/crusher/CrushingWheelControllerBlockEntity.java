@@ -23,9 +23,8 @@ import com.simibubi.create.infrastructure.fabric.CreateRecipeWrapper;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.platform.CatnipServices;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -52,9 +51,7 @@ import net.minecraft.world.phys.Vec3;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
-import org.jetbrains.annotations.Nullable;
-
-public class CrushingWheelControllerBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity {
+public class CrushingWheelControllerBlockEntity extends SmartBlockEntity {
 
 	public Entity processingEntity;
 	private UUID entityUUID;
@@ -78,11 +75,10 @@ public class CrushingWheelControllerBlockEntity extends SmartBlockEntity impleme
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		return inventory;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.inventory,
+			AllBlockEntityTypes.CRUSHING_WHEEL_CONTROLLER.get()
+		);
 	}
 
 	@Override

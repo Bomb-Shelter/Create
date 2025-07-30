@@ -209,7 +209,7 @@ public class ItemHelper {
 		do {
 			extracting = ItemStack.EMPTY;
 
-			for (StorageView<ItemVariant> view : inv) {
+			for (StorageView<ItemVariant> view : inv.nonEmptyViews()) {
 				int amountToExtractFromThisSlot =
 					Math.min(maxExtractionCount - extracting.getCount(), view.getResource().getComponentMap()
 						.getOrDefault(DataComponents.MAX_STACK_SIZE, 64));

@@ -27,9 +27,7 @@ import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.platform.CatnipServices;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -37,14 +35,12 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.Containers;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -56,9 +52,7 @@ import net.minecraft.world.phys.Vec3;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
-import org.jetbrains.annotations.Nullable;
-
-public class StockTickerBlockEntity extends StockCheckingBlockEntity implements IHaveHoveringInformation, SidedStorageBlockEntity {
+public class StockTickerBlockEntity extends StockCheckingBlockEntity implements IHaveHoveringInformation {
 
 	// Player-interface Feature
 	protected List<List<BigItemStack>> lastClientsideStockSnapshot;
@@ -82,11 +76,10 @@ public class StockTickerBlockEntity extends StockCheckingBlockEntity implements 
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		return this.receivedPayments;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.receivedPayments,
+			AllBlockEntityTypes.STOCK_TICKER.get()
+		);
 	}
 
 	public void refreshClientStockSnapshot() {

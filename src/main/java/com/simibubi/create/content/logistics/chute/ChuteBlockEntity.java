@@ -10,12 +10,9 @@ import javax.annotation.ParametersAreNonnullByDefault;
 
 import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 
-import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -54,7 +51,6 @@ import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.Containers;
 import net.minecraft.world.entity.item.ItemEntity;
@@ -72,7 +68,7 @@ import net.minecraft.world.phys.Vec3;
  * Commented Code: Chutes create air streams and act similarly to encased fans
  * (Unfinished)
  */
-public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity { // , IAirCurrentSource {
+public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation { // , IAirCurrentSource {
 
 	// public AirCurrent airCurrent;
 
@@ -107,11 +103,10 @@ public class ChuteBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		return this.itemHandler;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.itemHandler,
+			AllBlockEntityTypes.CHUTE.get()
+		);
 	}
 
 	@Override

@@ -7,11 +7,12 @@ import com.simibubi.create.content.contraptions.StructureTransform;
 
 import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 
-import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
-import io.github.fabricators_of_create.porting_lib.transfer.item.ItemHandlerHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.fabric.api.lookup.v1.block.BlockApiCache;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -33,7 +34,7 @@ public class ArmInteractionPoint {
 	protected Mode mode = Mode.DEPOSIT;
 
 	protected BlockState cachedState;
-	//protected BlockCapabilityCache<Storage<ItemVariant>, Direction> cachedHandler;
+	protected BlockApiCache<Storage<ItemVariant>, Direction> cachedHandler;
 	protected ArmAngleTarget cachedAngles;
 
 	public ArmInteractionPoint(ArmInteractionPointType type, Level level, BlockPos pos, BlockState state) {
@@ -97,27 +98,17 @@ public class ArmInteractionPoint {
 
 	@Nullable
 	protected Storage<ItemVariant> getHandler(ArmBlockEntity armBlockEntity) {
-		BlockEntity be = level.getBlockEntity(pos);
-		if (be == null)
-			return null;
-
-		return TransferUtil.getItemStorage(level, pos, be, null);
-
-		// Fabric TODO: how the fuck
-		/*if (cachedHandler == null && level instanceof ServerLevel serverLevel) {
+		if (cachedHandler == null && level instanceof ServerLevel serverLevel) {
 			BlockEntity be = level.getBlockEntity(pos);
 			if (be == null)
 				return null;
-			cachedHandler = BlockCapabilityCache.create(
-				Capabilities.ItemHandler.BLOCK,
+			cachedHandler = BlockApiCache.create(
+				ItemStorage.SIDED,
 				serverLevel,
-				pos,
-				Direction.UP,
-				() -> !armBlockEntity.isRemoved(),
-				() -> cachedHandler = null
+				pos
 			);
 		}
-		return cachedHandler.getCapability();*/
+		return cachedHandler.find(Direction.UP);
 	}
 
 	public ItemStack insert(ArmBlockEntity armBlockEntity, ItemStack stack, boolean simulate) {
@@ -140,8 +131,8 @@ public class ArmInteractionPoint {
 
 	public int getSlotCount(ArmBlockEntity armBlockEntity) {
 		Storage<ItemVariant> handler = getHandler(armBlockEntity);
-		if (handler == null)
-			return 0;
+		if (handler instanceof SlottedStorage<ItemVariant> storage)
+			return storage.getSlotCount();
 		return CreateTransferUtil.getSlotCount(handler);
 	}
 

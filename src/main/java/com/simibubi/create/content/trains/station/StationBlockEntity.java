@@ -70,9 +70,7 @@ import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.data.WorldAttached;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockPos.MutableBlockPos;
@@ -102,7 +100,7 @@ import net.minecraft.world.phys.Vec3;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
-public class StationBlockEntity extends SmartBlockEntity implements TransformableBlockEntity, SidedStorageBlockEntity {
+public class StationBlockEntity extends SmartBlockEntity implements TransformableBlockEntity {
 
 	public TrackTargetingBehaviour<GlobalStation> edgePoint;
 	public DoorControlBehaviour doorControls;
@@ -137,14 +135,17 @@ public class StationBlockEntity extends SmartBlockEntity implements Transformabl
 	}
 
 	public static void registerCapabilities() {
-		if (Mods.COMPUTERCRAFT.isLoaded()) {
-			PeripheralLookup.get().registerForBlockEntity((be, context) -> be.computerBehaviour.getPeripheralCapability(), AllBlockEntityTypes.TRACK_STATION.get());
-		}
-	}
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.depotBehaviour.itemHandler,
+			AllBlockEntityTypes.TRACK_STATION.get()
+		);
 
-	@Override
-	public @org.jetbrains.annotations.Nullable Storage<ItemVariant> getItemStorage(@org.jetbrains.annotations.Nullable Direction side) {
-		return depotBehaviour.itemHandler;
+		if (Mods.COMPUTERCRAFT.isLoaded()) {
+			PeripheralLookup.get().registerForBlockEntity(
+				(be, context) -> be.computerBehaviour.getPeripheralCapability(),
+				AllBlockEntityTypes.TRACK_STATION.get()
+			);
+		}
 	}
 
 	@Override

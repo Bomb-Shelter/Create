@@ -119,6 +119,7 @@ public class CommonEvents {
 		StartTracking.EVENT.register(CommonEvents::startTracking);
 		AddPackFindersEvent.EVENT.register(ModBusEvents::addPackFinders);
 		ModBusEvents.onRegisterMapDecorationRenderers();
+		ModBusEvents.registerCapabilities();
 	}
 
 	public static void onServerTick(MinecraftServer server) {

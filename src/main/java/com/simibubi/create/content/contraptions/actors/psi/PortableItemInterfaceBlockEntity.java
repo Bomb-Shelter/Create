@@ -8,19 +8,15 @@ import com.simibubi.create.infrastructure.fabric.transfer.FinalCommitSnapshot;
 
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import org.jetbrains.annotations.Nullable;
-
-public class PortableItemInterfaceBlockEntity extends PortableStorageInterfaceBlockEntity implements SidedStorageBlockEntity {
+public class PortableItemInterfaceBlockEntity extends PortableStorageInterfaceBlockEntity {
 
 	protected Storage<ItemVariant> capability;
 
@@ -30,11 +26,10 @@ public class PortableItemInterfaceBlockEntity extends PortableStorageInterfaceBl
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		return capability;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.capability,
+			AllBlockEntityTypes.PORTABLE_STORAGE_INTERFACE.get()
+		);
 	}
 
 	@Override

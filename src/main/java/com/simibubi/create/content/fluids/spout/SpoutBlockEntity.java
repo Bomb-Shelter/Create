@@ -27,9 +27,7 @@ import com.simibubi.create.foundation.fluid.FluidHelper;
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.nbt.NBTHelper;
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -44,9 +42,7 @@ import net.minecraft.world.phys.Vec3;
 
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
-import org.jetbrains.annotations.Nullable;
-
-public class SpoutBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity {
+public class SpoutBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
 
 	public static final int FILLING_TIME = 20;
 	protected BeltProcessingBehaviour beltProcessing;
@@ -65,14 +61,14 @@ public class SpoutBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<FluidVariant> getFluidStorage(@Nullable Direction side) {
-		if (side != Direction.DOWN)
-			return this.tank.getCapability();
-
-		return null;
+		FluidStorage.SIDED.registerForBlockEntity(
+			(be, context) -> {
+				if (context != Direction.DOWN)
+					return be.tank.getCapability();
+				return null;
+			},
+			AllBlockEntityTypes.SPOUT.get()
+		);
 	}
 
 	@Override

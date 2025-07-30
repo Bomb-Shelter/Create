@@ -21,10 +21,8 @@ import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.data.Pair;
 import net.createmod.catnip.math.VecHelper;
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -38,9 +36,7 @@ import net.minecraft.world.phys.Vec3;
 
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
-import org.jetbrains.annotations.Nullable;
-
-public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity {
+public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
 
 	public static final int FILLING_TIME = 20;
 
@@ -58,20 +54,23 @@ public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggl
 	}
 
 	public static void registerCapabilities() {
-	}
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> {
+				if (context != null && context.getAxis().isHorizontal())
+					return be.itemHandlers.get(context);
+				return null;
+			},
+			AllBlockEntityTypes.ITEM_DRAIN.get()
+		);
 
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		if (side != null && side.getAxis().isHorizontal())
-			return this.itemHandlers.get(side);
-		return null;
-	}
-
-	@Override
-	public @Nullable Storage<FluidVariant> getFluidStorage(@Nullable Direction side) {
-		if (side != Direction.UP)
-			return this.internalTank.getCapability();
-		return null;
+		FluidStorage.SIDED.registerForBlockEntity(
+			(be, context) -> {
+				if (context != Direction.UP)
+					return be.internalTank.getCapability();
+				return null;
+			},
+			AllBlockEntityTypes.ITEM_DRAIN.get()
+		);
 	}
 
 	@Override

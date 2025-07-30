@@ -25,11 +25,7 @@ import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.math.VecHelper;
 import net.fabricmc.fabric.api.screenhandler.v1.ExtendedScreenHandlerFactory;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponentMap.Builder;
 import net.minecraft.core.component.DataComponents;
@@ -38,7 +34,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.MenuProvider;
 import net.minecraft.world.Nameable;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -49,9 +44,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-import org.jetbrains.annotations.Nullable;
-
-public class ToolboxBlockEntity extends SmartBlockEntity implements ExtendedScreenHandlerFactory<SmartBlockData>, Nameable, SidedStorageBlockEntity {
+public class ToolboxBlockEntity extends SmartBlockEntity implements ExtendedScreenHandlerFactory<SmartBlockData>, Nameable {
 
 	public LerpedFloat lid = LerpedFloat.linear()
 		.startWithValue(0);
@@ -83,11 +76,10 @@ public class ToolboxBlockEntity extends SmartBlockEntity implements ExtendedScre
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		return inventory;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.inventory,
+			AllBlockEntityTypes.TOOLBOX.get()
+		);
 	}
 
 	public DyeColor getColor() {

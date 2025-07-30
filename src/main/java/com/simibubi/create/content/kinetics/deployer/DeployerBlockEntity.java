@@ -35,10 +35,7 @@ import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.fabricmc.api.Environment;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
-import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -72,7 +69,7 @@ import net.minecraft.world.phys.Vec3;
 
 import net.fabricmc.api.EnvType;
 
-public class DeployerBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity {
+public class DeployerBlockEntity extends KineticBlockEntity {
 
 	protected State state;
 	protected Mode mode;
@@ -111,13 +108,14 @@ public class DeployerBlockEntity extends KineticBlockEntity implements SidedStor
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @org.jetbrains.annotations.Nullable Storage<ItemVariant> getItemStorage(@org.jetbrains.annotations.Nullable Direction side) {
-		if (invHandler == null)
-			initHandler();
-		return invHandler;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) ->  {
+				if (be.invHandler == null)
+					be.initHandler();
+				return be.invHandler;
+			},
+			AllBlockEntityTypes.DEPLOYER.get()
+		);
 	}
 
 	@Override

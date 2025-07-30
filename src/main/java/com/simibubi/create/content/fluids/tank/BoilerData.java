@@ -10,7 +10,9 @@ import java.util.Set;
 import com.simibubi.create.infrastructure.fabric.transfer.EmptySingleFluidSlotStorage;
 import com.simibubi.create.infrastructure.fabric.transfer.EmptySingleItemSlotStorage;
 
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.fluid.base.SingleFluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
@@ -463,50 +465,32 @@ public class BoilerData {
 		return new BoilerFluidHandler();
 	}
 
-	public class BoilerFluidHandler implements SlottedStorage<FluidVariant> {
-		private final BoilerFluidSlotStorage storage = new BoilerFluidSlotStorage();
-
+	public class BoilerFluidHandler extends SnapshotParticipant<Long> implements SingleSlotStorage<FluidVariant> {
 		@Override
-		public int getSlotCount() {
-			return 1;
+		public long getCapacity() {
+			return FluidConstants.BUCKET * 10;
+		}
+
+		public boolean isFluidValid(FluidVariant fluid, long amount) {
+			return FluidHelper.isWater(fluid);
 		}
 
 		@Override
-		public SingleSlotStorage<FluidVariant> getSlot(int slot) {
-			return storage;
-		}
-
-		@Override
-		public long insert(FluidVariant resource, long maxAmount, TransactionContext transaction) {
-			return 0;
-		}
-
-		@Override
-		public long extract(FluidVariant resource, long maxAmount, TransactionContext transaction) {
-			return 0;
-		}
-
-		@Override
-		public Iterator<StorageView<FluidVariant>> iterator() {
-			return storage.iterator();
-		}
-	}
-
-	private class BoilerFluidSlotStorage implements SingleSlotStorage<FluidVariant> {
-		@Override
-		public long insert(FluidVariant resource, long maxAmount, TransactionContext transaction) {
-			if (!FluidHelper.isWater(resource))
+		public long insert(FluidVariant resource, long amount, TransactionContext transaction) {
+			if (!isFluidValid(resource, amount))
 				return 0;
-
-			var snapshot = new BoilerFluidSnapshot(gatheredSupply + maxAmount);
-			snapshot.updateSnapshots(transaction);
-
-			return maxAmount;
+			gatheredSupply += amount;
+			return amount;
 		}
 
 		@Override
 		public long extract(FluidVariant resource, long maxAmount, TransactionContext transaction) {
 			return 0;
+		}
+
+		@Override
+		public boolean supportsExtraction() {
+			return false;
 		}
 
 		@Override
@@ -525,31 +509,13 @@ public class BoilerData {
 		}
 
 		@Override
-		public long getCapacity() {
-			return 10000;
-		}
-	}
-
-	private class BoilerFluidSnapshot extends SnapshotParticipant<Long> {
-		private long current;
-
-		public BoilerFluidSnapshot(long current) {
-			this.current = current;
-		}
-
-		@Override
 		protected Long createSnapshot() {
-			return current;
+			return gatheredSupply;
 		}
 
 		@Override
 		protected void readSnapshot(Long snapshot) {
-			this.current = snapshot;
-		}
-
-		@Override
-		protected void onFinalCommit() {
-			gatheredSupply = current;
+			gatheredSupply = snapshot;
 		}
 	}
 }

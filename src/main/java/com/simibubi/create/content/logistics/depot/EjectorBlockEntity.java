@@ -35,9 +35,7 @@ import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.math.AngleHelper;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -73,7 +71,7 @@ import net.minecraft.world.phys.shapes.CollisionContext;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
-public class EjectorBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity {
+public class EjectorBlockEntity extends KineticBlockEntity {
 
 	List<IntAttached<ItemStack>> launchedItems;
 	ScrollValueBehaviour maxStackSize;
@@ -107,11 +105,10 @@ public class EjectorBlockEntity extends KineticBlockEntity implements SidedStora
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @org.jetbrains.annotations.Nullable Storage<ItemVariant> getItemStorage(@org.jetbrains.annotations.Nullable Direction side) {
-		return depotBehaviour.itemHandler;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.depotBehaviour.itemHandler,
+			AllBlockEntityTypes.WEIGHTED_EJECTOR.get()
+		);
 	}
 
 	@Override

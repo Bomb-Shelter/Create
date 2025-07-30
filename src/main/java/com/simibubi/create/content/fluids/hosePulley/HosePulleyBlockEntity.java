@@ -13,11 +13,8 @@ import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.ServerSpeedProvider;
 
 import net.createmod.catnip.animation.LerpedFloat;
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
@@ -26,9 +23,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
-import org.jetbrains.annotations.Nullable;
-
-public class HosePulleyBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity {
+public class HosePulleyBlockEntity extends KineticBlockEntity {
 
 	LerpedFloat offset;
 	boolean isMoving;
@@ -50,13 +45,14 @@ public class HosePulleyBlockEntity extends KineticBlockEntity implements SidedSt
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<FluidVariant> getFluidStorage(@Nullable Direction side) {
-		if (side == null || HosePulleyBlock.hasPipeTowards(this.level, this.worldPosition, this.getBlockState(), side))
-			return this.handler;
-		return null;
+		FluidStorage.SIDED.registerForBlockEntity(
+			(be, context) -> {
+				if (context == null || HosePulleyBlock.hasPipeTowards(be.level, be.worldPosition, be.getBlockState(), context))
+					return be.handler;
+				return null;
+			},
+			AllBlockEntityTypes.HOSE_PULLEY.get()
+		);
 	}
 
 	@Override

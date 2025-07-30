@@ -23,10 +23,10 @@ import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -46,9 +46,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import org.jetbrains.annotations.Nullable;
-
-public class FrogportBlockEntity extends PackagePortBlockEntity implements IHaveHoveringInformation, SidedStorageBlockEntity {
+public class FrogportBlockEntity extends PackagePortBlockEntity implements IHaveHoveringInformation {
 
 	public ItemStack animatedPackage;
 	public LerpedFloat manualOpenAnimationProgress;
@@ -81,11 +79,10 @@ public class FrogportBlockEntity extends PackagePortBlockEntity implements IHave
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		return itemHandler;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.itemHandler,
+			AllBlockEntityTypes.PACKAGE_FROGPORT.get()
+		);
 	}
 
 	@Override

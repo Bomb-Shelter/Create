@@ -12,11 +12,8 @@ import com.simibubi.create.content.trains.station.GlobalStation.GlobalPackagePor
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.nbt.NBTHelper;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.sounds.SoundEvents;
@@ -26,9 +23,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import org.jetbrains.annotations.Nullable;
-
-public class PostboxBlockEntity extends PackagePortBlockEntity implements SidedStorageBlockEntity {
+public class PostboxBlockEntity extends PackagePortBlockEntity {
 
 	public WeakReference<GlobalStation> trackedGlobalStation;
 
@@ -45,11 +40,10 @@ public class PostboxBlockEntity extends PackagePortBlockEntity implements SidedS
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		return this.itemHandler;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.itemHandler,
+			AllBlockEntityTypes.PACKAGE_POSTBOX.get()
+		);
 	}
 
 	@Override

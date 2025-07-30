@@ -12,10 +12,9 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -60,7 +59,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity {
+public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHaveGoggleInformation {
 
 	SidedFilteringBehaviour filtering;
 
@@ -99,11 +98,10 @@ public class BrassTunnelBlockEntity extends BeltTunnelBlockEntity implements IHa
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @org.jetbrains.annotations.Nullable Storage<ItemVariant> getItemStorage(@org.jetbrains.annotations.Nullable Direction side) {
-		return this.tunnelCapability;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.tunnelCapability,
+			AllBlockEntityTypes.BRASS_TUNNEL.get()
+		);
 	}
 
 	@Override

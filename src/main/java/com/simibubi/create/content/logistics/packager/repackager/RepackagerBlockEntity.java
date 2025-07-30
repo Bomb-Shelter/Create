@@ -13,20 +13,17 @@ import com.simibubi.create.content.logistics.packager.PackagingRequest;
 import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import org.jetbrains.annotations.Nullable;
-
-public class RepackagerBlockEntity extends PackagerBlockEntity implements SidedStorageBlockEntity {
+public class RepackagerBlockEntity extends PackagerBlockEntity {
 
 	public PackageRepackageHelper repackageHelper;
 
@@ -152,10 +149,9 @@ public class RepackagerBlockEntity extends PackagerBlockEntity implements SidedS
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		return this.inventory;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.inventory,
+			AllBlockEntityTypes.REPACKAGER.get()
+		);
 	}
 }

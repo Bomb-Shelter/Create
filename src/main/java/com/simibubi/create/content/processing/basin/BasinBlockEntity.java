@@ -47,12 +47,13 @@ import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.lang.LangBuilder;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -76,9 +77,7 @@ import net.minecraft.world.phys.Vec3;
 
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
-import org.jetbrains.annotations.Nullable;
-
-public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, SidedStorageBlockEntity {
+public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation {
 
 	private boolean areFluidsMoving;
 	LerpedFloat ingredientRotationSpeed;
@@ -133,16 +132,14 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		return itemCapability;
-	}
-
-	@Override
-	public @Nullable Storage<FluidVariant> getFluidStorage(@Nullable Direction side) {
-		return fluidCapability;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.itemCapability,
+			AllBlockEntityTypes.BASIN.get()
+		);
+		FluidStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.fluidCapability,
+			AllBlockEntityTypes.BASIN.get()
+		);
 	}
 
 	@Override

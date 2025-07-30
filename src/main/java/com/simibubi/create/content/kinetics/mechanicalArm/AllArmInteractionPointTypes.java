@@ -10,6 +10,8 @@ import com.simibubi.create.infrastructure.fabric.transfer.InventoryStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 
+import net.fabricmc.fabric.impl.lookup.block.ServerWorldCache;
+
 import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.jetbrains.annotations.ApiStatus.Internal;
 
@@ -558,8 +560,8 @@ public class AllArmInteractionPointTypes {
 		public void updateCachedState() {
 			BlockState oldState = cachedState;
 			super.updateCachedState();
-			//if (cachedHandler != null && oldState != cachedState)
-				//level.invalidateCapabilities(cachedHandler.pos());
+			if (cachedHandler != null && oldState != cachedState && level instanceof ServerWorldCache cache)
+				cache.fabric_invalidateCache(cachedHandler.getPos());
 		}
 
 		@Nullable

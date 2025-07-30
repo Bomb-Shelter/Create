@@ -17,9 +17,9 @@ import io.github.fabricators_of_create.porting_lib.blocks.extensions.NeighborCha
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.BlockPos.MutableBlockPos;
 import net.minecraft.core.Direction;
@@ -37,9 +37,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.BoundingBox;
 
-import org.jetbrains.annotations.Nullable;
-
-public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBlockEntityContainer.Inventory, SidedStorageBlockEntity {
+public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBlockEntityContainer.Inventory {
 
 	protected ICapabilityProvider<Storage<ItemVariant>> itemCapability = null;
 	protected InventoryIdentifier invId;
@@ -68,14 +66,15 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		this.initCapability();
-		if (this.itemCapability == null)
-			return null;
-		return this.itemCapability.getCapability();
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> {
+				be.initCapability();
+				if (be.itemCapability == null)
+					return null;
+				return be.itemCapability.getCapability();
+			},
+			AllBlockEntityTypes.ITEM_VAULT.get()
+		);
 	}
 
 	@Override

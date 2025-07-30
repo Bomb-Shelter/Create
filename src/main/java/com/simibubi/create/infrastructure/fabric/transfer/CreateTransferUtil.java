@@ -10,8 +10,6 @@ import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageUtil;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
-import net.fabricmc.fabric.api.transfer.v1.storage.TransferVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.ResourceAmount;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
@@ -20,7 +18,6 @@ import net.minecraft.ReportedException;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -123,17 +120,15 @@ public class CreateTransferUtil {
 			if (!simulate)
 				transaction.commit();
 
-			stack.shrink((int) Math.min(inserted, 64));
-			return stack;
+			return stack.copyWithCount(stack.getCount() - (int) inserted);
 		}
 	}
 
 	public static ItemStack insertItemStacked(Storage<ItemVariant> storage, ItemStack stack, boolean simulate) {
 		ItemStack remainder = stack.copy();
 		long inserted = simulate ? CreateTransferUtil.simulateInsertItem(storage, stack) : TransferUtil.insertItem(storage, stack);
-		if (!simulate) {
-			remainder.shrink((int) inserted);
-		}
+
+		remainder.shrink((int) inserted);
 
 		return remainder;
 	}
@@ -150,6 +145,9 @@ public class CreateTransferUtil {
 	}
 
 	public static ItemStack extractItem(Storage<ItemVariant> storage, int slot, long amount, boolean simulate) {
+		if (storage instanceof SlottedStorage<ItemVariant> slotted) {
+			return extractItem(slotted.getSlot(slot), amount, simulate);
+		}
 		int current = 0;
 		for (StorageView<ItemVariant> view : storage) {
 			if (current++ == slot) {
@@ -176,12 +174,16 @@ public class CreateTransferUtil {
 			return ItemStack.EMPTY;
 		try (Transaction transaction = TransferUtil.getTransaction()) {
 			var resource = storage.getResource();
-			var inserted = storage.extract(resource, amount, transaction);
+			int maxSize = resource.getComponentMap().getOrDefault(DataComponents.MAX_STACK_SIZE, resource.getItem().getDefaultMaxStackSize());
+			if (amount > maxSize) {
+				amount = maxSize;
+			}
+			var extracted = storage.extract(resource, amount, transaction);
 
 			if (!simulate)
 				transaction.commit();
 
-			return resource.toStack((int) Mth.clamp(amount - inserted, 0, 64));
+			return resource.toStack((int) extracted);
 		}
 	}
 

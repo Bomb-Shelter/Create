@@ -23,7 +23,6 @@ import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Direction.Axis;
@@ -40,9 +39,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
-import org.jetbrains.annotations.Nullable;
-
-public class BeltTunnelBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity {
+public class BeltTunnelBlockEntity extends SmartBlockEntity {
 
 	public Map<Direction, LerpedFloat> flaps;
 	public Set<Direction> sides;
@@ -58,22 +55,23 @@ public class BeltTunnelBlockEntity extends SmartBlockEntity implements SidedStor
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		if (this.cap == null) {
-			if (AllBlocks.BELT.has(this.level.getBlockState(this.worldPosition.below()))) {
-				BlockEntity beBelow = this.level.getBlockEntity(this.worldPosition.below());
-				if (beBelow != null) {
-					Storage<ItemVariant> capBelow = ItemStorage.SIDED.find(beBelow.getLevel(), beBelow.getBlockPos().below(), beBelow.getBlockState(), beBelow, Direction.UP);
-					if (capBelow != null) {
-						this.cap = capBelow;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) ->  {
+				if (be.cap == null) {
+					if (AllBlocks.BELT.has(be.level.getBlockState(be.worldPosition.below()))) {
+						BlockEntity beBelow = be.level.getBlockEntity(be.worldPosition.below());
+						if (beBelow != null) {
+							Storage<ItemVariant> capBelow = ItemStorage.SIDED.find(be.level, be.worldPosition.below(), Direction.UP);
+							if (capBelow != null) {
+								be.cap = capBelow;
+							}
+						}
 					}
 				}
-			}
-		}
-		return this.cap;
+				return be.cap;
+			},
+			AllBlockEntityTypes.ANDESITE_TUNNEL.get()
+		);
 	}
 
 	@Override

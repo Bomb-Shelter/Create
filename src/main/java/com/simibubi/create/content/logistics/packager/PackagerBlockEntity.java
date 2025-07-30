@@ -10,10 +10,10 @@ import java.util.UUID;
 import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -66,7 +66,7 @@ import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.entity.SignText;
 import net.minecraft.world.level.block.state.BlockState;
 
-public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorageBlockEntity {
+public class PackagerBlockEntity extends SmartBlockEntity {
 
 	public boolean redstonePowered;
 	public int buttonCooldown;
@@ -106,11 +106,10 @@ public class PackagerBlockEntity extends SmartBlockEntity implements SidedStorag
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		return inventory;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.inventory,
+			AllBlockEntityTypes.PACKAGER.get()
+		);
 	}
 
 	@Override

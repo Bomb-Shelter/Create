@@ -9,9 +9,9 @@ import java.util.Map.Entry;
 
 import com.simibubi.create.infrastructure.fabric.transfer.FinalCommitSnapshot;
 
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
@@ -51,7 +51,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 
-public class MechanicalCrafterBlockEntity extends KineticBlockEntity implements SidedStorageBlockEntity {
+public class MechanicalCrafterBlockEntity extends KineticBlockEntity {
 
 	enum Phase {
 		IDLE, ACCEPTING, ASSEMBLING, EXPORTING, WAITING, CRAFTING, INSERTING;
@@ -123,11 +123,10 @@ public class MechanicalCrafterBlockEntity extends KineticBlockEntity implements 
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		return getInvCapability();
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.getInvCapability(),
+			AllBlockEntityTypes.MECHANICAL_CRAFTER.get()
+		);
 	}
 
 	protected Storage<ItemVariant> getInvCapability() {

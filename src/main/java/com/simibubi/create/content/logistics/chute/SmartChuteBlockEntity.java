@@ -7,18 +7,14 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringBehaviour;
 import com.simibubi.create.foundation.item.ItemHelper.ExtractionCountMode;
 
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import org.jetbrains.annotations.Nullable;
-
-public class SmartChuteBlockEntity extends ChuteBlockEntity implements SidedStorageBlockEntity {
+public class SmartChuteBlockEntity extends ChuteBlockEntity {
 
 	FilteringBehaviour filtering;
 
@@ -27,11 +23,10 @@ public class SmartChuteBlockEntity extends ChuteBlockEntity implements SidedStor
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		return this.itemHandler;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> be.itemHandler,
+			AllBlockEntityTypes.SMART_CHUTE.get()
+		);
 	}
 
 	@Override

@@ -35,9 +35,7 @@ import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import net.createmod.catnip.math.VecHelper;
-import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.minecraft.MethodsReturnNonnullByDefault;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -77,11 +75,9 @@ import net.minecraft.world.phys.Vec3;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
-import org.jetbrains.annotations.Nullable;
-
 @ParametersAreNonnullByDefault
 @MethodsReturnNonnullByDefault
-public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements SidedStorageBlockEntity {
+public class SawBlockEntity extends BlockBreakingKineticBlockEntity {
 
 	private static final Object cuttingRecipesKey = new Object();
 	public static final Supplier<RecipeType<?>> woodcuttingRecipeType =
@@ -102,13 +98,14 @@ public class SawBlockEntity extends BlockBreakingKineticBlockEntity implements S
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<ItemVariant> getItemStorage(@Nullable Direction side) {
-		if (side != Direction.DOWN)
-			return inventory;
-		return null;
+		ItemStorage.SIDED.registerForBlockEntity(
+			(be, context) -> {
+				if (context != Direction.DOWN)
+					return be.inventory;
+				return null;
+			},
+			AllBlockEntityTypes.SAW.get()
+		);
 	}
 
 	@Override

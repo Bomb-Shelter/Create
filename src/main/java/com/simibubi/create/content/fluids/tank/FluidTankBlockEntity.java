@@ -26,9 +26,7 @@ import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
-import net.fabricmc.fabric.api.transfer.v1.storage.base.SidedStorageBlockEntity;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -43,7 +41,7 @@ import net.minecraft.world.phys.AABB;
 
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 
-public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IMultiBlockEntityContainer.Fluid, SidedStorageBlockEntity {
+public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggleInformation, IMultiBlockEntityContainer.Fluid {
 
 	private static final int MAX_SIZE = 3;
 
@@ -82,14 +80,14 @@ public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggl
 	}
 
 	public static void registerCapabilities() {
-	}
-
-	@Override
-	public @Nullable Storage<FluidVariant> getFluidStorage(@Nullable Direction side) {
-		if (this.fluidCapability == null)
-			this.refreshCapability();
-
-		return this.fluidCapability;
+		FluidStorage.SIDED.registerForBlockEntity(
+			(be, context) -> {
+				if (be.fluidCapability == null)
+					be.refreshCapability();
+				return be.fluidCapability;
+			},
+			AllBlockEntityTypes.FLUID_TANK.get()
+		);
 	}
 
 	protected SmartFluidTank createInventory() {
