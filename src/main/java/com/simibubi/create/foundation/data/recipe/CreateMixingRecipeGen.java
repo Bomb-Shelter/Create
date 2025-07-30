@@ -11,6 +11,7 @@ import com.simibubi.create.content.processing.recipe.HeatCondition;
 
 import com.simibubi.create.infrastructure.fabric.crafting.BlockTagIngredient;
 
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.tags.BlockTags;
@@ -31,31 +32,31 @@ public final class CreateMixingRecipeGen extends MixingRecipeGen {
 	GeneratedRecipe
 
 		TEMP_LAVA = create("lava_from_cobble", b -> b.require(Tags.Items.COBBLESTONES)
-		.output(Fluids.LAVA, 50)
+		.output(Fluids.LAVA, 4050)
 		.requiresHeat(HeatCondition.SUPERHEATED)),
 
-	TEA = create("tea", b -> b.require(Fluids.WATER, 250)
-		.require(Tags.Fluids.MILK, 250)
+	TEA = create("tea", b -> b.require(Fluids.WATER, FluidConstants.BOTTLE)
+		.require(Tags.Fluids.MILK, FluidConstants.BUCKET / 4)
 		.require(ItemTags.LEAVES)
-		.output(AllFluids.TEA.get(), 500)
+		.output(AllFluids.TEA.get(), FluidConstants.BUCKET / 2)
 		.requiresHeat(HeatCondition.HEATED)),
 
-	CHOCOLATE = create("chocolate", b -> b.require(Tags.Fluids.MILK, 250)
+	CHOCOLATE = create("chocolate", b -> b.require(Tags.Fluids.MILK, FluidConstants.BUCKET / 4)
 		.require(Items.SUGAR)
 		.require(Items.COCOA_BEANS)
-		.output(AllFluids.CHOCOLATE.get(), 250)
+		.output(AllFluids.CHOCOLATE.get(), FluidConstants.BUCKET / 4)
 		.requiresHeat(HeatCondition.HEATED)),
 
 	CHOCOLATE_MELTING = create("chocolate_melting", b -> b.require(AllItems.BAR_OF_CHOCOLATE.get())
-		.output(AllFluids.CHOCOLATE.get(), 250)
+		.output(AllFluids.CHOCOLATE.get(), FluidConstants.BUCKET / 4)
 		.requiresHeat(HeatCondition.HEATED)),
 
 	HONEY = create("honey", b -> b.require(Items.HONEY_BLOCK)
-		.output(AllFluids.HONEY.get(), 1000)
+		.output(AllFluids.HONEY.get(), FluidConstants.BLOCK)
 		.requiresHeat(HeatCondition.HEATED)),
 
 	DOUGH = create("dough_by_mixing", b -> b.require(CreateRecipeProvider.I.wheatFlour())
-		.require(Fluids.WATER, 1000)
+		.require(Fluids.WATER, FluidConstants.BUCKET)
 		.output(AllItems.DOUGH.get(), 1)),
 
 	BRASS_INGOT = create("brass_ingot", b -> b.require(CreateRecipeProvider.I.copper())
@@ -72,7 +73,7 @@ public final class CreateMixingRecipeGen extends MixingRecipeGen {
 		.output(CreateRecipeProvider.I.andesiteAlloy(), 1)),
 
 	MUD = create("mud_by_mixing", b -> b.require(new BlockTagIngredient(BlockTags.CONVERTABLE_TO_MUD))
-		.require(Fluids.WATER, 250)
+		.require(Fluids.WATER, FluidConstants.BUCKET / 4)
 		.output(Blocks.MUD, 1)),
 
 	PULP = create("cardboard_pulp", b -> b
@@ -80,13 +81,13 @@ public final class CreateMixingRecipeGen extends MixingRecipeGen {
 		.require(AllItemTags.PULPIFIABLE.tag)
 		.require(AllItemTags.PULPIFIABLE.tag)
 		.require(AllItemTags.PULPIFIABLE.tag)
-		.require(Fluids.WATER, 250)
+		.require(Fluids.WATER, FluidConstants.BUCKET / 4)
 		.output(AllItems.PULP, 1)),
 
 	// AE2
 
 	AE2_FLUIX = create(Mods.AE2.recipeId("fluix_crystal"), b -> b.require(Tags.Items.DUSTS_REDSTONE)
-		.require(Fluids.WATER, 250)
+		.require(Fluids.WATER, FluidConstants.BUCKET / 4)
 		.require(Mods.AE2, "charged_certus_quartz_crystal")
 		.require(Tags.Items.GEMS_QUARTZ)
 		.output(1f, Mods.AE2, "fluix_crystal", 2)

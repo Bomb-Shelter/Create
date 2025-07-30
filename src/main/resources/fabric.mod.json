@@ -25,6 +25,9 @@
     "modmenu": [
       "com.simibubi.create.compat.modmenu.CreateModMenuCompat"
     ],
+    "jei_mod_plugin": [
+      "com.simibubi.create.compat.jei.CreateJEI"
+    ],
     "fabric-datagen": [
       "com.simibubi.create.infrastructure.data.CreateDatagen"
     ],

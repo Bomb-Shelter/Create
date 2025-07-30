@@ -199,8 +199,8 @@ dependencies {
     modImplementation("dev.ftb.mods:ftb-teams-fabric:2101.1.0")
     modImplementation("dev.ftb.mods:ftb-library-fabric:2101.1.3")
 
-    modImplementation("maven.modrinth:journeymap:1.21.1-6.0.0-beta.46+fabric")
-    modImplementation("info.journeymap:journeymap-api-fabric:2.0.0-1.21.1-SNAPSHOT") {
+    modCompileOnly("maven.modrinth:journeymap:1.21.1-6.0.0-beta.46+fabric")
+    modCompileOnly("info.journeymap:journeymap-api-fabric:2.0.0-1.21.1-SNAPSHOT") {
         exclude(group: "curse.maven") // Pulls in a old version of journey map which is for forge
     }
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:${mixinextras_version}")))

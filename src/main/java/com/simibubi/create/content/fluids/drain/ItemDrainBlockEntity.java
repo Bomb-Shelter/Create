@@ -77,7 +77,7 @@ public class ItemDrainBlockEntity extends SmartBlockEntity implements IHaveGoggl
 	public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
 		behaviours.add(new DirectBeltInputBehaviour(this).allowingBeltFunnels()
 			.setInsertionHandler(this::tryInsertingFromSide));
-		behaviours.add(internalTank = SmartFluidTankBehaviour.single(this, 1500)
+		behaviours.add(internalTank = SmartFluidTankBehaviour.single(this, 121500)
 			.allowExtraction()
 			.forbidInsertion());
 		registerAwardables(behaviours, AllAdvancements.DRAIN, AllAdvancements.CHAINED_DRAIN);

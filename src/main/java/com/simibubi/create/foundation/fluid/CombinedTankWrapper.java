@@ -1,17 +1,17 @@
 package com.simibubi.create.foundation.fluid;
 
+import com.google.common.collect.Iterators;
 import com.simibubi.create.infrastructure.fabric.transfer.EmptySingleFluidSlotStorage;
 
 import net.createmod.catnip.data.Iterate;
-import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
-import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
 import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * Combines multiple IFluidHandlers into one interface (See CombinedInvWrapper
@@ -103,7 +103,7 @@ public class CombinedTankWrapper implements SlottedStorage<FluidVariant> {
 
 	@Override
 	public Iterator<StorageView<FluidVariant>> iterator() {
-		return null;
+		return new CombinedIterator();
 	}
 
 	protected int getIndexForSlot(int slot) {
@@ -125,5 +125,46 @@ public class CombinedTankWrapper implements SlottedStorage<FluidVariant> {
 		if (index <= 0 || index >= baseIndex.length)
 			return slot;
 		return slot - baseIndex[index - 1];
+	}
+
+	private class CombinedIterator implements Iterator<StorageView<FluidVariant>> {
+		final Iterator<SlottedStorage<FluidVariant>> partIterator = Iterators.forArray(itemHandler);
+		// Always holds the next StorageView<T>, except during next() while the iterator is being advanced.
+		Iterator<? extends StorageView<FluidVariant>> currentPartIterator = null;
+
+		CombinedIterator() {
+			advanceCurrentPartIterator();
+		}
+
+		@Override
+		public boolean hasNext() {
+			return currentPartIterator != null && currentPartIterator.hasNext();
+		}
+
+		@Override
+		public StorageView<FluidVariant> next() {
+			if (!hasNext()) {
+				throw new NoSuchElementException();
+			}
+
+			StorageView<FluidVariant> returned = currentPartIterator.next();
+
+			// Advance the current part iterator
+			if (!currentPartIterator.hasNext()) {
+				advanceCurrentPartIterator();
+			}
+
+			return returned;
+		}
+
+		private void advanceCurrentPartIterator() {
+			while (partIterator.hasNext()) {
+				this.currentPartIterator = partIterator.next().iterator();
+
+				if (this.currentPartIterator.hasNext()) {
+					break;
+				}
+			}
+		}
 	}
 }

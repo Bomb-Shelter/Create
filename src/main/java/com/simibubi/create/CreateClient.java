@@ -104,8 +104,6 @@ public class CreateClient implements ClientModInitializer {
 
 		AllInstanceTypes.init();
 
-		MODEL_SWAPPER.registerListeners();
-
 		ZAPPER_RENDER_HANDLER.registerListeners();
 		POTATO_CANNON_RENDER_HANDLER.registerListeners();
 

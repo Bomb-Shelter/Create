@@ -142,11 +142,11 @@ public abstract class ProcessingRecipeBuilder<P extends ProcessingRecipeParams, 
 		return self();
 	}
 
-	public S require(Fluid fluid, int amount) {
+	public S require(Fluid fluid, long amount) {
 		return require(FluidIngredient.fromFluid(fluid, amount));
 	}
 
-	public S require(TagKey<Fluid> fluidTag, int amount) {
+	public S require(TagKey<Fluid> fluidTag, long amount) {
 		return require(FluidIngredient.fromTag(fluidTag, amount));
 	}
 
@@ -200,7 +200,7 @@ public abstract class ProcessingRecipeBuilder<P extends ProcessingRecipeParams, 
 		return self();
 	}
 
-	public S output(Fluid fluid, int amount) {
+	public S output(Fluid fluid, long amount) {
 		fluid = FluidHelper.convertToStill(fluid);
 		return output(new FluidStack(fluid, amount));
 	}

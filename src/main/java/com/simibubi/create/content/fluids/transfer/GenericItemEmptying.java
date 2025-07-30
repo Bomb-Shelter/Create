@@ -6,6 +6,7 @@ import java.util.Optional;
 import com.simibubi.create.AllRecipeTypes;
 import com.simibubi.create.content.fluids.potion.PotionFluidHandler;
 
+import com.simibubi.create.infrastructure.fabric.transfer.ActuallyMutableContainerItemContext;
 import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 
 import io.github.fabricators_of_create.porting_lib.transfer.MutableContainerItemContext;
@@ -13,6 +14,7 @@ import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.createmod.catnip.data.Pair;
 import net.fabricmc.fabric.api.registry.FuelRegistry;
 import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
@@ -65,11 +67,12 @@ public class GenericItemEmptying {
 
 		ItemStack split = stack.copy();
 		split.setCount(1);
-		Storage<FluidVariant> capability = FluidStorage.ITEM.find(stack, new MutableContainerItemContext(stack));
+		ActuallyMutableContainerItemContext context = new ActuallyMutableContainerItemContext(stack);
+		Storage<FluidVariant> capability = FluidStorage.ITEM.find(stack, context);
 		if (capability == null)
 			return Pair.of(resultingFluid, resultingItem);
-		resultingFluid = CreateTransferUtil.extractFluid(capability, 1000, simulate);
-		resultingItem = stack
+		resultingFluid = CreateTransferUtil.extractFluid(capability, FluidConstants.BUCKET, simulate);
+		resultingItem = context.getContainer()
 			.copy();
 		if (!simulate)
 			stack.shrink(1);

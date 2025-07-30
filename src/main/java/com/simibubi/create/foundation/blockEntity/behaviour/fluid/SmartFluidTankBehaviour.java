@@ -43,12 +43,12 @@ public class SmartFluidTankBehaviour extends BlockEntityBehaviour {
 
 	private BehaviourType<SmartFluidTankBehaviour> behaviourType;
 
-	public static SmartFluidTankBehaviour single(SmartBlockEntity be, int capacity) {
+	public static SmartFluidTankBehaviour single(SmartBlockEntity be, long capacity) {
 		return new SmartFluidTankBehaviour(TYPE, be, 1, capacity, false);
 	}
 
 	public SmartFluidTankBehaviour(BehaviourType<SmartFluidTankBehaviour> type, SmartBlockEntity be, int tanks,
-		int tankCapacity, boolean enforceVariety) {
+		long tankCapacity, boolean enforceVariety) {
 		super(be);
 		insertionAllowed = true;
 		extractionAllowed = true;
@@ -229,7 +229,7 @@ public class SmartFluidTankBehaviour extends BlockEntityBehaviour {
 		protected LerpedFloat fluidLevel;
 		protected FluidStack renderedFluid;
 
-		public TankSegment(int capacity) {
+		public TankSegment(long capacity) {
 			tank = new SmartFluidTank(capacity, f -> onFluidStackChanged());
 			fluidLevel = LerpedFloat.linear()
 				.startWithValue(0)

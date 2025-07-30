@@ -27,6 +27,7 @@ import com.simibubi.create.foundation.fluid.FluidHelper;
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -78,7 +79,7 @@ public class SpoutBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 
 	@Override
 	public void addBehaviours(List<BlockEntityBehaviour> behaviours) {
-		tank = SmartFluidTankBehaviour.single(this, 1000);
+		tank = SmartFluidTankBehaviour.single(this, FluidConstants.BUCKET);
 		behaviours.add(tank);
 
 		beltProcessing = new BeltProcessingBehaviour(this).whenItemEnters(this::onItemReceived)

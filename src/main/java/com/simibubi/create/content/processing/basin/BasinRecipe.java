@@ -28,6 +28,7 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.CraftingInput;
@@ -125,14 +126,18 @@ public class BasinRecipe extends StandardProcessingRecipe<RecipeInput> {
 				long amountRequired = fluidIngredient.getRequiredAmount();
 
 				for (int tank = 0; tank < availableFluids.length; tank++) {
-					FluidStack fluidStack = new FluidStack(availableFluids[tank]);
+					StorageView<FluidVariant> view = availableFluids[tank];
+					FluidStack fluidStack = new FluidStack(view);
 					if (simulate && fluidStack.getAmount() <= extractedFluidsFromTank[tank])
 						continue;
 					if (!fluidIngredient.test(fluidStack))
 						continue;
 					long drainedAmount = Math.min(amountRequired, fluidStack.getAmount());
 					if (!simulate) {
-						fluidStack.shrink(drainedAmount);
+						try (Transaction tx = TransferUtil.getTransaction()) {
+							view.extract(view.getResource(), drainedAmount, tx);
+							tx.commit();
+						}
 						fluidsAffected = true;
 					}
 					amountRequired -= drainedAmount;

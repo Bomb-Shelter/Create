@@ -46,11 +46,11 @@ public abstract sealed class FluidIngredient implements Predicate<FluidStack> {
 
 	public List<FluidStack> matchingFluidStacks;
 
-	public static FluidIngredient fromTag(TagKey<Fluid> tag, int amount) {
+	public static FluidIngredient fromTag(TagKey<Fluid> tag, long amount) {
 		return new FluidTagIngredient(tag, amount);
 	}
 
-	public static FluidIngredient fromFluid(Fluid fluid, int amount) {
+	public static FluidIngredient fromFluid(Fluid fluid, long amount) {
 		FluidStackIngredient ingredient = new FluidStackIngredient(fluid, amount);
 		ingredient.fixFlowing();
 		return ingredient;

@@ -5,22 +5,21 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.content.fluids.potion.PotionFluidHandler;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 
+import com.simibubi.create.infrastructure.fabric.transfer.ActuallyMutableContainerItemContext;
 import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 
 import io.github.fabricators_of_create.porting_lib.transfer.MutableContainerItemContext;
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
-import net.fabricmc.fabric.api.transfer.v1.context.ContainerItemContext;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.fluid.base.FullItemFluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.impl.transfer.fluid.EmptyBucketStorage;
-import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.MilkBucketItem;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
@@ -79,7 +78,7 @@ public class GenericItemFilling {
 		if (stack.getItem() == Items.GLASS_BOTTLE && canFillGlassBottleInternally(availableFluid))
 			return PotionFluidHandler.getRequiredAmountForFilledBottle(stack, availableFluid);
 		if (stack.getItem() == Items.BUCKET && canFillBucketInternally(availableFluid))
-			return 1000;
+			return FluidConstants.BUCKET;
 
 		Storage<FluidVariant> capability = FluidStorage.ITEM.find(stack, new MutableContainerItemContext(stack));
 		if (capability == null || capability instanceof EmptyBucketStorage)
@@ -91,7 +90,7 @@ public class GenericItemFilling {
 				return -1;
 			if (!((FullItemFluidStorage) capability).isResourceBlank())
 				return -1;
-			return 1000;
+			return FluidConstants.BUCKET;
 		}
 
 		long filled = CreateTransferUtil.simulateInsertFluid(capability, availableFluid);
@@ -133,11 +132,12 @@ public class GenericItemFilling {
 
 		ItemStack split = stack.copy();
 		split.setCount(1);
-		Storage<FluidVariant> capability = FluidStorage.ITEM.find(stack, new MutableContainerItemContext(stack));
+		ActuallyMutableContainerItemContext context = new ActuallyMutableContainerItemContext(stack);
+		Storage<FluidVariant> capability = FluidStorage.ITEM.find(stack, context);
 		if (capability == null)
 			return ItemStack.EMPTY;
 		TransferUtil.insertFluid(capability, toFill);
-		ItemStack container = stack
+		ItemStack container = context.getContainer()
 			.copy();
 		stack.shrink(1);
 		return container;
