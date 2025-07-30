@@ -13,11 +13,11 @@ import com.simibubi.create.foundation.item.ItemHelper;
 import com.simibubi.create.foundation.sound.SoundScapes;
 import com.simibubi.create.foundation.sound.SoundScapes.AmbienceGroup;
 
-import com.simibubi.create.infrastructure.fabric.CreateRecipeWrapper;
 import com.simibubi.create.infrastructure.fabric.transfer.CombinedInventoryStorage;
 import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.RecipeWrapper;
 import net.createmod.catnip.math.VecHelper;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
@@ -109,7 +109,7 @@ public class MillstoneBlockEntity extends KineticBlockEntity {
 			.isEmpty())
 			return;
 
-		CreateRecipeWrapper inventoryIn = new CreateRecipeWrapper(inputInv);
+		RecipeWrapper inventoryIn = new RecipeWrapper(inputInv);
 		if (lastRecipe == null || !lastRecipe.matches(inventoryIn, level)) {
 			Optional<RecipeHolder<MillingRecipe>> recipe = AllRecipeTypes.MILLING.find(inventoryIn, level);
 			if (!recipe.isPresent()) {
@@ -141,7 +141,7 @@ public class MillstoneBlockEntity extends KineticBlockEntity {
 	}
 
 	private void process() {
-		CreateRecipeWrapper inventoryIn = new CreateRecipeWrapper(inputInv);
+		RecipeWrapper inventoryIn = new RecipeWrapper(inputInv);
 
 		if (lastRecipe == null || !lastRecipe.matches(inventoryIn, level)) {
 			Optional<RecipeHolder<MillingRecipe>> recipe = AllRecipeTypes.MILLING.find(inventoryIn, level);
@@ -200,7 +200,7 @@ public class MillstoneBlockEntity extends KineticBlockEntity {
 	private boolean canProcess(ItemStack stack) {
 		ItemStackHandler tester = new ItemStackHandler(1);
 		tester.setStackInSlot(0, stack);
-		CreateRecipeWrapper inventoryIn = new CreateRecipeWrapper(tester);
+		RecipeWrapper inventoryIn = new RecipeWrapper(tester);
 
 		if (lastRecipe != null && lastRecipe.matches(inventoryIn, level))
 			return true;

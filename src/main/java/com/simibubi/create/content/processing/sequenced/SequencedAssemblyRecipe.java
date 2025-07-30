@@ -18,8 +18,7 @@ import com.simibubi.create.content.processing.recipe.ProcessingRecipe;
 import com.simibubi.create.foundation.fluid.FluidIngredient;
 import com.simibubi.create.foundation.utility.CreateLang;
 
-import com.simibubi.create.infrastructure.fabric.CreateRecipeWrapper;
-
+import io.github.fabricators_of_create.porting_lib.transfer.item.RecipeWrapper;
 import io.netty.buffer.ByteBuf;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
@@ -43,7 +42,7 @@ import net.minecraft.world.level.Level;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
-public class SequencedAssemblyRecipe implements Recipe<CreateRecipeWrapper> {
+public class SequencedAssemblyRecipe implements Recipe<RecipeWrapper> {
 
 	protected SequencedAssemblyRecipeSerializer serializer;
 
@@ -91,7 +90,7 @@ public class SequencedAssemblyRecipe implements Recipe<CreateRecipeWrapper> {
 
 	public static <R extends ProcessingRecipe<?, ?>> Stream<RecipeHolder<R>> getRecipes(Level world, ItemStack item, RecipeType<R> type, Class<R> recipeClass) {
 		List<RecipeHolder<SequencedAssemblyRecipe>> all = world.getRecipeManager()
-			.<CreateRecipeWrapper, SequencedAssemblyRecipe>getAllRecipesFor(AllRecipeTypes.SEQUENCED_ASSEMBLY.getType());
+			.<RecipeWrapper, SequencedAssemblyRecipe>getAllRecipesFor(AllRecipeTypes.SEQUENCED_ASSEMBLY.getType());
 
 		List<RecipeHolder<R>> result = new ArrayList<>();
 
@@ -182,12 +181,12 @@ public class SequencedAssemblyRecipe implements Recipe<CreateRecipeWrapper> {
 	}
 
 	@Override
-	public boolean matches(CreateRecipeWrapper inv, Level p_77569_2_) {
+	public boolean matches(RecipeWrapper inv, Level p_77569_2_) {
 		return false;
 	}
 
 	@Override
-	public ItemStack assemble(CreateRecipeWrapper input, HolderLookup.Provider registries) {
+	public ItemStack assemble(RecipeWrapper input, HolderLookup.Provider registries) {
 		return ItemStack.EMPTY;
 	}
 

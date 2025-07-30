@@ -14,8 +14,7 @@ import com.simibubi.create.content.processing.recipe.StandardProcessingRecipe;
 import com.simibubi.create.content.processing.sequenced.IAssemblyRecipe;
 import com.simibubi.create.foundation.utility.CreateLang;
 
-import com.simibubi.create.infrastructure.fabric.CreateRecipeWrapper;
-
+import io.github.fabricators_of_create.porting_lib.transfer.item.RecipeWrapper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.ItemLike;
@@ -25,14 +24,14 @@ import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 
 @ParametersAreNonnullByDefault
-public class CuttingRecipe extends StandardProcessingRecipe<CreateRecipeWrapper> implements IAssemblyRecipe {
+public class CuttingRecipe extends StandardProcessingRecipe<RecipeWrapper> implements IAssemblyRecipe {
 
 	public CuttingRecipe(ProcessingRecipeParams params) {
 		super(AllRecipeTypes.CUTTING, params);
 	}
 
 	@Override
-	public boolean matches(CreateRecipeWrapper inv, Level worldIn) {
+	public boolean matches(RecipeWrapper inv, Level worldIn) {
 		if (inv.isEmpty())
 			return false;
 		return ingredients.get(0)

@@ -39,7 +39,7 @@ public class MountedStorageMenus {
 			return null;
 
 		MenuType<?> type = GENERIC_CHEST_MENUS.get(rows - 1);
-		Container wrapper = new StorageInteractionWrapper(handler, stillValid, onClose);
+		Container wrapper = new StorageInteractionWrapper(handler, stillValid, onClose).getContainer();
 		MenuConstructor constructor = (id, inv, player) -> new ChestMenu(type, id, inv, wrapper, rows);
 		return new SimpleMenuProvider(constructor, menuName);
 	}
@@ -50,7 +50,7 @@ public class MountedStorageMenus {
 		if (handler.getSlotCount() != 9)
 			return null;
 
-		Container wrapper = new StorageInteractionWrapper(handler, stillValid, onClose);
+		Container wrapper = new StorageInteractionWrapper(handler, stillValid, onClose).getContainer();
 		MenuConstructor constructor = (id, inv, player) -> new DispenserMenu(id, inv, wrapper);
 		return new SimpleMenuProvider(constructor, name);
 	}

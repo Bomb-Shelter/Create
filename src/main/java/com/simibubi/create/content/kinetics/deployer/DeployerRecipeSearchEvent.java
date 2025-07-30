@@ -5,10 +5,9 @@ import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
-import com.simibubi.create.infrastructure.fabric.CreateRecipeWrapper;
-
 import io.github.fabricators_of_create.porting_lib.core.event.BaseEvent;
 import io.github.fabricators_of_create.porting_lib.core.event.CancellableEvent;
+import io.github.fabricators_of_create.porting_lib.transfer.item.RecipeWrapper;
 import net.fabricmc.fabric.api.event.Event;
 import net.fabricmc.fabric.api.event.EventFactory;
 import net.minecraft.world.item.crafting.Recipe;
@@ -23,12 +22,12 @@ public class DeployerRecipeSearchEvent extends BaseEvent implements CancellableE
 	});
 
 	private final DeployerBlockEntity blockEntity;
-	private final CreateRecipeWrapper inventory;
+	private final RecipeWrapper inventory;
 	@Nullable
 	RecipeHolder<? extends Recipe<? extends RecipeInput>> recipe = null;
 	private int maxPriority = 0;
 
-	public DeployerRecipeSearchEvent(DeployerBlockEntity blockEntity, CreateRecipeWrapper inventory) {
+	public DeployerRecipeSearchEvent(DeployerBlockEntity blockEntity, RecipeWrapper inventory) {
 		this.blockEntity = blockEntity;
 		this.inventory = inventory;
 	}
@@ -37,7 +36,7 @@ public class DeployerRecipeSearchEvent extends BaseEvent implements CancellableE
 		return blockEntity;
 	}
 
-	public CreateRecipeWrapper getInventory() {
+	public RecipeWrapper getInventory() {
 		return inventory;
 	}
 

@@ -7,8 +7,7 @@ import com.simibubi.create.content.processing.recipe.ProcessingRecipeBuilder;
 
 import com.simibubi.create.content.processing.recipe.ProcessingRecipeParams;
 
-import com.simibubi.create.infrastructure.fabric.CreateRecipeWrapper;
-
+import io.github.fabricators_of_create.porting_lib.transfer.item.RecipeWrapper;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
@@ -16,7 +15,7 @@ import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.Level;
 
-public class ItemApplicationRecipe extends ProcessingRecipe<CreateRecipeWrapper, ItemApplicationRecipeParams> {
+public class ItemApplicationRecipe extends ProcessingRecipe<RecipeWrapper, ItemApplicationRecipeParams> {
 
 	private boolean keepHeldItem;
 
@@ -26,7 +25,7 @@ public class ItemApplicationRecipe extends ProcessingRecipe<CreateRecipeWrapper,
 	}
 
 	@Override
-	public boolean matches(CreateRecipeWrapper inv, Level p_77569_2_) {
+	public boolean matches(RecipeWrapper inv, Level p_77569_2_) {
 		return getProcessedItem().test(inv.getItem(0)) && getRequiredHeldItem().test(inv.getItem(1));
 	}
 

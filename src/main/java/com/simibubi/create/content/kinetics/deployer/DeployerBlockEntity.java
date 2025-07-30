@@ -26,10 +26,9 @@ import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringB
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.CreateLang;
 
-import com.simibubi.create.infrastructure.fabric.CreateRecipeWrapper;
-
 import dev.engine_room.flywheel.lib.model.baked.PartialModel;
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
+import io.github.fabricators_of_create.porting_lib.transfer.item.RecipeWrapper;
 import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.math.VecHelper;
@@ -565,7 +564,7 @@ public class DeployerBlockEntity extends KineticBlockEntity {
 		recipeInv.setStackInSlot(0, stack);
 		recipeInv.setStackInSlot(1, heldItemMainhand);
 
-		DeployerRecipeSearchEvent event = new DeployerRecipeSearchEvent(this, new CreateRecipeWrapper(recipeInv));
+		DeployerRecipeSearchEvent event = new DeployerRecipeSearchEvent(this, new RecipeWrapper(recipeInv));
 
 		event.addRecipe(() -> SequencedAssemblyRecipe.getRecipe(level, event.getInventory(),
 			AllRecipeTypes.DEPLOYING.getType(), DeployerApplicationRecipe.class), 100);

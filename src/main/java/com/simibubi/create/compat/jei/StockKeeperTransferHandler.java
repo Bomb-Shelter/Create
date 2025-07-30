@@ -96,13 +96,13 @@ public class StockKeeperTransferHandler implements IUniversalRecipeTransferHandl
 		if (summary == null)
 			return null;
 
-		Container outputDummy = new LegacyRecipeWrapper(new ItemStackHandler(9));
+		Container outputDummy = new LegacyRecipeWrapper(new ItemStackHandler(9)).getContainer();
 		List<Slot> craftingSlots = new ArrayList<>();
 		for (int i = 0; i < outputDummy.getContainerSize(); i++)
 			craftingSlots.add(new Slot(outputDummy, i, 0, 0));
 
 		List<BigItemStack> stacksByCount = summary.getStacksByCount();
-		Container inputDummy = new LegacyRecipeWrapper(new ItemStackHandler(stacksByCount.size()));
+		Container inputDummy = new LegacyRecipeWrapper(new ItemStackHandler(stacksByCount.size())).getContainer();
 		Map<Slot, ItemStack> availableItemStacks = new HashMap<>();
 		for (int j = 0; j < stacksByCount.size(); j++) {
 			BigItemStack bigItemStack = stacksByCount.get(j);
