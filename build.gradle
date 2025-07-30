@@ -92,7 +92,7 @@ loom {
         server {
             server()
 
-            runDir = project.file('run/server')
+            runDir = 'run/server'
 
             programArg '--nogui'
         }
