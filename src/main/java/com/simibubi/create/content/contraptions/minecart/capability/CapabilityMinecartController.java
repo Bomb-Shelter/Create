@@ -15,24 +15,20 @@ import com.simibubi.create.AllAttachmentTypes;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.content.contraptions.minecart.CouplingHandler;
 
-import io.github.fabricators_of_create.porting_lib.core.event.entity.player.PlayerEvent;
-import io.github.fabricators_of_create.porting_lib.entity.events.EntityEvents;
 import io.github.fabricators_of_create.porting_lib.entity.events.EntityJoinLevelEvent;
 import io.github.fabricators_of_create.porting_lib.entity.events.EntityLeaveLevelEvent;
 import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerEvents.StartTracking;
-import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerEvents.StopTracking;
 import io.github.fabricators_of_create.porting_lib.entity.events.tick.EntityTickEvent;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectLists;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.data.WorldAttached;
-import net.fabricmc.fabric.api.networking.v1.EntityTrackingEvents;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.vehicle.AbstractMinecart;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.chunk.LevelChunk;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.phys.Vec3;
 
 public class CapabilityMinecartController {
@@ -114,7 +110,7 @@ public class CapabilityMinecartController {
 			data.tick();
 	}
 
-	public static void onChunkUnloaded(Level level, LevelChunk chunk) {
+	public static void onChunkUnloaded(Level level, ChunkAccess chunk) {
 		ChunkPos chunkPos = chunk
 			.getPos();
 		Map<UUID, MinecartController> carts = loadedMinecartsByUUID.get(level);

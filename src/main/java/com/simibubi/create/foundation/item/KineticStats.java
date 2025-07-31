@@ -6,7 +6,6 @@ import static net.minecraft.ChatFormatting.GRAY;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -53,8 +52,8 @@ public class KineticStats implements TooltipModifier {
 	}
 
 	@Override
-	public void modify(ItemStack stack, TooltipContext context, TooltipFlag flag, List<Component> tooltip) {
-		List<Component> kineticStats = getKineticStats(block, Minecraft.getInstance().player);
+	public void modify(ItemStack stack, TooltipContext context, TooltipFlag flag, List<Component> tooltip, Player player) {
+		List<Component> kineticStats = getKineticStats(block, player);
 		if (!kineticStats.isEmpty()) {
 			tooltip.add(CommonComponents.EMPTY);
 			tooltip.addAll(kineticStats);

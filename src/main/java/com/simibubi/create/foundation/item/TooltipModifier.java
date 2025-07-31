@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 
@@ -23,7 +24,7 @@ public interface TooltipModifier {
 
 	TooltipModifier EMPTY = new TooltipModifier() {
 		@Override
-		public void modify(ItemStack stack, TooltipContext context, TooltipFlag flag, List<Component> tooltip) {
+		public void modify(ItemStack stack, TooltipContext context, TooltipFlag flag, List<Component> tooltip, Player player) {
 		}
 
 		@Override
@@ -32,15 +33,15 @@ public interface TooltipModifier {
 		}
 	};
 
-	void modify(ItemStack stack, TooltipContext context, TooltipFlag flag, List<Component> tooltip);
+	void modify(ItemStack stack, TooltipContext context, TooltipFlag flag, List<Component> tooltip, Player player);
 
 	default TooltipModifier andThen(TooltipModifier after) {
 		if (after == EMPTY) {
 			return this;
 		}
-		return (stack, context, flag, tooltip) -> {
-			modify(stack, context, flag, tooltip);
-			after.modify(stack, context, flag, tooltip);
+		return (stack, context, flag, tooltip, player) -> {
+			modify(stack, context, flag, tooltip, player);
+			after.modify(stack, context, flag, tooltip, player);
 		};
 	}
 

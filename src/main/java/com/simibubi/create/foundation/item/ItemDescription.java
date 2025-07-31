@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -233,7 +234,7 @@ public record ItemDescription(ImmutableList<Component> lines, ImmutableList<Comp
 		}
 
 		@Override
-		public void modify(ItemStack stack, TooltipContext context, TooltipFlag flag, List<Component> tooltip) {
+		public void modify(ItemStack stack, TooltipContext context, TooltipFlag flag, List<Component> tooltip, Player player) {
 			if (checkLocale()) {
 				description = create(item, palette);
 			}

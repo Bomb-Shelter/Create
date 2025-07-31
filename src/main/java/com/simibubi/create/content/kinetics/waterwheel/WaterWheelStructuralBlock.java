@@ -9,6 +9,9 @@ import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomLandi
 
 import io.github.fabricators_of_create.porting_lib.blocks.extensions.FlammableBlock;
 
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -175,6 +178,7 @@ public class WaterWheelStructuralBlock extends DirectionalBlock implements IWren
 	}
 
 	@Override
+	@Environment(EnvType.CLIENT)
 	public boolean addDestroyEffects(BlockState state, ClientLevel Level, BlockPos pos, ParticleEngine engine) {
 		return true;
 	}

@@ -12,6 +12,8 @@ import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringB
 import com.simibubi.create.foundation.blockEntity.behaviour.inventory.InvManipulationBehaviour;
 
 import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomDestroyEffectsBlock;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.BlockPos;
@@ -153,6 +155,7 @@ public abstract class AbstractFunnelBlock extends Block
 	;
 
 	@Override
+	@Environment(EnvType.CLIENT)
 	public boolean addDestroyEffects(BlockState state, ClientLevel level, BlockPos pos, ParticleEngine engine) {
 		return ReducedDestroyEffects.addDestroyEffects(state, level, pos, engine);
 	}

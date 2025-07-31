@@ -46,7 +46,7 @@ public interface ICustomParticleDataWithSprite<T extends ParticleOptions> extend
 	@Override
 	@Environment(EnvType.CLIENT)
 	public default void register(ParticleType<T> type) {
-		ParticleFactoryRegistry.getInstance().register(type, provider -> getMetaFactory().create(provider));
+		ParticleFactoryRegistry.getInstance().register(type, getMetaFactory()::create);
 	}
 
 }

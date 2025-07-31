@@ -20,7 +20,6 @@ import com.simibubi.create.foundation.utility.CreateLang;
 
 import io.github.fabricators_of_create.porting_lib.transfer.item.RecipeWrapper;
 import io.netty.buffer.ByteBuf;
-import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.HolderLookup;
@@ -263,12 +262,6 @@ public class SequencedAssemblyRecipe implements Recipe<RecipeWrapper> {
 			}
 		}
 
-	}
-
-	static {
-		ItemTooltipCallback.EVENT.register((stack, tooltipContext, tooltipType, lines) -> {
-			addToTooltip(stack, lines);
-		});
 	}
 
 	public Ingredient getIngredient() {

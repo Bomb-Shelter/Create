@@ -5,6 +5,8 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.simibubi.create.AllParticleTypes;
 import com.simibubi.create.foundation.particle.ICustomParticleData;
 
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleProvider;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleType;
@@ -32,7 +34,12 @@ public class FluidParticleData implements ParticleOptions, ICustomParticleData<F
 	@Override
 	@Environment(EnvType.CLIENT)
 	public ParticleProvider<FluidParticleData> getFactory() {
-		return (data, world, x, y, z, vx, vy, vz) -> FluidStackParticle.create(data.type, world, data.fluid, x, y, z,
+		return this::createParticle;
+	}
+
+	@Environment(EnvType.CLIENT)
+	public Particle createParticle(FluidParticleData data, ClientLevel world, double x, double y, double z, double vx, double vy, double vz) {
+		return FluidStackParticle.create(data.type, world, data.fluid, x, y, z,
 			vx, vy, vz);
 	}
 

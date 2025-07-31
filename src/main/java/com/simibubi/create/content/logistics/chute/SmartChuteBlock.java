@@ -5,6 +5,8 @@ import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.foundation.block.render.ReducedDestroyEffects;
 
 import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomDestroyEffectsBlock;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.core.BlockPos;
@@ -75,6 +77,7 @@ public class SmartChuteBlock extends AbstractChuteBlock implements CustomDestroy
 	}
 
 	@Override
+	@Environment(EnvType.CLIENT)
 	public boolean addDestroyEffects(BlockState state, ClientLevel level, BlockPos pos, ParticleEngine engine) {
 		return ReducedDestroyEffects.addDestroyEffects(state, level, pos, engine);
 	}

@@ -50,7 +50,8 @@
     "accessor.ftb.RegionMapPanelAccessor",
     "datafixer.BlockPosFormatAndRenamesFixMixin",
     "datafixer.ItemStackComponentizationFixMixin",
-    "datafixer.V1460Mixin"
+    "datafixer.V1460Mixin",
+    "fabric.ItemStackMixin"
   ],
   "client": [
     "accessor.AgeableListModelAccessor",

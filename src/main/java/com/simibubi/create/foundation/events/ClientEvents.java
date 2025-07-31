@@ -67,6 +67,7 @@ import com.simibubi.create.foundation.blockEntity.behaviour.edgeInteraction.Edge
 import com.simibubi.create.foundation.blockEntity.behaviour.filtering.FilteringRenderer;
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollValueHandler;
 import com.simibubi.create.foundation.blockEntity.behaviour.scrollValue.ScrollValueRenderer;
+import com.simibubi.create.foundation.events.fabric.ChunkUnloadCallback;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.simibubi.create.foundation.item.TooltipModifier;
 import com.simibubi.create.foundation.networking.LeftClickPacket;
@@ -96,6 +97,7 @@ import net.createmod.catnip.levelWrappers.WrappedClientLevel;
 import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.render.DefaultSuperRenderTypeBuffer;
 import net.createmod.catnip.render.SuperRenderTypeBuffer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientChunkEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -111,6 +113,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Item.TooltipContext;
 import net.minecraft.world.item.ItemStack;
@@ -121,10 +124,13 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.Vec3;
 
+import org.jetbrains.annotations.Nullable;
+
 public class ClientEvents {
 	public static void init() {
 		ClientTickEvents.START_CLIENT_TICK.register(client -> onTickPre());
 		ClientTickEvents.END_CLIENT_TICK.register(client -> onTickPost());
+		ClientChunkEvents.CHUNK_UNLOAD.register((world, chunk) -> ChunkUnloadCallback.EVENT.invoker().onChunkUnload(world, chunk));
 	}
 
 	public static void onTickPre() {
@@ -215,7 +221,6 @@ public class ClientEvents {
 		Unload.EVENT.register(ClientEvents::onUnloadWorld);
 		WorldRenderEvents.AFTER_TRANSLUCENT.register(ClientEvents::onRenderWorld);
 		ComputeCameraAngles.EVENT.register(ClientEvents::onCameraSetup);
-		ItemTooltipCallback.EVENT.register(ClientEvents::addToItemTooltip);
 		ClientTickEvents.START_CLIENT_TICK.register(client -> onRenderFramePre());
 		ClientTickEvents.END_CLIENT_TICK.register(client -> onRenderFramePost());
 		EntityMountEvent.EVENT.register(ClientEvents::onMount);
@@ -282,16 +287,16 @@ public class ClientEvents {
 			event.setPitch(CameraAngleAnimationService.getPitch(partialTicks));
 	}
 
-	public static void addToItemTooltip(ItemStack stack, TooltipContext context, TooltipFlag type, List<Component> lines) {
+	public static void addToItemTooltip(ItemStack stack, TooltipContext context, TooltipFlag type, List<Component> lines, @Nullable Player player) {
 		if (!AllConfigs.client().tooltips.get())
 			return;
-		//if (event.getEntity() == null)
-			//return;
+		if (player == null)
+			return;
 
 		Item item = stack.getItem();
 		TooltipModifier modifier = TooltipModifier.REGISTRY.get(item);
 		if (modifier != null && modifier != TooltipModifier.EMPTY) {
-			modifier.modify(stack, context, type, lines);
+			modifier.modify(stack, context, type, lines, player);
 		}
 
 		SequencedAssemblyRecipe.addToTooltip(stack, lines);

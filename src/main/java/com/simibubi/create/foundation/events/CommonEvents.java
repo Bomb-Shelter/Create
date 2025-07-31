@@ -52,6 +52,7 @@ import com.simibubi.create.content.redstone.link.controller.LinkedControllerServ
 import com.simibubi.create.content.trains.entity.CarriageEntityHandler;
 import com.simibubi.create.content.trains.station.StationBlockEntity;
 import com.simibubi.create.foundation.data.RuntimeDataGenerator;
+import com.simibubi.create.foundation.events.fabric.ChunkUnloadCallback;
 import com.simibubi.create.foundation.map.StationMapDecorationRenderer;
 import com.simibubi.create.foundation.pack.DynamicPack;
 import com.simibubi.create.foundation.pack.DynamicPackSource;
@@ -93,13 +94,14 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.LevelChunk;
 
 public class CommonEvents {
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(CommonEvents::onServerTick);
-		ServerChunkEvents.CHUNK_UNLOAD.register((world, chunk) -> onChunkUnloaded(chunk));
-		ClientChunkEvents.CHUNK_UNLOAD.register((world, chunk) -> onChunkUnloaded(chunk));
+		ServerChunkEvents.CHUNK_UNLOAD.register((world, chunk) -> ChunkUnloadCallback.EVENT.invoker().onChunkUnload(world, chunk));
+		ChunkUnloadCallback.EVENT.register(CommonEvents::onChunkUnloaded);
 		PlayerLoggedInEvent.EVENT.register(CommonEvents::playerLoggedIn);
 		PlayerLoggedOutEvent.EVENT.register(CommonEvents::playerLoggedOut);
 		ServerTickEvents.END_WORLD_TICK.register(CommonEvents::onServerWorldTick);
@@ -132,8 +134,8 @@ public class CommonEvents {
 		TickBasedCache.tick();
 	}
 
-	public static void onChunkUnloaded(LevelChunk chunk) {
-		CapabilityMinecartController.onChunkUnloaded(chunk.getLevel(), chunk);
+	public static void onChunkUnloaded(Level level, ChunkAccess chunk) {
+		CapabilityMinecartController.onChunkUnloaded(level, chunk);
 	}
 
 	public static void playerLoggedIn(PlayerLoggedInEvent event) {
