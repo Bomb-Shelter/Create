@@ -2,15 +2,16 @@
   "schemaVersion": 1,
   "id": "create",
   "version": "${mod_version}",
-  "name": "Fucked Up Create (unofficial)",
+  "name": "Create: Fucked Up (unofficial)",
   "description": "${mod_description}",
   "authors": [
     "simibubi",
-    "BluSpring"
+    "BluSpring",
+    "AlphaMode"
   ],
   "contact": {
-    "sources": "https://github.com/BluSpring/Create",
-    "issues": "https://github.com/BluSpring/Create/issues"
+    "sources": "https://github.com/Bomb-Shelter/Create",
+    "issues": "https://github.com/Bomb-Shelter/Create/issues"
   },
   "license": "${mod_license}",
   "icon": "icon.png",
