@@ -84,6 +84,10 @@ public abstract class WrapperMountedItemStorage<T extends SlottedStackStorage> e
 		try (Transaction tx = TransferUtil.getTransaction()) {
 			for (int i = 0; i < handler.getSlotCount(); i++) {
 				var slot = handler.getSlot(i);
+
+				if (slot.getResource().isBlank())
+					continue;
+
 				long inserted = copy.getSlot(i).insert(slot.getResource(), slot.getAmount(), tx);
 				if (inserted != slot.getAmount()) {
 					long remainder = slot.getAmount() - inserted;
