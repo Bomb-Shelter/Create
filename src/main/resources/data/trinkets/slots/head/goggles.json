@@ -1,0 +1,6 @@
+{
+  "order": -1028,
+  "icon": "create:gui/slots/goggles",
+  "drop_rule": "keep",
+  "validator_predicates": ["trinkets:tag"]
+}

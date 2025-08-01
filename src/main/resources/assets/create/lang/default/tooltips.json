@@ -1,8 +1,8 @@
 {
 	"block.create.wooden_bracket.tooltip.summary": "_Decorate_ your _Shafts, Cogwheels_ and _Pipes_ with a cozy and wooden bit of reinforcement.",
-	
+
 	"block.create.metal_bracket.tooltip.summary": "_Decorate_ your _Shafts, Cogwheels_ and _Pipes_ with an industrial and sturdy bit of reinforcement.",
-	
+
 	"block.create.seat.tooltip.summary": "Sit yourself down and enjoy the ride! Will anchor a player onto a moving _contraption_. Great for static furniture too! Comes in a variety of colours.",
 	"block.create.seat.tooltip.condition1": "Right click on Seat",
 	"block.create.seat.tooltip.behaviour1": "Sits the player on the _Seat_. Press L-shift to leave the _Seat_.",
@@ -126,11 +126,11 @@
 	"item.create.linked_controller.tooltip.behaviour3": "Enables _Bind Mode_, press one of the _six controls_ to bind it to the _Links' Frequency_.",
 	"item.create.linked_controller.tooltip.condition4": "R-Click on Lectern",
 	"item.create.linked_controller.tooltip.behaviour4": "Places the Controller into the Lectern for easy activation. (R-Click while Sneaking to retrieve it)",
-	
+
 	"item.create.copper_diving_helmet.tooltip.summary": "Together with a _Backtank_, allows the wielder to _breathe_ _underwater_ for an extended amount of time.",
 	"item.create.copper_diving_helmet.tooltip.condition1": "When Worn",
 	"item.create.copper_diving_helmet.tooltip.behaviour1": "Provides the _Water Breathing_ effect, slowly draining _Air Pressure_ from the Backtank.",
-	
+
 	"item.create.netherite_diving_helmet.tooltip.summary": "Together with a _Netherite Backtank_, this can protect you from _extreme heat_. To be effective, _Legs and Feet_ have to be covered in _Netherite_, too.",
 	"item.create.netherite_diving_helmet.tooltip.condition1": "When Worn (Full set)",
 	"item.create.netherite_diving_helmet.tooltip.behaviour1": "Provides immunity to _Fire_ and _Lava_, slowly draining _Air Pressure_ from the Backtank. Also grants _improved vision_ in Lava",
@@ -158,7 +158,7 @@
 	"block.create.placard.tooltip.behaviour1": "_Adds_ the held _item_ to the Placard. _Emits_ a brief _Redstone_ signal if a matching item was present already.",
 	"block.create.placard.tooltip.condition2": "When Punched",
 	"block.create.placard.tooltip.behaviour2": "_Removes_ the current _item_ in the frame.",
-	
+
 	"block.create.flywheel.tooltip.summary": "_Embellish_ your _Machines_ with this imposing Wheel of Brass.",
 	"block.create.flywheel.tooltip.condition1": "When Powered by Kinetics",
 	"block.create.flywheel.tooltip.behaviour1": "Starts spinning.",
@@ -184,7 +184,7 @@
 	"item.create.experience_nugget.tooltip.behaviour1": "_Redeems_ _Experience_ points contained within.",
 
 	"block.create.peculiar_bell.tooltip.summary": "A decorative _Brass Bell_. Placing it right above open _Soul Fire_ may have side-effects...",
-	
+
 	"block.create.desk_bell.tooltip.summary": "Ring for Service! Emits a _redstone signal_ when activated.",
 	"block.create.desk_bell.tooltip.condition1": "When attached to Elevator Contraption",
 	"block.create.desk_bell.tooltip.behaviour1": "_Plays a sound_ when arriving at the _target floor_.",
@@ -209,6 +209,7 @@
 	"block.create.clipboard.tooltip.condition1": "When R-Clicked",
 	"block.create.clipboard.tooltip.behaviour1": "Opens the _Interface_. _Sneak-Click_ to _place_ it on a surface.",
 	"block.create.clipboard.tooltip.condition2": "When Used on Blocks",
-	"block.create.clipboard.tooltip.behaviour2": "Some blocks' _settings_, such as filters, can be _copied (R-Click)_ and _applied (L-Click)_ elsewhere."
+	"block.create.clipboard.tooltip.behaviour2": "Some blocks' _settings_, such as filters, can be _copied (R-Click)_ and _applied (L-Click)_ elsewhere.",
 
+  "trinkets.slot.head.goggles": "Goggles"
 }
