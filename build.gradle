@@ -137,6 +137,7 @@ repositories {
             includeGroup "mysticdrew"
         }
     }
+    maven { url = "https://maven.nova-committee.cn/releases" } // Modern Keybinding
 }
 
 dependencies {
@@ -204,6 +205,8 @@ dependencies {
         exclude(group: "curse.maven") // Pulls in a old version of journey map which is for forge
     }
     include(implementation(annotationProcessor("io.github.llamalad7:mixinextras-fabric:${mixinextras_version}")))
+
+    include(modImplementation("curse.maven:modern-keybinding-fabric-695433:${mkb_version}"))
 }
 
 sourceSets.main {
