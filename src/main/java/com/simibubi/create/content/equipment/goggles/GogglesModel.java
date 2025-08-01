@@ -16,9 +16,11 @@ public class GogglesModel extends BakedModelWrapper<BakedModel> implements Trans
 
 	@Override
 	public BakedModel applyTransform(ItemDisplayContext cameraItemDisplayContext, PoseStack mat, boolean leftHanded, DefaultTransform defaultTransform) {
-		if (cameraItemDisplayContext == ItemDisplayContext.HEAD)
-			return TransformTypeDependentItemBakedModel
-				.maybeApplyTransform(AllPartialModels.GOGGLES.get(), cameraItemDisplayContext, mat, leftHanded, defaultTransform);
+		if (cameraItemDisplayContext == ItemDisplayContext.HEAD) {
+			var model = AllPartialModels.GOGGLES.get();
+			defaultTransform.apply(model);
+			return model;
+		}
 		return TransformTypeDependentItemBakedModel.maybeApplyTransform(this.originalModel, cameraItemDisplayContext, mat, leftHanded, defaultTransform);
 	}
 

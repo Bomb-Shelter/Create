@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import io.github.fabricators_of_create.porting_lib.models.TransformTypeDependentItemBakedModel;
 import io.github.fabricators_of_create.porting_lib.models.data.ModelData;
+import net.fabricmc.fabric.api.renderer.v1.model.WrapperBakedModel;
 import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.block.model.BakedQuad;
@@ -26,7 +27,7 @@ import java.util.List;
  * <p>
  * Useful for creating wrapper baked models which only override certain properties.
  */
-public abstract class BakedModelWrapper<T extends BakedModel> implements BakedModel, TransformTypeDependentItemBakedModel {
+public abstract class BakedModelWrapper<T extends BakedModel> implements BakedModel, TransformTypeDependentItemBakedModel, WrapperBakedModel {
 	protected final T originalModel;
 
 	public BakedModelWrapper(T originalModel) {
@@ -36,6 +37,11 @@ public abstract class BakedModelWrapper<T extends BakedModel> implements BakedMo
 	@Override
 	public List<BakedQuad> getQuads(@Nullable BlockState state, @Nullable Direction side, RandomSource rand) {
 		return originalModel.getQuads(state, side, rand);
+	}
+
+	@Override
+	public BakedModel getWrappedModel() {
+		return this.originalModel;
 	}
 
 	@Override
