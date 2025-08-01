@@ -10,9 +10,14 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import com.simibubi.create.infrastructure.fabric.client.CreateFluidRenderHandler;
+import com.simibubi.create.infrastructure.fabric.client.CreateFluidType;
+
 import io.github.fabricators_of_create.porting_lib.fluids.BaseFlowingFluid;
 import io.github.fabricators_of_create.porting_lib.fluids.FluidType;
 import io.github.fabricators_of_create.porting_lib.registry.DeferredHolder;
+
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -253,11 +258,11 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 
 	public static FluidType defaultFluidType(FluidType.Properties properties, ResourceLocation stillTexture,
 											 ResourceLocation flowingTexture) {
-		var fluidType = new FluidType(properties) {
-			// Fabric TODO: figure this out
-			/*@Override
-			public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {
-				consumer.accept(new IClientFluidTypeExtensions() {
+		var fluidType = new CreateFluidType(properties) {
+			@Environment(EnvType.CLIENT)
+			@Override
+			public FluidRenderHandler getRenderHandler() {
+				return new CreateFluidRenderHandler() {
 					@Override
 					public ResourceLocation getStillTexture() {
 						return stillTexture;
@@ -267,8 +272,8 @@ public class CreateRegistrate extends AbstractRegistrate<CreateRegistrate> {
 					public ResourceLocation getFlowingTexture() {
 						return flowingTexture;
 					}
-				});
-			}*/
+				};
+			}
 		};
 
 		return fluidType;

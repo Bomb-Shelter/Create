@@ -1,10 +1,13 @@
 package com.simibubi.create;
 
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
 
+import com.simibubi.create.infrastructure.fabric.client.CustomRenderHandlerFluidType;
+import com.simibubi.create.infrastructure.fabric.client.CreateFluidRenderHandler;
+
+import io.github.fabricators_of_create.porting_lib.event.client.FogEvents;
 import io.github.fabricators_of_create.porting_lib.fluids.BaseFlowingFluid;
 
 import io.github.fabricators_of_create.porting_lib.fluids.FluidInteractionRegistry;
@@ -16,7 +19,17 @@ import io.github.fabricators_of_create.porting_lib.fluids.PortingLibFluids;
 
 import io.github.fabricators_of_create.porting_lib.tags.Tags;
 
-import org.jetbrains.annotations.NotNull;
+import net.createmod.catnip.platform.CatnipServices;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
+
+import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry;
+
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.level.Level;
+
 import org.joml.Vector3f;
 
 import com.mojang.blaze3d.shaders.FogShape;
@@ -105,6 +118,47 @@ public class AllFluids {
 	public static void register() {
 	}
 
+	private static void registerClient() {
+		CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> {
+			ClientFluidEvents.registerFluidRenderHandler(POTION);
+			ClientFluidEvents.registerFluidRenderHandler(TEA);
+			ClientFluidEvents.registerFluidRenderHandler(HONEY);
+			ClientFluidEvents.registerFluidRenderHandler(CHOCOLATE);
+		});
+	}
+
+	@Environment(EnvType.CLIENT)
+	private static class ClientFluidEvents {
+		public static <T extends BaseFlowingFluid> void registerFluidRenderHandler(FluidEntry<T> fluid) {
+			if (fluid.getType() instanceof CustomRenderHandlerFluidType fluidType) {
+				FluidRenderHandlerRegistry.INSTANCE.register(fluid.getSource(), fluid.get(), fluidType.getRenderHandler());
+			}
+
+			if (fluid.getType() instanceof TintedFluidType tintedFluidType) {
+				FogEvents.SET_COLOR.register((data, partialTicks) -> {
+					Level level = data.getCamera().getEntity().level();
+					FluidState fluidState = level.getFluidState(data.getCamera().getBlockPosition());
+					if (fluidState.is((Fluid) fluid.getSource()) || fluidState.is(fluid.get())) {
+						Vector3f modified = tintedFluidType.modifyFogColor(data.getCamera(), partialTicks, (ClientLevel) level, Minecraft.getInstance().options.getEffectiveRenderDistance(), Minecraft.getInstance().gameRenderer.getDarkenWorldAmount(partialTicks), new Vector3f(data.getRed(), data.getGreen(), data.getBlue()));
+						data.setRed(modified.x);
+						data.setGreen(modified.y);
+						data.setBlue(modified.z);
+					}
+				});
+
+				FogEvents.RENDER_FOG.register((mode, type, camera, partialTick, renderDistance, nearDistance, farDistance, shape, fogData) -> {
+					Level level = camera.getEntity().level();
+					FluidState fluidState = level.getFluidState(camera.getBlockPosition());
+					if (fluidState.is((Fluid) fluid.getSource()) || fluidState.is(fluid.get())) {
+						tintedFluidType.modifyFogRender(camera, mode, renderDistance, partialTick, nearDistance, farDistance, shape);
+					}
+
+					return false;
+				});
+			}
+		}
+	}
+
 	public static void registerFluidInteractions() {
 		FluidInteractionRegistry.addInteraction(PortingLibFluids.LAVA_TYPE, new InteractionInformation(
 			HONEY.get().getFluidType(),
@@ -131,6 +185,8 @@ public class AllFluids {
 				}
 			}
 		));
+
+		registerClient();
 	}
 
 	@Nullable
@@ -147,7 +203,7 @@ public class AllFluids {
 		return null;
 	}
 
-	public static abstract class TintedFluidType extends FluidType {
+	public static abstract class TintedFluidType extends FluidType implements CustomRenderHandlerFluidType {
 
 		protected static final int NO_TINT = 0xffffffff;
 		private ResourceLocation stillTexture;
@@ -159,11 +215,9 @@ public class AllFluids {
 			this.flowingTexture = flowingTexture;
 		}
 
-		// Fabric TODO: how
-		/*@Override
-		public void initializeClient(Consumer<IClientFluidTypeExtensions> consumer) {
-			consumer.accept(new IClientFluidTypeExtensions() {
-
+		@Environment(EnvType.CLIENT)
+		public FluidRenderHandler getRenderHandler() {
+			return new CreateFluidRenderHandler() {
 				@Override
 				public ResourceLocation getStillTexture() {
 					return stillTexture;
@@ -175,36 +229,30 @@ public class AllFluids {
 				}
 
 				@Override
-				public int getTintColor(FluidStack stack) {
-					return TintedFluidType.this.getTintColor(stack);
+				public int getTintColor(FluidState state, BlockAndTintGetter level, BlockPos pos) {
+					return TintedFluidType.this.getTintColor(state, level, pos);
 				}
+			};
+		}
 
-				@Override
-				public int getTintColor(FluidState state, BlockAndTintGetter getter, BlockPos pos) {
-					return TintedFluidType.this.getTintColor(state, getter, pos);
-				}
+		@Environment(EnvType.CLIENT)
+		public Vector3f modifyFogColor(Camera camera, float partialTick, ClientLevel level,
+									   int renderDistance, float darkenWorldAmount, Vector3f fluidFogColor) {
+			Vector3f customFogColor = TintedFluidType.this.getCustomFogColor();
+			return customFogColor == null ? fluidFogColor : customFogColor;
+		}
 
-				@Override
-				public @NotNull Vector3f modifyFogColor(Camera camera, float partialTick, ClientLevel level,
-														int renderDistance, float darkenWorldAmount, Vector3f fluidFogColor) {
-					Vector3f customFogColor = TintedFluidType.this.getCustomFogColor();
-					return customFogColor == null ? fluidFogColor : customFogColor;
-				}
-
-				@Override
-				public void modifyFogRender(Camera camera, FogMode mode, float renderDistance, float partialTick,
-											float nearDistance, float farDistance, FogShape shape) {
-					float modifier = TintedFluidType.this.getFogDistanceModifier();
-					float baseWaterFog = 96.0f;
-					if (modifier != 1f) {
-						RenderSystem.setShaderFogShape(FogShape.CYLINDER);
-						RenderSystem.setShaderFogStart(-8);
-						RenderSystem.setShaderFogEnd(baseWaterFog * modifier);
-					}
-				}
-
-			});
-		}*/
+		@Environment(EnvType.CLIENT)
+		public void modifyFogRender(Camera camera, FogMode mode, float renderDistance, float partialTick,
+									float nearDistance, float farDistance, FogShape shape) {
+			float modifier = TintedFluidType.this.getFogDistanceModifier();
+			float baseWaterFog = 96.0f;
+			if (modifier != 1f) {
+				RenderSystem.setShaderFogShape(FogShape.CYLINDER);
+				RenderSystem.setShaderFogStart(-8);
+				RenderSystem.setShaderFogEnd(baseWaterFog * modifier);
+			}
+		}
 
 		protected abstract int getTintColor(FluidStack stack);
 
