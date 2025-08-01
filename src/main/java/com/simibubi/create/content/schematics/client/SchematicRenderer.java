@@ -6,6 +6,7 @@ import java.util.Map;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.foundation.render.BlockEntityRenderHelper;
 
+import com.simibubi.create.infrastructure.fabric.client.CreateShadedBlockSbbBuilder;
 import com.simibubi.create.infrastructure.fabric.client.LayerFilteringBakedModel;
 
 import net.createmod.catnip.render.ShadedBlockSbbBuilder;
@@ -141,7 +142,7 @@ public class SchematicRenderer {
 		public final PoseStack poseStack = new PoseStack();
 		public final RandomSource random = RandomSource.createNewThreadLocalInstance();
 		public final BlockPos.MutableBlockPos mutableBlockPos = new BlockPos.MutableBlockPos();
-		public final ShadedBlockSbbBuilder sbbBuilder = ShadedBlockSbbBuilder.create();
+		public final ShadedBlockSbbBuilder sbbBuilder = CreateShadedBlockSbbBuilder.create();
 	}
 
 }

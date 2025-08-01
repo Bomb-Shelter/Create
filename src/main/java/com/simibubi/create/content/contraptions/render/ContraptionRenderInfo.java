@@ -1,5 +1,7 @@
 package com.simibubi.create.content.contraptions.render;
 
+import com.simibubi.create.infrastructure.fabric.client.CreateShadedBlockSbbBuilder;
+
 import net.minecraft.client.renderer.ItemBlockRenderTypes;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -145,6 +147,6 @@ public class ContraptionRenderInfo {
 	private static class ThreadLocalObjects {
 		public final PoseStack poseStack = new PoseStack();
 		public final RandomSource random = RandomSource.createNewThreadLocalInstance();
-		public final ShadedBlockSbbBuilder sbbBuilder = ShadedBlockSbbBuilder.create();
+		public final ShadedBlockSbbBuilder sbbBuilder = CreateShadedBlockSbbBuilder.create();
 	}
 }

@@ -154,6 +154,7 @@ public class SchematicHandler implements LayeredDraw.Layer {
 		SchematicLevel wMirroredFB = new SchematicLevel(clientWorld);
 		SchematicLevel wMirroredLR = new SchematicLevel(clientWorld);
 		StructurePlaceSettings placementSettings = new StructurePlaceSettings();
+		placementSettings.setIgnoreEntities(true);
 		StructureTransform transform;
 		BlockPos pos;
 
