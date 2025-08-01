@@ -14,6 +14,15 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 
+import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
+
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+
+import net.minecraft.world.level.block.Block;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.MapCodec;
@@ -33,7 +42,7 @@ import net.minecraft.world.level.block.state.BlockState;
  * Gets an item handler from the mounted block, copies it to an ItemStackHandler,
  * and then copies the inventory back to the target when unmounting.
  * All blocks for which this mounted storage is registered must provide a
- * {@link SlottedStackStorage} to {@link ItemStorage#SIDED}.
+ * {@link SlottedStorage} to {@link ItemStorage#SIDED}.
  * <br>
  * To use this implementation, either register {@link AllMountedStorageTypes#SIMPLE} to your block
  * manually, or add your block to the {@link AllTags.AllBlockTags#SIMPLE_MOUNTED_STORAGE} tag.
@@ -42,11 +51,11 @@ import net.minecraft.world.level.block.state.BlockState;
 public class SimpleMountedStorage extends WrapperMountedItemStorage<ItemStackHandler> {
 	public static final MapCodec<SimpleMountedStorage> CODEC = codec(SimpleMountedStorage::new);
 
-	public SimpleMountedStorage(MountedItemStorageType<?> type, SlottedStackStorage handler) {
+	public SimpleMountedStorage(MountedItemStorageType<?> type, SlottedStorage<ItemVariant> handler) {
 		super(type, copyToItemStackHandler(handler));
 	}
 
-	public SimpleMountedStorage(SlottedStackStorage handler) {
+	public SimpleMountedStorage(SlottedStorage<ItemVariant> handler) {
 		this(AllMountedStorageTypes.SIMPLE.get(), handler);
 	}
 
@@ -59,7 +68,22 @@ public class SimpleMountedStorage extends WrapperMountedItemStorage<ItemStackHan
 		if (cap != null) {
 			validate(cap).ifPresent(handler -> {
 				for (int i = 0; i < handler.getSlotCount(); i++) {
-					handler.setStackInSlot(i, this.getStackInSlot(i));
+					var slot = handler.getSlot(i);
+					ItemStack toInsert = this.getStackInSlot(i);
+					try (Transaction tx = TransferUtil.getTransaction()) {
+						slot.extract(slot.getResource(), slot.getAmount(), tx);
+						ItemVariant variant = ItemVariant.of(toInsert);
+
+						long inserted = slot.insert(variant, toInsert.getCount(), tx);
+						if (inserted != toInsert.getCount()) {
+							long remainder = toInsert.getCount() - inserted;
+							long fallbackInsert = handler.insert(variant, remainder, tx);
+							if (remainder != fallbackInsert) {
+								Block.popResource(level, pos, toInsert.copyWithCount((int) (fallbackInsert - remainder)));
+							}
+						}
+						tx.commit();
+					}
 				}
 			});
 		}
@@ -69,7 +93,7 @@ public class SimpleMountedStorage extends WrapperMountedItemStorage<ItemStackHan
 	 * Make sure the targeted handler is valid for copying items back into.
 	 * It is highly recommended to call super in overrides.
 	 */
-	protected Optional<SlottedStackStorage> validate(Storage<ItemVariant> handler) {
+	protected Optional<SlottedStorage<ItemVariant>> validate(Storage<ItemVariant> handler) {
 		if (!(handler instanceof SlottedStorage<ItemVariant> slottedStorage))
 			return Optional.empty();
 

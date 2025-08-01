@@ -28,6 +28,8 @@ import net.createmod.catnip.math.AngleHelper;
 import net.createmod.catnip.math.VecHelper;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.platform.CatnipServices;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -266,8 +268,11 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 			ArmInteractionPoint armInteractionPoint = inputs.get(i);
 			if (!armInteractionPoint.isValid())
 				continue;
-			for (int j = 0; j < armInteractionPoint.getSlotCount(this); j++) {
-				if (getDistributableAmount(armInteractionPoint, j) == 0)
+			var handler = armInteractionPoint.getHandler(this);
+			if (handler == null)
+				continue;
+			for (StorageView<ItemVariant> view : handler.nonEmptyViews()) {
+				if (getDistributableAmount(armInteractionPoint, view) == 0)
 					continue;
 
 				selectIndex(true, i);
@@ -338,8 +343,8 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 		setChanged();
 	}
 
-	protected int getDistributableAmount(ArmInteractionPoint armInteractionPoint, int i) {
-		ItemStack stack = armInteractionPoint.extract(this, i, true);
+	protected int getDistributableAmount(ArmInteractionPoint armInteractionPoint, StorageView<ItemVariant> view) {
+		ItemStack stack = armInteractionPoint.extract(this, view, true);
 		ItemStack remainder = simulateInsertion(stack);
 		if (ItemStack.isSameItem(stack, remainder)) {
 			return stack.getCount() - remainder.getCount();
@@ -381,25 +386,29 @@ public class ArmBlockEntity extends KineticBlockEntity implements TransformableB
 
 	protected void collectItem() {
 		ArmInteractionPoint armInteractionPoint = getTargetedInteractionPoint();
-		if (armInteractionPoint != null && armInteractionPoint.isValid())
-			for (int i = 0; i < armInteractionPoint.getSlotCount(this); i++) {
-				int amountExtracted = getDistributableAmount(armInteractionPoint, i);
-				if (amountExtracted == 0)
-					continue;
+		if (armInteractionPoint != null && armInteractionPoint.isValid()) {
+			var handler = armInteractionPoint.getHandler(this);
+			if (handler != null) {
+				for (StorageView<ItemVariant> view : handler.nonEmptyViews()) {
+					int amountExtracted = getDistributableAmount(armInteractionPoint, view);
+					if (amountExtracted == 0)
+						continue;
 
-				ItemStack prevHeld = heldItem;
-				heldItem = armInteractionPoint.extract(this, i, amountExtracted, false);
-				phase = Phase.SEARCH_OUTPUTS;
-				chasedPointProgress = 0;
-				chasedPointIndex = -1;
-				sendData();
-				setChanged();
+					ItemStack prevHeld = heldItem;
+					heldItem = armInteractionPoint.extract(this, view, amountExtracted, false);
+					phase = Phase.SEARCH_OUTPUTS;
+					chasedPointProgress = 0;
+					chasedPointIndex = -1;
+					sendData();
+					setChanged();
 
-				if (!ItemStack.isSameItem(heldItem, prevHeld))
-					level.playSound(null, worldPosition, SoundEvents.ITEM_PICKUP, SoundSource.BLOCKS, .125f,
-						.5f + Create.RANDOM.nextFloat() * .25f);
-				return;
+					if (!ItemStack.isSameItem(heldItem, prevHeld))
+						level.playSound(null, worldPosition, SoundEvents.ITEM_PICKUP, SoundSource.BLOCKS, .125f,
+							.5f + Create.RANDOM.nextFloat() * .25f);
+					return;
+				}
 			}
+		}
 
 		phase = Phase.SEARCH_INPUTS;
 		chasedPointProgress = 0;

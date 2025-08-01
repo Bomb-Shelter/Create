@@ -194,9 +194,7 @@ public class FluidHelper {
 				heldItem = heldItem.copy();
 			ItemStack out = GenericItemFilling.fillItem(world, requiredAmountForItem, heldItem, new FluidStack(fluid));
 
-			FluidStack copy = new FluidStack(fluid);
-			copy.setAmount(requiredAmountForItem);
-			CreateTransferUtil.extractFluid(fluid, copy, false);
+			CreateTransferUtil.extractFluid(fluid, fluid.getResource(), requiredAmountForItem, false);
 
 			if (!player.isCreative())
 				player.getInventory()

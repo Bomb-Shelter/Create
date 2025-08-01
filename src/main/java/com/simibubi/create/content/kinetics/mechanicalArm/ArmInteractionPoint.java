@@ -14,6 +14,7 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -118,15 +119,15 @@ public class ArmInteractionPoint {
 		return CreateTransferUtil.insertItem(handler, stack, simulate);
 	}
 
-	public ItemStack extract(ArmBlockEntity armBlockEntity, int slot, int amount, boolean simulate) {
+	public ItemStack extract(ArmBlockEntity armBlockEntity, StorageView<ItemVariant> view, int amount, boolean simulate) {
 		Storage<ItemVariant> handler = getHandler(armBlockEntity);
 		if (handler == null)
 			return ItemStack.EMPTY;
-		return CreateTransferUtil.extractItem(handler, slot, amount, simulate);
+		return CreateTransferUtil.extractItem(view, amount, simulate);
 	}
 
-	public ItemStack extract(ArmBlockEntity armBlockEntity, int slot, boolean simulate) {
-		return extract(armBlockEntity, slot, 64, simulate);
+	public ItemStack extract(ArmBlockEntity armBlockEntity, StorageView<ItemVariant> view, boolean simulate) {
+		return extract(armBlockEntity, view, 64, simulate);
 	}
 
 	public int getSlotCount(ArmBlockEntity armBlockEntity) {

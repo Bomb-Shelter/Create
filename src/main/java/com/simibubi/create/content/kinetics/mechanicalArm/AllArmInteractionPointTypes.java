@@ -10,6 +10,7 @@ import com.simibubi.create.infrastructure.fabric.transfer.InventoryStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.impl.lookup.block.ServerWorldCache;
 
 import org.apache.commons.lang3.mutable.MutableBoolean;
@@ -310,7 +311,7 @@ public class AllArmInteractionPointTypes {
 		}
 
 		@Override
-		public ItemStack extract(ArmBlockEntity armBlockEntity, int slot, int amount, boolean simulate) {
+		public ItemStack extract(ArmBlockEntity armBlockEntity, StorageView<ItemVariant> view, int amount, boolean simulate) {
 			return ItemStack.EMPTY;
 		}
 
@@ -406,13 +407,13 @@ public class AllArmInteractionPointTypes {
 		}
 
 		@Override
-		public ItemStack extract(ArmBlockEntity armBlockEntity, int slot, int amount, boolean simulate) {
+		public ItemStack extract(ArmBlockEntity armBlockEntity, StorageView<ItemVariant> view, int amount, boolean simulate) {
 			BlockEntity be = level.getBlockEntity(pos);
 			if (!(be instanceof MechanicalCrafterBlockEntity crafter))
 				return ItemStack.EMPTY;
 			SmartInventory inventory = crafter.getInventory();
 			inventory.allowExtraction();
-			ItemStack extract = super.extract(armBlockEntity, slot, amount, simulate);
+			ItemStack extract = super.extract(armBlockEntity, view, amount, simulate);
 			inventory.forbidExtraction();
 			return extract;
 		}
@@ -582,9 +583,9 @@ public class AllArmInteractionPointTypes {
 		}
 
 		@Override
-		public ItemStack extract(ArmBlockEntity armBlockEntity, int slot, int amount, boolean simulate) {
+		public ItemStack extract(ArmBlockEntity armBlockEntity, StorageView<ItemVariant> view, int amount, boolean simulate) {
 			Storage<ItemVariant> handler = InventoryStorage.of(getContainer(), Direction.DOWN);
-			return CreateTransferUtil.extractItem(handler, slot, amount, simulate);
+			return CreateTransferUtil.extractItem(view, amount, simulate);
 		}
 
 		@Override
@@ -621,13 +622,13 @@ public class AllArmInteractionPointTypes {
 		}
 
 		@Override
-		public ItemStack extract(ArmBlockEntity armBlockEntity, int slot, int amount, boolean simulate) {
+		public ItemStack extract(ArmBlockEntity armBlockEntity, StorageView<ItemVariant> view, int amount, boolean simulate) {
 			if (!cachedState.getOptionalValue(JukeboxBlock.HAS_RECORD).orElse(false))
 				return ItemStack.EMPTY;
 			if (!(level.getBlockEntity(pos) instanceof JukeboxBlockEntity jukeboxBE))
 				return ItemStack.EMPTY;
 			if (!simulate)
-				return jukeboxBE.removeItem(slot, amount);
+				return CreateTransferUtil.extractItem(view, view.getAmount(), false);
 			return jukeboxBE.getTheItem();
 		}
 	}

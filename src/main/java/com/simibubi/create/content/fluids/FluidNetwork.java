@@ -202,8 +202,7 @@ public class FluidNetwork {
 					continue;
 				if (!FluidStack.isSameFluidSameComponents(contained, fluid))
 					continue;
-				FluidStack toExtract = FluidHelper.copyStackWithAmount(contained, flowSpeed);
-				transfer = CreateTransferUtil.extractFluid(view, toExtract, simulate);
+				transfer = CreateTransferUtil.extractFluid(view, contained.getVariant(), flowSpeed, simulate);
 			}
 
 			if (transfer.isEmpty()) {

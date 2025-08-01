@@ -1,11 +1,16 @@
 package com.simibubi.create.api.contraption.storage.item;
 
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+
+import net.minecraft.world.level.block.Block;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -73,11 +78,23 @@ public abstract class WrapperMountedItemStorage<T extends SlottedStackStorage> e
 		return this.wrapped.isItemValid(slot, resource, count);
 	}
 
-	public static ItemStackHandler copyToItemStackHandler(SlottedStackStorage handler) {
+	public static ItemStackHandler copyToItemStackHandler(SlottedStorage<ItemVariant> handler) {
 		ItemStackHandler copy = new ItemStackHandler(handler.getSlotCount());
-		for (int i = 0; i < handler.getSlotCount(); i++) {
-			copy.setStackInSlot(i, handler.getStackInSlot(i).copy());
+
+		try (Transaction tx = TransferUtil.getTransaction()) {
+			for (int i = 0; i < handler.getSlotCount(); i++) {
+				var slot = handler.getSlot(i);
+				long inserted = copy.getSlot(i).insert(slot.getResource(), slot.getAmount(), tx);
+				if (inserted != slot.getAmount()) {
+					long remainder = slot.getAmount() - inserted;
+					long leftOverInserted = copy.insert(slot.getResource(), remainder, tx);
+					if (leftOverInserted != remainder) {
+						throw new RuntimeException("Failed to store item into inventory");
+					}
+				}
+			}
 		}
+
 		return copy;
 	}
 }

@@ -33,6 +33,7 @@ import com.simibubi.create.foundation.utility.CreateLang;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.simibubi.create.infrastructure.config.CSchematics;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 import com.simibubi.create.infrastructure.fabric.transfer.EmptyItemHandler;
 
 import io.github.fabricators_of_create.porting_lib.blocks.extensions.CustomRenderBoundingBoxBlockEntity;
@@ -722,47 +723,42 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements Exten
 		int BookOutput = 3;
 
 		ItemStack blueprint = inventory.getStackInSlot(0);
-		try (Transaction transaction = TransferUtil.getTransaction()) {
-			SingleSlotStorage<ItemVariant> bookInputSlot = inventory.getSlot(BookInput);
+		ItemStack paper = CreateTransferUtil.extractItem(inventory, BookInput, 1, true);
+		boolean outputFull = inventory.getStackInSlot(BookOutput)
+			.getCount() == inventory.getSlotLimit(BookOutput);
 
-			long paper = bookInputSlot.extract(bookInputSlot.getResource(), 1, transaction);
-			boolean outputFull = inventory.getStackInSlot(BookOutput)
-				.getCount() == inventory.getSlotLimit(BookOutput);
+		if (printer.isErrored())
+			return;
 
-			if (printer.isErrored())
-				return;
+		if (!printer.isLoaded()) {
+			if (!blueprint.isEmpty())
+				initializePrinter(blueprint);
+			return;
+		}
 
-			if (!printer.isLoaded()) {
-				if (!blueprint.isEmpty())
-					initializePrinter(blueprint);
-				return;
-			}
-
-			if (paper <= 0 || outputFull) {
-				if (bookPrintingProgress != 0)
-					sendUpdate = true;
-				bookPrintingProgress = 0;
-				dontUpdateChecklist = false;
-				return;
-			}
-
-			if (bookPrintingProgress >= 1) {
-				bookPrintingProgress = 0;
-
-				if (!dontUpdateChecklist)
-					updateChecklist();
-
-				dontUpdateChecklist = true;
-				ItemStack extractItem = bookInputSlot.getResource().toStack(1);
-				ItemStack stack = AllBlocks.CLIPBOARD.isIn(extractItem) ? checklist.createWrittenClipboard()
-					: checklist.createWrittenBook();
-				stack.setCount(inventory.getStackInSlot(BookOutput)
-					.getCount() + 1);
-				transaction.commit();
-				inventory.setStackInSlot(BookOutput, stack);
+		if (paper.isEmpty() || outputFull) {
+			if (bookPrintingProgress != 0)
 				sendUpdate = true;
-				return;
-			}
+			bookPrintingProgress = 0;
+			dontUpdateChecklist = false;
+			return;
+		}
+
+		if (bookPrintingProgress >= 1) {
+			bookPrintingProgress = 0;
+
+			if (!dontUpdateChecklist)
+				updateChecklist();
+
+			dontUpdateChecklist = true;
+			ItemStack extractItem = CreateTransferUtil.extractItem(inventory, BookInput, 1, false);
+			ItemStack stack = AllBlocks.CLIPBOARD.isIn(extractItem) ? checklist.createWrittenClipboard()
+				: checklist.createWrittenBook();
+			stack.setCount(inventory.getStackInSlot(BookOutput)
+				.getCount() + 1);
+			inventory.setStackInSlot(BookOutput, stack);
+			sendUpdate = true;
+			return;
 		}
 
 		bookPrintingProgress += 0.05f;
@@ -881,12 +877,11 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements Exten
 			if (cap == null)
 				continue;
 			for (int slot = 0; slot < cap.getSlotCount(); slot++) {
-				SingleSlotStorage<ItemVariant> slotStorage = cap.getSlot(slot);
-				try (Transaction transaction = TransferUtil.getTransaction()) {
-					if (slotStorage.extract(slotStorage.getResource(), 1, transaction) <= 0)
-						continue;
-				}
-				checklist.collect(slotStorage.getResource().toStack(1));
+				ItemStack stackInSlot = cap.getSlot(slot).getResource().toStack();
+				if (CreateTransferUtil.extractItem(cap, slot, 1, true)
+					.isEmpty())
+					continue;
+				checklist.collect(stackInSlot);
 			}
 		}
 		sendUpdate = true;

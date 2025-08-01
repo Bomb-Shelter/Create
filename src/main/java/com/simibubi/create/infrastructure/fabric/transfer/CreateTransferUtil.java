@@ -280,14 +280,14 @@ public class CreateTransferUtil {
 		return FluidStack.EMPTY;
 	}
 
-	public static FluidStack extractFluid(StorageView<FluidVariant> storage, FluidStack stack, boolean simulate) {
+	public static FluidStack extractFluid(StorageView<FluidVariant> storage, FluidVariant variant, long amount, boolean simulate) {
 		try (Transaction transaction = TransferUtil.getTransaction()) {
-			var extracted = storage.extract(stack.getVariant(), stack.getAmount(), transaction);
+			var extracted = storage.extract(variant, amount, transaction);
 
 			if (!simulate)
 				transaction.commit();
 
-			return new FluidStack(stack.getVariant(), extracted);
+			return new FluidStack(variant, extracted);
 		}
 	}
 
