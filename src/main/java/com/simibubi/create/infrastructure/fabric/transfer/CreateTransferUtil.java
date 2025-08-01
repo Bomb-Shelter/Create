@@ -120,6 +120,9 @@ public class CreateTransferUtil {
 			if (!simulate)
 				transaction.commit();
 
+			if (inserted >= stack.getCount())
+				return ItemStack.EMPTY;
+
 			return stack.copyWithCount(stack.getCount() - (int) inserted);
 		}
 	}

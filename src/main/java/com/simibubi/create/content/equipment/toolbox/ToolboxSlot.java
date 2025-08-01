@@ -35,7 +35,7 @@ public class ToolboxSlot extends SlotItemHandler {
 		SingleSlotStorage<ItemVariant> currentStack = handler.getSlot(this.port_lib$getSlotIndex());
 		ItemStack remainder = CreateTransferUtil.insertItem(currentStack, maxAdd, true);
 		long current = currentStack.getAmount();
-		int added = remainder.getCount();
+		int added = maxInput - remainder.getCount();
 		return (int) (current + added);
 	}
 
