@@ -69,7 +69,7 @@ public class GogglesTrinketsRenderer implements TrinketRenderer {
 			return true;
 		return TrinketsApi.getTrinketComponent(entity)
 			.filter(component -> {							 // guaranteed  // may be null
-				TrinketInventory inv = component.getInventory().get("head").get("hat");
+				TrinketInventory inv = component.getInventory().get("head").get("goggles");
 				return inv != null && !inv.isEmpty();
 			}).isPresent();
 	}
