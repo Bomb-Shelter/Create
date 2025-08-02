@@ -76,7 +76,7 @@ public class GenericItemFilling {
 
 	public static long getRequiredAmountForItem(Level world, ItemStack stack, FluidStack availableFluid) {
 		if (stack.getItem() == Items.GLASS_BOTTLE && canFillGlassBottleInternally(availableFluid))
-			return PotionFluidHandler.getRequiredAmountForFilledBottle(stack, availableFluid);
+			return FluidConstants.BOTTLE;
 		if (stack.getItem() == Items.BUCKET && canFillBucketInternally(availableFluid))
 			return FluidConstants.BUCKET;
 
