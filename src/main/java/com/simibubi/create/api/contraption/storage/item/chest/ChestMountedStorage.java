@@ -3,7 +3,12 @@ package com.simibubi.create.api.contraption.storage.item.chest;
 import com.simibubi.create.infrastructure.fabric.transfer.CombinedInventoryStorage;
 import com.simibubi.create.infrastructure.fabric.transfer.InventoryStorage;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -40,8 +45,12 @@ public class ChestMountedStorage extends SimpleMountedStorage {
 		super(type, handler);
 	}
 
-	public ChestMountedStorage(SlottedStackStorage handler) {
+	public ChestMountedStorage(ItemStackHandler handler) {
 		this(AllMountedStorageTypes.CHEST.get(), handler);
+	}
+
+	public ChestMountedStorage(SlottedStorage<ItemVariant> storage) {
+		this(copyToItemStackHandler(storage));
 	}
 
 	@Override

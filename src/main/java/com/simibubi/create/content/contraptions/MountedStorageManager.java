@@ -34,7 +34,6 @@ import com.simibubi.create.content.fluids.tank.storage.creative.CreativeFluidTan
 import com.simibubi.create.content.logistics.crate.CreativeCrateMountedStorage;
 import com.simibubi.create.content.logistics.depot.storage.DepotMountedStorage;
 import com.simibubi.create.content.logistics.vault.ItemVaultMountedStorage;
-import com.simibubi.create.impl.contraption.storage.FallbackMountedStorage;
 
 import net.createmod.catnip.codecs.CatnipCodecUtils;
 import net.createmod.catnip.nbt.NBTHelper;
@@ -335,7 +334,7 @@ public class MountedStorageManager {
 		if (clientPacket) {
 			// let the client know of all non-synced ones too
 			SetView<BlockPos> positions = Sets.union(this.getAllItemStorages().keySet(), this.getFluids().storages.keySet());
-			ListTag list = new ListTag();
+ 			ListTag list = new ListTag();
 			for (BlockPos pos : positions) {
 				CompoundTag tag = new CompoundTag();
 				tag.putInt("X", pos.getX());
@@ -437,11 +436,6 @@ public class MountedStorageManager {
 				this.addStorage(new CreativeCrateMountedStorage(supplied), pos);
 			} else if (data.contains("Synced")) {
 				this.addStorage(DepotMountedStorage.fromLegacy(registries, data), pos);
-			} else {
-				// we can create a fallback storage safely, it will be validated before unmounting
-				ItemStackHandler handler = new ItemStackHandler();
-				handler.deserializeNBT(registries, data);
-				this.addStorage(new FallbackMountedStorage(handler), pos);
 			}
 		});
 

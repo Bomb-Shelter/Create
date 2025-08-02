@@ -78,27 +78,18 @@ public abstract class WrapperMountedItemStorage<T extends SlottedStackStorage> e
 		return this.wrapped.isItemValid(slot, resource, count);
 	}
 
-	public static ItemStackHandler copyToItemStackHandler(SlottedStorage<ItemVariant> handler) {
-		ItemStackHandler copy = new ItemStackHandler(handler.getSlotCount());
-
-		try (Transaction tx = TransferUtil.getTransaction()) {
-			for (int i = 0; i < handler.getSlotCount(); i++) {
-				var slot = handler.getSlot(i);
-
-				if (slot.getResource().isBlank())
-					continue;
-
-				long inserted = copy.getSlot(i).insert(slot.getResource(), slot.getAmount(), tx);
-				if (inserted != slot.getAmount()) {
-					long remainder = slot.getAmount() - inserted;
-					long leftOverInserted = copy.insert(slot.getResource(), remainder, tx);
-					if (leftOverInserted != remainder) {
-						throw new RuntimeException("Failed to store item into inventory");
-					}
-				}
+	public static ItemStackHandler copyToItemStackHandler(SlottedStorage<ItemVariant> storage) {
+		ItemStack[] array = new ItemStack[storage.getSlotCount()];
+		for (int i = 0; i < array.length; i++) {
+			SingleSlotStorage<ItemVariant> slot = storage.getSlot(i);
+			if (slot.isResourceBlank()) {
+				array[i] = ItemStack.EMPTY;
+			} else {
+				int amount = TransferUtil.truncateLong(slot.getAmount());
+				ItemStack stack = slot.getResource().toStack(amount);
+				array[i] = stack;
 			}
 		}
-
-		return copy;
+		return new ItemStackHandler(array);
 	}
 }

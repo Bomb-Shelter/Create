@@ -14,7 +14,6 @@ import com.simibubi.create.content.logistics.crate.CreativeCrateMountedStorageTy
 import com.simibubi.create.content.logistics.depot.storage.DepotMountedStorageType;
 import com.simibubi.create.content.logistics.vault.ItemVaultMountedStorageType;
 import com.simibubi.create.foundation.data.CreateRegistrate;
-import com.simibubi.create.impl.contraption.storage.FallbackMountedStorageType;
 import com.tterrag.registrate.util.entry.RegistryEntry;
 
 import net.minecraft.world.level.block.Blocks;
@@ -22,8 +21,7 @@ import net.minecraft.world.level.block.Blocks;
 public class AllMountedStorageTypes {
 	private static final CreateRegistrate REGISTRATE = Create.registrate();
 
-	// fallback is special, provider is registered on lookup creation so it's always last
-	public static final RegistryEntry<MountedItemStorageType<?>, FallbackMountedStorageType> FALLBACK = simpleItem("fallback", FallbackMountedStorageType::new);
+	// fabric: no fallback, there is no common simple implementation
 
 	// registrations for these are handled by the blocks, not the types
 	public static final RegistryEntry<MountedItemStorageType<?>, CreativeCrateMountedStorageType> CREATIVE_CRATE = simpleItem("creative_crate", CreativeCrateMountedStorageType::new);

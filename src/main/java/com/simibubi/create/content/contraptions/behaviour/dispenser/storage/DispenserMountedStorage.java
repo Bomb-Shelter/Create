@@ -3,7 +3,12 @@ package com.simibubi.create.content.contraptions.behaviour.dispenser.storage;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+
+import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -26,8 +31,12 @@ public class DispenserMountedStorage extends SimpleMountedStorage {
 		super(type, handler);
 	}
 
-	public DispenserMountedStorage(SlottedStackStorage handler) {
+	public DispenserMountedStorage(ItemStackHandler handler) {
 		this(AllMountedStorageTypes.DISPENSER.get(), handler);
+	}
+
+	public DispenserMountedStorage(SlottedStorage<ItemVariant> storage) {
+		this(copyToItemStackHandler(storage));
 	}
 
 	@Override
