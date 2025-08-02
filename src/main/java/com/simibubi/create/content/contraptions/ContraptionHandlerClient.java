@@ -5,6 +5,7 @@ import java.util.Collection;
 
 import javax.annotation.Nullable;
 
+import io.github.fabricators_of_create.porting_lib.client_events.event.client.InputEvent.InteractionKeyMappingTriggered;
 import io.github.fabricators_of_create.porting_lib.entity.events.tick.PlayerTickEvent;
 
 import io.github.fabricators_of_create.porting_lib.entity.events.tick.PlayerTickEvent.Post;
@@ -48,13 +49,7 @@ import net.fabricmc.api.Environment;
 public class ContraptionHandlerClient {
 	public static void init() {
 		Post.EVENT.register(ContraptionHandlerClient::preventRemotePlayersWalkingAnimations);
-		UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
-			return rightClickingOnContraptionsGetsHandledLocally(hand);
-		});
-
-		UseEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
-			return rightClickingOnContraptionsGetsHandledLocally(hand);
-		});
+		InteractionKeyMappingTriggered.EVENT.register(ContraptionHandlerClient::rightClickingOnContraptionsGetsHandledLocally);
 	}
 
 	@Environment(EnvType.CLIENT)
@@ -80,18 +75,18 @@ public class ContraptionHandlerClient {
 	}
 
 	@Environment(EnvType.CLIENT)
-	public static InteractionResult rightClickingOnContraptionsGetsHandledLocally(InteractionHand hand) {
+	public static void rightClickingOnContraptionsGetsHandledLocally(InteractionKeyMappingTriggered event) {
 		Minecraft mc = Minecraft.getInstance();
 		LocalPlayer player = mc.player;
 
 		if (player == null)
-			return InteractionResult.PASS;
+			return;
 		if (player.isSpectator())
-			return InteractionResult.PASS;
+			return;
 		if (mc.level == null)
-			return InteractionResult.PASS;
-		//if (!event.isUseItem())
-			//return;
+			return;
+		if (!event.isUseItem())
+			return;
 
 		Couple<Vec3> rayInputs = getRayInputs(player);
 		Vec3 origin = rayInputs.getFirst();
@@ -128,8 +123,9 @@ public class ContraptionHandlerClient {
 		}
 
 		if (bestResult == null)
-			return InteractionResult.PASS;
+			return;
 
+		InteractionHand hand = event.getHand();
 		Direction face = bestResult.getDirection();
 		BlockPos pos = bestResult.getBlockPos();
 
@@ -138,7 +134,8 @@ public class ContraptionHandlerClient {
 		} else
 			handleSpecialInteractions(bestEntity, player, pos, face, hand);
 
-		return InteractionResult.FAIL;
+		event.setCanceled(true);
+		event.setSwingHand(false);
 	}
 
 	private static boolean handleSpecialInteractions(AbstractContraptionEntity contraptionEntity, Player player,
