@@ -1,9 +1,9 @@
-// 1.21.1	2025-08-02T13:42:56.094965324	Create: Fucked Up (unofficial)/Create's Generated Registry Entries
+// 1.21.1	2025-08-02T14:09:45.628486825	Create: Fucked Up (unofficial)/Create's Generated Registry Entries
 1a20cb4e64dc07918a28fbccc73102bca3560f16 data/create/create/potato_projectile/type/baked_potato.json
 beec3679133426fb829b11b2041eb3c5cb10bcf0 data/create/create/potato_projectile/type/pufferfish.json
 030ede1044384c4117ac1e491bf5c78bbd2842f5 data/create/damage_type/crush.json
-fbf6999fb922a0770cfbea3a8bddc11ba8b1552b data/create/worldgen/configured_feature/zinc_ore.json
 ed83634a4af759ef80cfd1101f5715d38268620f data/create/worldgen/configured_feature/striated_ores_nether.json
+fbf6999fb922a0770cfbea3a8bddc11ba8b1552b data/create/worldgen/configured_feature/zinc_ore.json
 b3f6cb5cfd9fd10d4841480632474800b34055ad data/create/worldgen/placed_feature/zinc_ore.json
 e3ab3c4bd70ad742d37091ae05774aadffb1d1d5 data/create/create/potato_projectile/type/fallback.json
 abb9dd2c98388abb430343d4ac02d460e5edc086 data/create/create/potato_projectile/type/apple.json
@@ -33,10 +33,10 @@ afdc8574e8e915dac5693f368e9c1260714ad111 data/create/damage_type/mechanical_roll
 d7ba49f29711546a65861c8140004d97fa09f16b data/create/enchantment/potato_recovery.json
 050c9333d41efd2577e1e597c7c68b00436b0963 data/create/create/potato_projectile/type/glow_berry.json
 d6f22959336e7dd19fc8593c5bad134462f51616 data/create/damage_type/fan_lava.json
-1b1d89dde0f4ae3289de6c35e2210044b2921ff3 data/create/create/potato_projectile/type/enchanted_golden_apple.json
 63e2df2c83982204bc92479b1df26561922e795d data/create/create/potato_projectile/type/pumpkin_block.json
-6cef3daecf686b417c6dfbe02556fcdff9b1e417 data/create/create/potato_projectile/type/carrot.json
 afe4e7cc87110d6f045f6672fb312a09290ca04a data/create/create/potato_projectile/type/glistering_melon.json
+1b1d89dde0f4ae3289de6c35e2210044b2921ff3 data/create/create/potato_projectile/type/enchanted_golden_apple.json
+6cef3daecf686b417c6dfbe02556fcdff9b1e417 data/create/create/potato_projectile/type/carrot.json
 0a968b4dd96cd7743336b0cce76eafae59a10a6a data/create/create/potato_projectile/type/melon_block.json
 8450576952f7723d22250da6f554dd0fda4e9fce data/create/create/potato_projectile/type/beetroot.json
 43cfce97a9326a1a7ce95f91a052586610b9686c data/create/damage_type/mechanical_saw.json
