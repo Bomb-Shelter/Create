@@ -165,12 +165,7 @@ dependencies {
     include("net.createmod.ponder:Ponder-Fabric-${minecraft_version}:${ponder_version}")
 
     modCompileOnly("dev.engine-room.flywheel:flywheel-fabric-api-${flywheel_minecraft_version}:${flywheel_version}")
-    modRuntimeOnly(include("dev.engine-room.flywheel:flywheel-fabric-${flywheel_minecraft_version}:${flywheel_version}") {
-        version {
-            strictly "[1.0,2.0)"
-            prefer flywheel_version
-        }
-    })
+    modRuntimeOnly(include("dev.engine-room.flywheel:flywheel-fabric-${flywheel_minecraft_version}:${flywheel_version}"))
     modRuntimeOnly("dev.engine-room.vanillin:vanillin-fabric-${flywheel_minecraft_version}:${vanillin_version}")
 
     if (ponderInWorkspace) {
