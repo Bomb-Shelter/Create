@@ -15,3 +15,12 @@ if (file("registrate").exists()) {
         }
     }
 }
+
+if (file("flywheel").exists()) {
+    includeBuild("flywheel") {
+        dependencySubstitution {
+            substitute(module("dev.engine-room.flywheel:flywheel-fabric-1.21.1")).using(project(":fabric"))
+            substitute(module("com.tterrag.registrate_fabric:flywheel-common-1.21.1")).using(project(":common"))
+        }
+    }
+}
