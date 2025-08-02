@@ -10,6 +10,7 @@ import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.simibubi.create.foundation.fluid.FluidIngredient;
 
 import net.createmod.catnip.data.Pair;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
@@ -62,8 +63,8 @@ public class PotionFluidHandler {
 		PotionContents potion = stack.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
 		BottleType bottleTypeFromItem = bottleTypeFromItem(stack.getItem());
 		if (potion.is(Potions.WATER) && potion.customEffects().isEmpty() && bottleTypeFromItem == BottleType.REGULAR)
-			return new FluidStack(Fluids.WATER, 250);
-		FluidStack fluid = getFluidFromPotion(potion, bottleTypeFromItem, 250);
+			return new FluidStack(Fluids.WATER, FluidConstants.BOTTLE);
+		FluidStack fluid = getFluidFromPotion(potion, bottleTypeFromItem, (int) FluidConstants.BOTTLE);
 		fluid.set(AllDataComponents.POTION_FLUID_BOTTLE_TYPE, bottleTypeFromItem);
 		return fluid;
 	}
@@ -88,10 +89,6 @@ public class PotionFluidHandler {
 			case SPLASH -> Items.SPLASH_POTION;
 			default -> Items.POTION;
 		};
-	}
-
-	public static int getRequiredAmountForFilledBottle(ItemStack stack, FluidStack availableFluid) {
-		return 250;
 	}
 
 	public static ItemStack fillBottle(ItemStack stack, FluidStack availableFluid) {

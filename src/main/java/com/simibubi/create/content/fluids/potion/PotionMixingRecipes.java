@@ -17,6 +17,7 @@ import com.simibubi.create.foundation.mixin.accessor.PotionBrewingAccessor;
 
 import io.github.fabricators_of_create.porting_lib.brewing.BrewingRecipe;
 import io.github.fabricators_of_create.porting_lib.brewing.IBrewingRecipe;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.minecraft.core.Holder.Reference;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
@@ -80,8 +81,8 @@ public class PotionMixingRecipes {
 		for (Item container : allowedSupportedContainers) {
 			BottleType bottleType = PotionFluidHandler.bottleTypeFromItem(container);
 			for (PotionBrewing.Mix<Potion> mix : ((PotionBrewingAccessor) potionBrewing).create$getPotionMixes()) {
-				FluidStack fromFluid = PotionFluidHandler.getFluidFromPotion(new PotionContents(mix.from()), bottleType, 1000);
-				FluidStack toFluid = PotionFluidHandler.getFluidFromPotion(new PotionContents(mix.to()), bottleType, 1000);
+				FluidStack fromFluid = PotionFluidHandler.getFluidFromPotion(new PotionContents(mix.from()), bottleType, (int) FluidConstants.BUCKET);
+				FluidStack toFluid = PotionFluidHandler.getFluidFromPotion(new PotionContents(mix.to()), bottleType, (int) FluidConstants.BUCKET);
 
 				mixingRecipes.add(createRecipe("potion_mixing_vanilla_" + recipeIndex++, mix.ingredient(), fromFluid, toFluid));
 			}
@@ -106,8 +107,8 @@ public class PotionMixingRecipes {
 				.toList();
 
 			for (Reference<Potion> potion : potions) {
-				FluidStack fromFluid = PotionFluidHandler.getFluidFromPotion(new PotionContents(potion), fromBottleType, 1000);
-				FluidStack toFluid = PotionFluidHandler.getFluidFromPotion(new PotionContents(potion), toBottleType, 1000);
+				FluidStack fromFluid = PotionFluidHandler.getFluidFromPotion(new PotionContents(potion), fromBottleType, (int) FluidConstants.BUCKET);
+				FluidStack toFluid = PotionFluidHandler.getFluidFromPotion(new PotionContents(potion), toBottleType, (int) FluidConstants.BUCKET);
 
 				mixingRecipes.add(createRecipe("potion_mixing_vanilla_" + recipeIndex++, ingredient, fromFluid, toFluid));
 			}
@@ -131,11 +132,11 @@ public class PotionMixingRecipes {
 							continue;
 						}
 						FluidStack inputFluid = PotionFluidHandler.getFluidFromPotionItem(stacks[0]);
-						inputFluid.setAmount(1000);
+						inputFluid.setAmount((int) FluidConstants.BUCKET);
 						if (outputFluid == null) {
 							outputFluid = PotionFluidHandler.getFluidFromPotionItem(output);
 						}
-						outputFluid.setAmount(1000);
+						outputFluid.setAmount((int) FluidConstants.BUCKET);
 						mixingRecipes.add(createRecipe("potion_mixing_modded_" + recipeIndex++, ingredient, inputFluid, outputFluid));
 					}
 				}
