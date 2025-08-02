@@ -28,6 +28,7 @@ import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.level.Level;
 
 import org.joml.Vector3f;
@@ -86,7 +87,7 @@ public class AllFluids {
 				.tickRate(25)
 				.slopeFindDistance(3)
 				.explosionResistance(100f))
-			.tag(Tags.Fluids.HONEY)
+			.tag(Tags.Fluids.HONEY, FluidTags.WATER) // fabric: water tag controls physics
 			.source(BaseFlowingFluid.Source::new) // TODO: remove when Registrate fixes FluidBuilder
 			.block()
 			.properties(p -> p.mapColor(MapColor.TERRACOTTA_YELLOW))
@@ -101,7 +102,7 @@ public class AllFluids {
 				SolidRenderedPlaceableFluidType.create(0x622020,
 					() -> 1f / 32f * AllConfigs.client().chocolateTransparencyMultiplier.getF()))
 			.lang("Chocolate")
-			.tag(AllTags.commonFluidTag("chocolates"))
+			.tag(AllTags.commonFluidTag("chocolates"), FluidTags.WATER) // fabric: water tag controls physics
 			.properties(b -> b.viscosity(1500)
 				.density(1400))
 			.fluidProperties(p -> p.levelDecreasePerBlock(2)
