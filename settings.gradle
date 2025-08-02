@@ -6,7 +6,7 @@ pluginManagement {
     }
 }
 
-rootProject.name = 'Create'
+rootProject.name = 'Create Fabric Explosive Edition'
 
 if (file("registrate").exists()) {
     includeBuild("registrate") {

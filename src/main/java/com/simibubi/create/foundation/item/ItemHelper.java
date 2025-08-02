@@ -12,6 +12,7 @@ import com.simibubi.create.foundation.mixin.accessor.ItemStackHandlerAccessor;
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 
@@ -102,10 +103,7 @@ public class ItemHelper {
 	}
 
 	public static <T extends IBE<? extends BlockEntity>> int calcRedstoneFromBlockEntity(T ibe, Level level, BlockPos pos) {
-		return ibe.getBlockEntityOptional(level, pos)
-			.map(be -> TransferUtil.getItemStorage(level, pos, be, null))
-			.map(ItemHelper::calcRedstoneFromInventory)
-			.orElse(0);
+		return calcRedstoneFromInventory(ItemStorage.SIDED.find(level, pos, null));
 	}
 
 	public static int calcRedstoneFromInventory(@Nullable Storage<ItemVariant> inv) {

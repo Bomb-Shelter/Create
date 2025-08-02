@@ -1,0 +1,9 @@
+[submodule "Registrate"]
+	path = registrate
+	url = https://github.com/Bomb-Shelter/Registrate/
+	branch = fabric/1.21.1
+
+[submodule "Flywheel"]
+	path = flywheel
+	url = https://github.com/Bomb-Shelter/Flywheel.git
+	branch = 1.21.1/dev
