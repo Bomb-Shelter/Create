@@ -7,3 +7,11 @@ pluginManagement {
 }
 
 rootProject.name = 'Create'
+
+if (file("registrate").exists()) {
+    includeBuild("registrate") {
+        dependencySubstitution {
+            substitute(module("com.tterrag.registrate_fabric:Registrate-Fabric")).using(project(":"))
+        }
+    }
+}

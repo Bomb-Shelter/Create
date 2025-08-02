@@ -5,7 +5,7 @@ plugins {
     id "eclipse"
     id "maven-publish"
     id "java"
-    id "fabric-loom" version "1.10-SNAPSHOT"
+    id "fabric-loom" version "1.10.+"
     id "me.modmuss50.mod-publish-plugin" version "0.8.3"
     id "dev.ithundxr.silk" version "0.11.15"
     id "net.kyori.blossom" version "2.1.0" // https://github.com/KyoriPowered/blossom
@@ -158,10 +158,10 @@ dependencies {
         include(modImplementation("io.github.fabricators_of_create.Porting-Lib:${module}:${porting_lib_version}"))
     }
 
-    modCompileOnly("com.tterrag.registrate_fabric:Registrate:${registrate_version}") {
+    modCompileOnly("com.tterrag.registrate_fabric:Registrate-Fabric:${registrate_version}") {
         exclude(group: "io.github.fabricators_of_create")
     }
-    include(modRuntimeOnly("com.tterrag.registrate_fabric:Registrate:${registrate_version}"))
+    include(modRuntimeOnly("com.tterrag.registrate_fabric:Registrate-Fabric:${registrate_version}"))
     include("net.createmod.ponder:Ponder-Fabric-${minecraft_version}:${ponder_version}")
 
     modCompileOnly("dev.engine-room.flywheel:flywheel-fabric-api-${flywheel_minecraft_version}:${flywheel_version}")

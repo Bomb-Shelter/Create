@@ -101,6 +101,7 @@ public abstract class ProcessingRecipeBuilder<P extends ProcessingRecipeParams, 
 	}
 
 	public R build() {
+		validateFluidAmounts();
 		return factory.create(params);
 	}
 
@@ -115,6 +116,18 @@ public abstract class ProcessingRecipeBuilder<P extends ProcessingRecipeParams, 
 			Create.LOGGER.warn(Joiner.on('\n').join(errors));
 		}
 		consumer.accept(id, recipe, null, recipeConditions.toArray(new ICondition[0]));
+	}
+
+	public static final long[] SUS_AMOUNTS = { 10, 250, 500, 1000 };
+
+	private void validateFluidAmounts() {
+		for (FluidIngredient ingredient : params.fluidIngredients) {
+			for (long amount : SUS_AMOUNTS) {
+				if (ingredient.getRequiredAmount() == amount) {
+					Create.LOGGER.warn("Suspicious fluid amount in recipe [{}]: {}", recipeId, amount);
+				}
+			}
+		}
 	}
 
 	// Datagen shortcuts

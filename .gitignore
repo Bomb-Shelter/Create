@@ -44,3 +44,6 @@ local.properties
 
 .DS_Store
 /libs/
+
+.gitmodules
+registrate/
