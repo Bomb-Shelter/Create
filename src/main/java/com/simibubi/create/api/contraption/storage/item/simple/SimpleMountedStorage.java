@@ -51,12 +51,12 @@ import net.minecraft.world.level.block.state.BlockState;
 public class SimpleMountedStorage extends WrapperMountedItemStorage<ItemStackHandler> {
 	public static final MapCodec<SimpleMountedStorage> CODEC = codec(SimpleMountedStorage::new);
 
-	public SimpleMountedStorage(MountedItemStorageType<?> type, SlottedStorage<ItemVariant> handler) {
-		super(type, copyToItemStackHandler(handler));
-	}
-
 	public SimpleMountedStorage(SlottedStorage<ItemVariant> handler) {
 		this(AllMountedStorageTypes.SIMPLE.get(), handler);
+	}
+
+	public SimpleMountedStorage(MountedItemStorageType<?> type, SlottedStorage<ItemVariant> handler) {
+		super(type, copyToItemStackHandler(handler));
 	}
 
 	@Override
