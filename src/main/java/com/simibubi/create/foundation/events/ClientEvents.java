@@ -2,12 +2,11 @@ package com.simibubi.create.foundation.events;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.simibubi.create.AllItems;
-import com.simibubi.create.Create;
+import com.simibubi.create.AllKeys;
 import com.simibubi.create.CreateClient;
 import com.simibubi.create.content.contraptions.ContraptionHandler;
 import com.simibubi.create.content.contraptions.actors.seat.ContraptionPlayerPassengerRotation;
@@ -83,7 +82,6 @@ import io.github.fabricators_of_create.porting_lib.client_events.event.client.Vi
 import io.github.fabricators_of_create.porting_lib.entity.events.EntityMountEvent;
 import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent;
 import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerInteractEvent.LeftClickEmpty;
-import io.github.fabricators_of_create.porting_lib.event.client.EntityAddedLayerCallback;
 import io.github.fabricators_of_create.porting_lib.event.client.OverlayRenderCallback;
 import io.github.fabricators_of_create.porting_lib.event.client.OverlayRenderCallback.Types;
 import io.github.fabricators_of_create.porting_lib.item.client.IItemDecorator;
@@ -92,14 +90,12 @@ import io.github.fabricators_of_create.porting_lib.level.events.LevelEvent;
 import io.github.fabricators_of_create.porting_lib.level.events.LevelEvent.Load;
 import io.github.fabricators_of_create.porting_lib.level.events.LevelEvent.Unload;
 import net.createmod.catnip.animation.AnimationTickHolder;
-import net.createmod.catnip.config.ui.BaseConfigScreen;
 import net.createmod.catnip.levelWrappers.WrappedClientLevel;
 import net.createmod.catnip.platform.CatnipServices;
 import net.createmod.catnip.render.DefaultSuperRenderTypeBuffer;
 import net.createmod.catnip.render.SuperRenderTypeBuffer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientChunkEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.LivingEntityFeatureRendererRegistrationCallback;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
@@ -108,7 +104,6 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.entity.EntityRenderDispatcher;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.PackType;
@@ -212,6 +207,8 @@ public class ClientEvents {
 		CardboardArmorStealthOverlay.clientTick();
 		FactoryPanelConnectionHandler.clientTick();
 		TickBasedCache.clientTick();
+		// fabric: see comment
+		AllKeys.fixBinds();
 	}
 
 	static {
