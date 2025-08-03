@@ -58,6 +58,17 @@ public enum AllKeys {
 		}
 	}
 
+	// fabric: sometimes after opening the toolbox menu, alt gets stuck as pressed until a screen is opened.
+	// why is this needed? why did this only just now break? Good questions! I wish I knew.
+	public static void fixBinds() {
+		long window = Minecraft.getInstance().getWindow().getWindow();
+		for (AllKeys key : values()) {
+			if (key.keybind == null || key.keybind.isUnbound())
+				continue;
+			key.keybind.setDown(InputConstants.isKeyDown(window, key.getBoundCode()));
+		}
+	}
+
 	public KeyMapping getKeybind() {
 		return keybind;
 	}

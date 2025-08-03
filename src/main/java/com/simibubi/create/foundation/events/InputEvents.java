@@ -22,27 +22,35 @@ import io.github.fabricators_of_create.porting_lib.client_events.event.client.In
 import io.github.fabricators_of_create.porting_lib.client_events.event.client.InputEvent.MouseButton;
 import io.github.fabricators_of_create.porting_lib.client_events.event.client.InputEvent.MouseButton.Pre;
 import io.github.fabricators_of_create.porting_lib.client_events.event.client.InputEvent.MouseScrollingEvent;
+import io.github.fabricators_of_create.porting_lib.event.client.InteractEvents;
+import io.github.fabricators_of_create.porting_lib.event.client.KeyInputCallback;
+import io.github.fabricators_of_create.porting_lib.event.client.MouseInputEvents;
+import io.github.fabricators_of_create.porting_lib.event.client.MouseInputEvents.Action;
 import net.createmod.catnip.platform.CatnipServices;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.fabricmc.api.EnvType;
+import net.minecraft.world.phys.HitResult;
 
 public class InputEvents {
 	public static void init() {
-		Key.EVENT.register(InputEvents::onKeyInput);
+		KeyInputCallback.EVENT.register(InputEvents::onKeyInput);
 		MouseScrollingEvent.EVENT.register(InputEvents::onMouseScrolled);
-		Pre.EVENT.register(InputEvents::onMouseInput);
-		InteractionKeyMappingTriggered.EVENT.register(InputEvents::onClickInput);
+		MouseInputEvents.BEFORE_BUTTON.register(InputEvents::onMouseInput);
+		InteractEvents.USE.register(InputEvents::onUse);
+		InteractEvents.ATTACK.register(InputEvents::onAttack);
+		InteractEvents.PICK.register(InputEvents::onPick);
 	}
 
-	public static void onKeyInput(InputEvent.Key event) {
+	public static void onKeyInput(int key, int scancode, int action, int mods) {
 		if (Minecraft.getInstance().screen != null)
 			return;
 
-		int key = event.getKey();
-		boolean pressed = !(event.getAction() == 0);
+		boolean pressed = !(action == 0);
 
 		CreateClient.SCHEMATIC_HANDLER.onKeyInput(key, pressed);
 		ToolboxHandlerClient.onKeyInput(key, pressed);
@@ -61,75 +69,74 @@ public class InputEvents {
 		event.setCanceled(cancelled);
 	}
 
-	public static void onMouseInput(InputEvent.MouseButton.Pre event) {
+	public static boolean onMouseInput(int button, int modifiers, Action action) {
 		if (Minecraft.getInstance().screen != null)
-			return;
+			return false;
 
-		int button = event.getButton();
-		boolean pressed = !(event.getAction() == 0);
+		boolean pressed = action == Action.PRESS;
 
 		RadialWrenchHandler.onKeyInput(button, pressed);
 		if (CreateClient.SCHEMATIC_HANDLER.onMouseInput(button, pressed))
-			event.setCanceled(true);
+			return true;
 		else if (CreateClient.SCHEMATIC_AND_QUILL_HANDLER.onMouseInput(button, pressed))
-			event.setCanceled(true);
+			return true;
+		return false;
 	}
 
-	public static void onClickInput(InputEvent.InteractionKeyMappingTriggered event) {
-		Minecraft mc = Minecraft.getInstance();
+	// fabric: onClickInput split up
+	public static InteractionResult onUse(Minecraft mc, HitResult hit, InteractionHand hand) {
 		if (mc.screen != null)
-			return;
+			return InteractionResult.PASS;
 
-		if (CurvedTrackInteraction.onClickInput(event)) {
-			event.setCanceled(true);
-			return;
+		if (CurvedTrackInteraction.onClickInput(true, false)) {
+			return InteractionResult.SUCCESS;
 		}
 
-		KeyMapping key = event.getKeyMapping();
+		if (CreateClient.GLUE_HANDLER.onMouseInput(false))
+			return InteractionResult.SUCCESS;
 
-		if (key == mc.options.keyUse || key == mc.options.keyAttack) {
-			if (CreateClient.GLUE_HANDLER.onMouseInput(key == mc.options.keyAttack))
-				event.setCanceled(true);
+		if (FactoryPanelConnectionHandler.onRightClick() || ChainConveyorConnectionHandler.onRightClick()) {
+			return InteractionResult.SUCCESS;
 		}
-
-		if (key == mc.options.keyUse
-			&& (FactoryPanelConnectionHandler.onRightClick() || ChainConveyorConnectionHandler.onRightClick())) {
-			event.setCanceled(true);
-			return;
-		}
-
-		if (key == mc.options.keyPickItem) {
-			if (ToolboxHandlerClient.onPickItem())
-				event.setCanceled(true);
-			return;
-		}
-
-		if (!event.isUseItem())
-			return;
 
 		LinkedControllerClientHandler.deactivateInLectern();
-		TrainRelocator.onClicked(event);
+		boolean cancel = TrainRelocator.onClicked();
 
-		if (ChainConveyorInteractionHandler.onUse()) {
-			event.setCanceled(true);
-			return;
-		} else if (PackagePortTargetSelectionHandler.onUse()) {
-			event.setCanceled(true);
-			return;
+		if (ChainConveyorInteractionHandler.onUse() || PackagePortTargetSelectionHandler.onUse()) {
+			return InteractionResult.SUCCESS;
 		}
 
 		if (mc.player != null) {
-			ItemStack itemInHand = mc.player.getItemInHand(event.getHand());
-			if (AllItemTags.WRENCH.matches(itemInHand))
-				return;
-			if (itemInHand.is(Items.CHAIN) || AllBlocks.PACKAGE_FROGPORT.isIn(itemInHand))
-				return;
+			ItemStack itemInHand = mc.player.getItemInHand(hand);
+			if (!AllItemTags.WRENCH.matches(itemInHand)
+				&& !itemInHand.is(Items.CHAIN)
+				&& !AllBlocks.PACKAGE_FROGPORT.isIn(itemInHand)
+				&& ChainPackageInteractionHandler.onUse()) {
+				return InteractionResult.SUCCESS;
+			}
 		}
 
-		CatnipServices.PLATFORM.executeOnClientOnly(() -> () -> {
-			if (ChainPackageInteractionHandler.onUse())
-				event.setCanceled(true);
-		});
+		return cancel ? InteractionResult.SUCCESS : InteractionResult.PASS;
+	}
+
+	public static InteractionResult onAttack(Minecraft mc, HitResult hit) {
+		if (mc.screen != null)
+			return InteractionResult.PASS;
+
+		if (CurvedTrackInteraction.onClickInput(false, true)) {
+			return InteractionResult.SUCCESS;
+		}
+
+		return CreateClient.GLUE_HANDLER.onMouseInput(true)
+			? InteractionResult.SUCCESS
+			: InteractionResult.PASS;
+	}
+
+	public static boolean onPick(Minecraft mc, HitResult hit) {
+		if (mc.screen != null)
+			return false;
+
+		return ToolboxHandlerClient.onPickItem();
 	}
 
 }

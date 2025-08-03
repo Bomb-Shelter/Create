@@ -72,42 +72,39 @@ public class TrainRelocator {
 		return relocatingTrain != null;
 	}
 
-	static {
-
-	}
-
 	@Environment(EnvType.CLIENT)
-	public static void onClicked(InputEvent.InteractionKeyMappingTriggered event) {
+	public static boolean onClicked() {
 		if (relocatingTrain == null)
-			return;
+			return false;
 
 		Minecraft mc = Minecraft.getInstance();
 		LocalPlayer player = mc.player;
 		if (player == null)
-			return;
+			return false;
 		if (player.isSpectator())
-			return;
+			return false;
 
 		if (!player.position()
 			.closerThan(relocatingOrigin, 24) || player.isShiftKeyDown()) {
 			relocatingTrain = null;
 			player.displayClientMessage(CreateLang.translateDirect("train.relocate.abort")
 				.withStyle(ChatFormatting.RED), true);
-			return;
+			return false;
 		}
 
 		if (player.isPassenger())
-			return;
+			return false;
 		if (mc.level == null)
-			return;
+			return false;
 		Train relocating = getRelocating(mc.level);
 		if (relocating != null) {
 			Boolean relocate = relocateClient(relocating, false);
 			if (relocate != null && relocate.booleanValue())
 				relocatingTrain = null;
 			if (relocate != null)
-				event.setCanceled(true);
+				return true; // cancel
 		}
+		return false;
 	}
 
 	@Nullable
