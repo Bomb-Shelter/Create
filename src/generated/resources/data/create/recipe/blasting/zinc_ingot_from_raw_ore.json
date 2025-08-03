@@ -7,7 +7,6 @@
     "tag": "c:raw_materials/zinc"
   },
   "result": {
-    "count": 1,
     "id": "create:zinc_ingot"
   }
 }

@@ -22,6 +22,9 @@
     "minecraft:dropper",
     "minecraft:chiseled_bookshelf",
     "minecraft:jukebox",
-    "#c:barrels"
+    {
+      "id": "#c:barrels",
+      "required": false
+    }
   ]
 }

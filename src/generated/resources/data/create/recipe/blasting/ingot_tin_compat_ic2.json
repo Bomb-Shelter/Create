@@ -1,10 +1,4 @@
 {
-  "neoforge:conditions": [
-    {
-      "type": "neoforge:mod_loaded",
-      "modid": "ic2"
-    }
-  ],
   "type": "minecraft:blasting",
   "category": "blocks",
   "cookingtime": 100,
@@ -12,6 +6,16 @@
   "ingredient": {
     "item": "create:crushed_raw_tin"
   },
+  "porting_lib:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "ic2"
+    },
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "ic2"
+    }
+  ],
   "result": {
     "id": "ic2:ingot_tin"
   }

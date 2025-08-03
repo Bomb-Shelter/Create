@@ -36,10 +36,25 @@
     "minecraft:weeping_vines_plant",
     "minecraft:weeping_vines",
     "minecraft:cake",
-    "#create:corals",
-    "#minecraft:cave_vines",
-    "#minecraft:banners",
-    "#minecraft:beds",
-    "#minecraft:doors"
+    {
+      "id": "#create:corals",
+      "required": false
+    },
+    {
+      "id": "#minecraft:cave_vines",
+      "required": false
+    },
+    {
+      "id": "#minecraft:banners",
+      "required": false
+    },
+    {
+      "id": "#minecraft:beds",
+      "required": false
+    },
+    {
+      "id": "#minecraft:doors",
+      "required": false
+    }
   ]
 }

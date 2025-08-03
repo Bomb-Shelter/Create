@@ -17,8 +17,17 @@
     "minecraft:waxed_exposed_copper_grate",
     "minecraft:waxed_weathered_copper_grate",
     "minecraft:waxed_oxidized_copper_grate",
-    "#minecraft:campfires",
-    "#minecraft:fences",
-    "#minecraft:leaves"
+    {
+      "id": "#minecraft:campfires",
+      "required": false
+    },
+    {
+      "id": "#minecraft:fences",
+      "required": false
+    },
+    {
+      "id": "#minecraft:leaves",
+      "required": false
+    }
   ]
 }

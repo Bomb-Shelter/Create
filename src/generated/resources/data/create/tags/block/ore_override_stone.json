@@ -1,5 +1,8 @@
 {
   "values": [
-    "#minecraft:stone_ore_replaceables"
+    {
+      "id": "#minecraft:stone_ore_replaceables",
+      "required": false
+    }
   ]
 }

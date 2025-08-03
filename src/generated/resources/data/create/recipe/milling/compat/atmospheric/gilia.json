@@ -1,19 +1,19 @@
 {
-  "neoforge:conditions": [
-    {
-      "type": "neoforge:mod_loaded",
-      "modid": "atmospheric"
-    }
-  ],
   "type": "create:milling",
   "ingredients": [
     {
-      "type": "neoforge:compound",
+      "fabric:type": "create:simple_datagen",
       "ingredients": [
         {
           "item": "atmospheric:gilia"
         }
       ]
+    }
+  ],
+  "porting_lib:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "atmospheric"
     }
   ],
   "processing_time": 50,

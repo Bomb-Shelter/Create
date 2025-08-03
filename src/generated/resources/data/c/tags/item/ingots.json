@@ -1,5 +1,8 @@
 {
   "values": [
-    "#create:create_ingots"
+    {
+      "id": "#create:create_ingots",
+      "required": false
+    }
   ]
 }

@@ -81,7 +81,7 @@ loom {
             client()
             name("Data Generation")
             vmArg("-Dfabric-api.datagen")
-            vmArg("-Dfabric-api.datagen.output-dir=${file("src/main/generated")}")
+            vmArg("-Dfabric-api.datagen.output-dir=${file("src/generated/resources")}")
             vmArg("-Dfabric-api.datagen.modid=create")
             vmArg("-Dporting_lib.datagen.existing_resources=${file("src/main/resources")}")
         }
@@ -210,6 +210,11 @@ sourceSets.main {
         if (!cc_tweaked_enable.toBoolean()) {
             exclude 'com/simibubi/create/compat/computercraft/implementation/**'
         }
+    }
+
+    resources {
+        srcDir("src/generated/resources")
+        exclude(".cache/")
     }
 
     blossom.javaSources {

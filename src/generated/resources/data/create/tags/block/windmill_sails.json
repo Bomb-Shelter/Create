@@ -17,6 +17,9 @@
     "create:green_sail",
     "create:red_sail",
     "create:black_sail",
-    "#minecraft:wool"
+    {
+      "id": "#minecraft:wool",
+      "required": false
+    }
   ]
 }

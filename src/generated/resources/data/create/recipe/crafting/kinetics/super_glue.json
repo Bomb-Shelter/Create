@@ -3,7 +3,7 @@
   "category": "misc",
   "key": {
     "A": {
-      "tag": "c:slimeballs"
+      "item": "minecraft:slime_ball"
     },
     "N": {
       "tag": "c:nuggets/iron"

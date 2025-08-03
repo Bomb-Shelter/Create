@@ -1,19 +1,19 @@
 {
-  "neoforge:conditions": [
-    {
-      "type": "neoforge:mod_loaded",
-      "modid": "betterendforge"
-    }
-  ],
   "type": "create:pressing",
   "ingredients": [
     {
-      "type": "neoforge:compound",
+      "fabric:type": "create:simple_datagen",
       "ingredients": [
         {
           "item": "betterendforge:shadow_grass"
         }
       ]
+    }
+  ],
+  "porting_lib:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "betterendforge"
     }
   ],
   "results": [
