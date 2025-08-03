@@ -17,12 +17,13 @@ apply from: "gradle/property_loader.gradle"
 
 boolean dev = System.getenv('RELEASE') == null || System.getenv('RELEASE').equals('false')
 ext.buildNumber = System.getenv('BUILD_NUMBER')
-String gitHash = "${calculateGitHash() + (hasUnstaged() ? "-modified" : "")}"
+String gitHash = calculateGitHash(false)
+String gitHashShort = calculateGitHash(true)
 
 base {
     archivesName = "create-fucked-up-$minecraft_version"
     group = "com.simibubi.create"
-    version = mod_version + (dev && buildNumber != null ? "-${buildNumber}" : '')
+    version = "$mod_version+$gitHashShort"
 }
 
 boolean inMultiModWorkspace = rootProject.hasProperty('multiModWorkspace.enabled')
@@ -325,12 +326,18 @@ publishMods {
     }
 }
 
-String calculateGitHash() {
+String calculateGitHash(boolean shortHash) {
     try {
-        def output = providers.exec {
-            commandLine("git", "rev-parse", "HEAD")
+        def args = ["git", "rev-parse"]
+        if (shortHash) {
+            args << "--short"
         }
-        return output.standardOutput.asText.get().trim()
+        args << "HEAD"
+
+        def output = providers.exec {
+            commandLine(args)
+        }
+        return output.standardOutput.asText.get().trim() + (hasUnstaged() ? "-modified" : "")
     } catch (Throwable ignored) {
         return "unknown"
     }
