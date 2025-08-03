@@ -1,5 +1,8 @@
 {
   "values": [
-    "#c:capturing_not_supported"
+    {
+      "id": "#c:capturing_not_supported",
+      "required": false
+    }
   ]
 }

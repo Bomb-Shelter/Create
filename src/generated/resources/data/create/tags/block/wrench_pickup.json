@@ -20,8 +20,17 @@
     "minecraft:daylight_detector",
     "minecraft:target",
     "minecraft:hopper",
-    "#minecraft:buttons",
-    "#minecraft:pressure_plates",
-    "#minecraft:rails"
+    {
+      "id": "#minecraft:buttons",
+      "required": false
+    },
+    {
+      "id": "#minecraft:pressure_plates",
+      "required": false
+    },
+    {
+      "id": "#minecraft:rails",
+      "required": false
+    }
   ]
 }

@@ -1,19 +1,19 @@
 {
-  "neoforge:conditions": [
-    {
-      "type": "neoforge:mod_loaded",
-      "modid": "elementaryores"
-    }
-  ],
   "type": "create:crushing",
   "ingredients": [
     {
-      "type": "neoforge:compound",
+      "fabric:type": "create:simple_datagen",
       "ingredients": [
         {
           "item": "elementaryores:ore_iron_nether"
         }
       ]
+    }
+  ],
+  "porting_lib:conditions": [
+    {
+      "type": "neoforge:mod_loaded",
+      "modid": "elementaryores"
     }
   ],
   "processing_time": 350,

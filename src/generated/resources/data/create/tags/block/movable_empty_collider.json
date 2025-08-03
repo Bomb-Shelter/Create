@@ -10,9 +10,21 @@
     "minecraft:twisting_vines",
     "minecraft:weeping_vines_plant",
     "minecraft:weeping_vines",
-    "#create:corals",
-    "#minecraft:cave_vines",
-    "#minecraft:fence_gates",
-    "#minecraft:banners"
+    {
+      "id": "#create:corals",
+      "required": false
+    },
+    {
+      "id": "#minecraft:cave_vines",
+      "required": false
+    },
+    {
+      "id": "#minecraft:fence_gates",
+      "required": false
+    },
+    {
+      "id": "#minecraft:banners",
+      "required": false
+    }
   ]
 }

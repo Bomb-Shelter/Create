@@ -1,5 +1,8 @@
 {
   "values": [
-    "#c:tools/wrench"
+    {
+      "id": "#c:tools/wrench",
+      "required": false
+    }
   ]
 }

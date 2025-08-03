@@ -313,7 +313,7 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 				.pattern(" B ")),
 
 		SUPER_GLUE = create(AllItems.SUPER_GLUE).unlockedByTag(I::ironSheet)
-			.viaShaped(b -> b.define('A', Tags.Items.SLIMEBALLS)
+			.viaShaped(b -> b.define('A', Items.SLIME_BALL)
 				.define('S', I.ironSheet())
 				.define('N', Tags.Items.NUGGETS_IRON)
 				.pattern("AS")

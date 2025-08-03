@@ -6,7 +6,7 @@
     },
     {
       "type": "fluid_stack",
-      "amount": 25,
+      "amount": 2025,
       "components": {
         "create:potion_fluid_bottle_type": "regular",
         "minecraft:potion_contents": {

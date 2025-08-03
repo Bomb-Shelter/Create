@@ -1,17 +1,17 @@
 {
-  "neoforge:conditions": [
+  "type": "create:crushing",
+  "ingredients": [
+    {
+      "item": "minecraft:netherrack"
+    }
+  ],
+  "porting_lib:conditions": [
     {
       "type": "neoforge:not",
       "value": {
         "type": "neoforge:mod_loaded",
         "modid": "exnihilosequentia"
       }
-    }
-  ],
-  "type": "create:crushing",
-  "ingredients": [
-    {
-      "item": "minecraft:netherrack"
     }
   ],
   "processing_time": 250,

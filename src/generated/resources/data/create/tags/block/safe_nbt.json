@@ -24,7 +24,13 @@
     "create:pulse_extender",
     "create:pulse_timer",
     "create:clipboard",
-    "#minecraft:banners",
-    "#minecraft:all_signs"
+    {
+      "id": "#minecraft:banners",
+      "required": false
+    },
+    {
+      "id": "#minecraft:all_signs",
+      "required": false
+    }
   ]
 }

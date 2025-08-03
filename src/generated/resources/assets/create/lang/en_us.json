@@ -3367,5 +3367,6 @@
   "item.create.zinc_ingot": "Zinc Ingot",
   "item.create.zinc_nugget": "Zinc Nugget",
   "itemGroup.create.base": "Create",
-  "itemGroup.create.palettes": "Create's Building Blocks"
+  "itemGroup.create.palettes": "Create's Building Blocks",
+  "trinkets.slot.head.goggles": "Goggles"
 }
