@@ -382,7 +382,7 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 				.pattern("I")),
 
 		STICKY_MECHANICAL_PISTON = create(AllBlocks.STICKY_MECHANICAL_PISTON).unlockedBy(I::andesiteAlloy)
-			.viaShaped(b -> b.define('S', Tags.Items.SLIMEBALLS)
+			.viaShaped(b -> b.define('S', Items.SLIME_BALL)
 				.define('P', AllBlocks.MECHANICAL_PISTON.get())
 				.pattern("S")
 				.pattern("P")),
@@ -859,7 +859,7 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 			.viaShaped(b -> b.define('I', I.andesiteAlloy())
 				.define('C', Tags.Items.COBBLESTONES)
 				.define('R', I.redstone())
-				.define('S', Tags.Items.SLIMEBALLS)
+				.define('S', Items.SLIME_BALL)
 				.pattern("ISI")
 				.pattern("CRC")),
 
@@ -1113,7 +1113,7 @@ public final class CreateStandardRecipeGen extends BaseRecipeProvider {
 
 		PACKAGE_FROGPORT = create(AllBlocks.PACKAGE_FROGPORT).unlockedBy(I::cardboard)
 			.viaShaped(b -> b.define('C', I.andesiteAlloy())
-				.define('B', Tags.Items.SLIMEBALLS)
+				.define('B', Items.SLIME_BALL)
 				.define('A', I.vault())
 				.pattern("B")
 				.pattern("A")
