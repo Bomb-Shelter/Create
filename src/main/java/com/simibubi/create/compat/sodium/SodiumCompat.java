@@ -20,7 +20,7 @@ public class SodiumCompat {
 
 	public static void init() {
 		Minecraft mc = Minecraft.getInstance();
-		WorldRenderEvents.AFTER_ENTITIES.register(context -> {
+		WorldRenderEvents.START.register(context -> {
 			{
 				Function<ResourceLocation, TextureAtlasSprite> atlas = mc.getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
 				TextureAtlasSprite sawSprite = atlas.apply(SAW_TEXTURE);
