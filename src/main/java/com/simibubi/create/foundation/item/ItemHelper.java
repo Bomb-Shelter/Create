@@ -23,6 +23,8 @@ import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 
+import net.minecraft.world.Container;
+
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import com.simibubi.create.content.logistics.box.PackageEntity;
@@ -359,12 +361,22 @@ public class ItemHelper {
 	}
 
 	public static void copyContents(SlottedStackStorage from, SlottedStackStorage to) {
-		if (from.getSlots() != to.getSlots()) {
+		if (from.getSlotCount() != to.getSlotCount()) {
 			throw new IllegalArgumentException("Slot count mismatch");
 		}
 
 		for (int i = 0; i < from.getSlotCount(); i++) {
 			to.setStackInSlot(i, from.getStackInSlot(i).copy());
+		}
+	}
+
+	public static void copyContents(SlottedStackStorage from, Container to) {
+		if (from.getSlotCount() != to.getContainerSize()) {
+			throw new IllegalArgumentException("Slot count mismatch");
+		}
+
+		for (int i = 0; i < from.getSlotCount(); i++) {
+			to.setItem(i, from.getStackInSlot(i).copy());
 		}
 	}
 

@@ -57,7 +57,7 @@ public class ChestMountedStorage extends SimpleMountedStorage {
 	public void unmount(Level level, BlockState state, BlockPos pos, @Nullable BlockEntity be) {
 		// the capability will include both sides of chests, but mounted storage is 1:1
 		if (be instanceof Container container && this.getSlotCount() == container.getContainerSize()) {
-			ItemHelper.copyContents(this, InventoryStorage.of(container, null));
+			ItemHelper.copyContents(this, container);
 		}
 	}
 
