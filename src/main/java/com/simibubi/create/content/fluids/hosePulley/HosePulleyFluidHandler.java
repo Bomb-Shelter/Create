@@ -8,71 +8,24 @@ import com.simibubi.create.content.fluids.transfer.FluidFillingBehaviour;
 import com.simibubi.create.foundation.fluid.FluidHelper;
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
 
+import com.simibubi.create.infrastructure.fabric.transfer.FinalCommitSnapshot;
+
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import net.minecraft.core.BlockPos;
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
+import net.minecraft.world.level.material.FlowingFluid;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.FluidState;
 
-public class HosePulleyFluidHandler implements SlottedStorage<FluidVariant> {
+public class HosePulleyFluidHandler implements SingleSlotStorage<FluidVariant> {
 
 	// The dynamic interface
-
-	private class HosePulleyInsertSnapshot extends SnapshotParticipant<Long> {
-		private final FluidVariant variant;
-		private long amount;
-
-		public HosePulleyInsertSnapshot(FluidVariant variant, long amount) {
-			this.variant = variant;
-			this.amount = amount;
-		}
-
-		@Override
-		protected Long createSnapshot() {
-			return amount;
-		}
-
-		@Override
-		protected void readSnapshot(Long snapshot) {
-			amount = snapshot;
-		}
-
-		@Override
-		protected void onFinalCommit() {
-			filler.tryDeposit(variant.getFluid(), rootPosGetter.get(), false);
-		}
-	}
-
-	private class HosePulleyExtractSnapshot extends SnapshotParticipant<Long> {
-		public FluidStack leftover;
-		private long amount;
-
-		public HosePulleyExtractSnapshot(long amount) {
-			this.amount = amount;
-		}
-
-		@Override
-		protected Long createSnapshot() {
-			return amount;
-		}
-
-		@Override
-		protected void readSnapshot(Long snapshot) {
-			this.amount = snapshot;
-		}
-
-		@Override
-		protected void onFinalCommit() {
-			drainer.pullNext(rootPosGetter.get(), false);
-
-			if (leftover != null && !leftover.isEmpty()) {
-				internalTank.setFluid(leftover);
-			}
-		}
-	}
 
 	@Override
 	public long insert(FluidVariant resource, long maxAmount, TransactionContext transaction) {
@@ -80,9 +33,6 @@ public class HosePulleyFluidHandler implements SlottedStorage<FluidVariant> {
 			return 0;
 		if (resource.isBlank() || !FluidHelper.hasBlockState(resource.getFluid()))
 			return 0;
-
-		var snapshot = new HosePulleyInsertSnapshot(resource, maxAmount);
-		snapshot.updateSnapshots(transaction);
 
 		long diff = maxAmount;
 		long remaining = maxAmount;
@@ -98,10 +48,9 @@ public class HosePulleyFluidHandler implements SlottedStorage<FluidVariant> {
 			}
 		}
 
-		//if (action.simulate())
-			//return diff <= 0 ? resource.getAmount() : internalTank.fill(remaining, action);
 		if (diff <= 0) {
-			return internalTank.extract(resource, -diff, transaction);
+			internalTank.extract(resource, -diff, transaction);
+			return maxAmount;
 		}
 
 		return internalTank.insert(resource, remaining, transaction) + (deposited ? 1000 : 0);
@@ -122,12 +71,10 @@ public class HosePulleyFluidHandler implements SlottedStorage<FluidVariant> {
 		if (internalTank.getFluidAmount() >= 1000)
 			return internalTank.extract(resource, maxDrain, transaction);
 
-		var snapshot = new HosePulleyExtractSnapshot(maxDrain);
-		snapshot.updateSnapshots(transaction);
 		BlockPos pos = rootPosGetter.get();
 		FluidStack returned = drainer.getDrainableFluid(pos);
 		if (!predicate.get() || !drainer.pullNext(pos, true))
-			return internalTank.extract(internalTank.getResource(), maxDrain, transaction);
+			return internalTank.extract(resource, maxDrain, transaction);
 
 		filler.counterpartActed();
 		FluidStack leftover = returned.copy();
@@ -136,7 +83,7 @@ public class HosePulleyFluidHandler implements SlottedStorage<FluidVariant> {
 
 		if (!internalTank.isEmpty() && !FluidStack.isSameFluidSameComponents(internalTank.getFluid(), returned)
 				|| returned.isEmpty())
-			return internalTank.extract(internalTank.getResource(), maxDrain, transaction);
+			return internalTank.extract(resource, maxDrain, transaction);
 
 		if (resource != null && !FluidStack.isSameFluidSameComponents(returned, new FluidStack(resource, maxDrain)))
 			return 0;
@@ -144,8 +91,37 @@ public class HosePulleyFluidHandler implements SlottedStorage<FluidVariant> {
 		drained = Math.min(maxDrain, available);
 		returned.setAmount(drained);
 		leftover.setAmount(available - drained);
-		snapshot.leftover = leftover;
+		(new FinalCommitSnapshot(maxDrain, () -> {
+			if (!leftover.isEmpty())
+				internalTank.setFluid(leftover);
+		}))
+			.updateSnapshots(transaction);
 		return returned.getAmount();
+	}
+
+	@Override
+	public boolean isResourceBlank() {
+		return getResource().isBlank();
+	}
+
+	@Override
+	public FluidVariant getResource() {
+		if (!internalTank.isResourceBlank() || drainer.blockEntity.getLevel() == null) return internalTank.getResource();
+		FluidState state = drainer.blockEntity.getLevel().getFluidState(rootPosGetter.get());
+		Fluid f = state.getType();
+		if (f instanceof FlowingFluid flowing) f = flowing.getSource();
+		if (!f.isSource(state)) return FluidVariant.blank();
+		return FluidVariant.of(f);
+	}
+
+	@Override
+	public long getAmount() {
+		return isResourceBlank() ? 0 : Long.MAX_VALUE;
+	}
+
+	@Override
+	public long getCapacity() {
+		return Long.MAX_VALUE;
 	}
 
 	//
@@ -163,16 +139,6 @@ public class HosePulleyFluidHandler implements SlottedStorage<FluidVariant> {
 		this.drainer = drainer;
 		this.rootPosGetter = rootPosGetter;
 		this.predicate = predicate;
-	}
-
-	@Override
-	public int getSlotCount() {
-		return internalTank.getSlotCount();
-	}
-
-	@Override
-	public Iterator<StorageView<FluidVariant>> iterator() {
-		return internalTank.iterator();
 	}
 
 	public SmartFluidTank getInternalTank() {
