@@ -6,7 +6,7 @@
       "item": "create:mechanical_piston"
     },
     "S": {
-      "tag": "c:slimeballs"
+      "item": "minecraft:slime_ball"
     }
   },
   "pattern": [

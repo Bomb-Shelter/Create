@@ -12,7 +12,7 @@
       "tag": "c:dusts/redstone"
     },
     "S": {
-      "tag": "c:slimeballs"
+      "item": "minecraft:slime_ball"
     }
   },
   "pattern": [
