@@ -82,7 +82,9 @@ public final class CreateRecipeProvider extends RecipeProvider {
 
 	protected static class I {
 
-		static TagKey<Item> redstone() { return Tags.Items.DUSTS_REDSTONE; }
+		static TagKey<Item> redstone() {
+			return Tags.Items.DUSTS_REDSTONE;
+		}
 
 		static TagKey<Item> planks() {
 			return ItemTags.PLANKS;
