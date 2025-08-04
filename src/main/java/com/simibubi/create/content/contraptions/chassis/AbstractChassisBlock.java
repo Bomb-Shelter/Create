@@ -10,6 +10,7 @@ import com.simibubi.create.foundation.block.IBE;
 
 import io.github.fabricators_of_create.porting_lib.tags.Tags;
 import net.createmod.catnip.data.Iterate;
+import net.fabricmc.fabric.api.tag.convention.v2.ConventionalItemTags;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
@@ -39,7 +40,7 @@ public abstract class AbstractChassisBlock extends RotatedPillarBlock implements
 		if (!player.mayBuild())
 			return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
 
-		boolean isSlimeBall = stack.is(Tags.Items.SLIMEBALLS) || AllItems.SUPER_GLUE.isIn(stack);
+		boolean isSlimeBall = stack.is(ConventionalItemTags.SLIME_BALLS) || AllItems.SUPER_GLUE.isIn(stack);
 
 		BooleanProperty affectedSide = getGlueableSide(state, hitResult.getDirection());
 		if (affectedSide == null)
