@@ -6,7 +6,7 @@
       "item": "create:item_vault"
     },
     "B": {
-      "item": "minecraft:slime_ball"
+      "tag": "c:slimeballs"
     },
     "C": {
       "item": "create:andesite_alloy"
