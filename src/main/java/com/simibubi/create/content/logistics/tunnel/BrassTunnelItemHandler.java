@@ -71,7 +71,7 @@ public class BrassTunnelItemHandler implements SlottedStorage<ItemVariant> {
 			});
 			snapshot.updateSnapshots(transaction);
 
-			return remainder.getCount() - CreateTransferUtil.getMaxStackSize(resource);
+			return CreateTransferUtil.getMaxStackSize(resource) - remainder.getCount();
 		}
 
 		@Override
