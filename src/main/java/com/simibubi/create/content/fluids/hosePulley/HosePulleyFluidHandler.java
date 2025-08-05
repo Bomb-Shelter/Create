@@ -73,8 +73,18 @@ public class HosePulleyFluidHandler implements SingleSlotStorage<FluidVariant> {
 
 		BlockPos pos = rootPosGetter.get();
 		FluidStack returned = drainer.getDrainableFluid(pos);
-		if (!predicate.get() || !drainer.pullNext(pos, true))
+
+		boolean predicateValue = predicate.get();
+		if (!predicateValue || !drainer.pullNext(pos, true)) {
+			if (predicateValue) {
+				new FinalCommitSnapshot(maxDrain, () -> {
+					drainer.pullNext(pos, false);
+				})
+					.updateSnapshots(transaction);
+			}
+
 			return internalTank.extract(resource, maxDrain, transaction);
+		}
 
 		filler.counterpartActed();
 		FluidStack leftover = returned.copy();
