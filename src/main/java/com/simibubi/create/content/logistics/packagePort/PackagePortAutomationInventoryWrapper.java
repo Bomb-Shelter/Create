@@ -51,14 +51,6 @@ public class PackagePortAutomationInventoryWrapper extends ItemHandlerWrapper {
 	}
 
 	@Override
-	public long extractSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
-		if (access)
-			return super.extractSlot(slot, resource, maxAmount, transaction);
-
-		return extract(resource, maxAmount, transaction);
-	}
-
-	@Override
 	public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
 		var stack = CreateTransferUtil.getLimitedStack(resource, maxAmount);
 		if (!PackageItem.isPackage(stack))
@@ -68,17 +60,5 @@ public class PackagePortAutomationInventoryWrapper extends ItemHandlerWrapper {
 			return 0;
 
 		return super.insert(resource, maxAmount, transaction);
-	}
-
-	@Override
-	public long insertSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
-		var stack = CreateTransferUtil.getLimitedStack(resource, maxAmount);
-		if (!PackageItem.isPackage(stack))
-			return 0;
-		String filterString = ppbe.getFilterString();
-		if (filterString != null && PackageItem.matchAddress(stack, filterString))
-			return 0;
-
-		return super.insertSlot(slot, resource, maxAmount, transaction);
 	}
 }

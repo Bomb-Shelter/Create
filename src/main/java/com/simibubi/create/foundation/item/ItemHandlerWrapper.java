@@ -2,26 +2,27 @@ package com.simibubi.create.foundation.item;
 
 import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.world.item.ItemStack;
 
-public class ItemHandlerWrapper implements SlottedStackStorage {
+import org.jetbrains.annotations.Nullable;
 
-	private SlottedStackStorage wrapped;
+import java.util.Iterator;
 
-	public ItemHandlerWrapper(SlottedStackStorage wrapped) {
+public class ItemHandlerWrapper implements Storage<ItemVariant> {
+
+	protected Storage<ItemVariant> wrapped;
+
+	public ItemHandlerWrapper(Storage<ItemVariant> wrapped) {
 		this.wrapped = wrapped;
 	}
 
 	@Override
-	public int getSlotCount() {
-		return wrapped.getSlotCount();
-	}
-
-	@Override
-	public ItemStack getStackInSlot(int slot) {
-		return wrapped.getStackInSlot(slot);
+	public boolean supportsInsertion() {
+		return wrapped.supportsInsertion();
 	}
 
 	@Override
@@ -30,28 +31,22 @@ public class ItemHandlerWrapper implements SlottedStackStorage {
 	}
 
 	@Override
+	public boolean supportsExtraction() {
+		return wrapped.supportsExtraction();
+	}
+
+	@Override
 	public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
 		return wrapped.extract(resource, maxAmount, transaction);
 	}
 
 	@Override
-	public int getSlotLimit(int slot) {
-		return wrapped.getSlotLimit(slot);
+	public Iterator<StorageView<ItemVariant>> iterator() {
+		return wrapped.iterator();
 	}
 
 	@Override
-	public boolean isItemValid(int slot, ItemVariant resource, int count) {
-		return wrapped.isItemValid(slot, resource, count);
+	public long getVersion() {
+		return wrapped.getVersion();
 	}
-
-	@Override
-	public SingleSlotStorage<ItemVariant> getSlot(int slot) {
-		return wrapped.getSlot(slot);
-	}
-
-	@Override
-	public void setStackInSlot(int slot, ItemStack stack) {
-		wrapped.setStackInSlot(slot, stack);
-	}
-
 }

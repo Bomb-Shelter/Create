@@ -209,7 +209,10 @@ public class ItemHelper {
 		do {
 			extracting = ItemStack.EMPTY;
 
-			for (StorageView<ItemVariant> view : inv.nonEmptyViews()) {
+			for (StorageView<ItemVariant> view : inv) {
+				if (view.getResource().isBlank()) // FU: why the FUCK does it hard crash on Fabric if it's blank?!
+					continue;
+
 				int amountToExtractFromThisSlot =
 					Math.min(maxExtractionCount - extracting.getCount(), view.getResource().getComponentMap()
 						.getOrDefault(DataComponents.MAX_STACK_SIZE, 64));
