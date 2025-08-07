@@ -3,6 +3,8 @@ package com.simibubi.create.api.contraption.storage.item.simple;
 import java.util.Optional;
 import java.util.function.Function;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 
@@ -70,7 +72,7 @@ public class SimpleMountedStorage extends WrapperMountedItemStorage<ItemStackHan
 				for (int i = 0; i < handler.getSlotCount(); i++) {
 					var slot = handler.getSlot(i);
 					ItemStack toInsert = this.getStackInSlot(i);
-					try (Transaction tx = TransferUtil.getTransaction()) {
+					try (Transaction tx = CreateTransferUtil.getTransaction()) {
 						slot.extract(slot.getResource(), slot.getAmount(), tx);
 						ItemVariant variant = ItemVariant.of(toInsert);
 

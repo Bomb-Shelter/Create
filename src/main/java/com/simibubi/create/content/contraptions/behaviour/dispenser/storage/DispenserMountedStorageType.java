@@ -3,6 +3,8 @@ package com.simibubi.create.content.contraptions.behaviour.dispenser.storage;
 import com.simibubi.create.api.contraption.storage.item.simple.SimpleMountedStorage;
 import com.simibubi.create.api.contraption.storage.item.simple.SimpleMountedStorageType;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
@@ -20,7 +22,7 @@ public class DispenserMountedStorageType extends SimpleMountedStorageType<Dispen
 
 	@Override
 	protected @Nullable SimpleMountedStorage createStorage(SlottedStorage<ItemVariant> storage) {
-		try (Transaction t = TransferUtil.getTransaction()) {
+		try (Transaction t = CreateTransferUtil.getTransaction()) {
 			for (SingleSlotStorage<ItemVariant> slot : storage.getSlots()) {
 				System.out.println("@@@@@: " + slot.getResource());
 			}

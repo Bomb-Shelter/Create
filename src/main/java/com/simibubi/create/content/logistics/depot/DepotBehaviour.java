@@ -407,7 +407,7 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 		transportedStack.insertedFrom = side;
 		transportedStack.prevSideOffset = transportedStack.sideOffset;
 		transportedStack.prevBeltPosition = transportedStack.beltPosition;
-		try (Transaction t = TransferUtil.getTransaction()) {
+		try (Transaction t = CreateTransferUtil.getTransaction()) {
 			snapshotParticipant.updateSnapshots(t);
 			ItemStack remainder = insert(transportedStack, t);
 			if (remainder.getCount() != size)
@@ -443,7 +443,7 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 				setCenteredHeldItem(added);
 				continue;
 			}
-			try (Transaction t = TransferUtil.getTransaction()) {
+			try (Transaction t = CreateTransferUtil.getTransaction()) {
 				long inserted = processingOutputBuffer.insert(ItemVariant.of(added.stack), added.stack.getCount(), t);
 				t.commit();
 				ItemStack remainder = added.stack.copy();

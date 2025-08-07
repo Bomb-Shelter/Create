@@ -134,7 +134,7 @@ public class BasinRecipe extends StandardProcessingRecipe<RecipeInput> {
 						continue;
 					long drainedAmount = Math.min(amountRequired, fluidStack.getAmount());
 					if (!simulate) {
-						try (Transaction tx = TransferUtil.getTransaction()) {
+						try (Transaction tx = CreateTransferUtil.getTransaction()) {
 							view.extract(view.getResource(), drainedAmount, tx);
 							tx.commit();
 						}

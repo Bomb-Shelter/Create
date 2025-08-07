@@ -22,6 +22,7 @@ import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandle
 import net.createmod.catnip.codecs.stream.CatnipStreamCodecBuilders;
 import net.createmod.catnip.data.Glob;
 import net.createmod.catnip.math.VecHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -73,6 +74,10 @@ public class PackageItem extends Item {
 
 	public static boolean isPackage(ItemStack stack) {
 		return stack.getItem() instanceof PackageItem;
+	}
+
+	public static boolean isPackage(ItemVariant variant) {
+		return variant.getItem() instanceof PackageItem;
 	}
 
 	@Override

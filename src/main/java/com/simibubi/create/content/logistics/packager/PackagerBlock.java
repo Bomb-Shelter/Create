@@ -11,14 +11,18 @@ import com.simibubi.create.foundation.block.IBE;
 import com.simibubi.create.foundation.block.WrenchableDirectionalBlock;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import io.github.fabricators_of_create.porting_lib.blocks.extensions.NeighborChangeListeningBlock;
 import io.github.fabricators_of_create.porting_lib.blocks.extensions.WeakPowerCheckingBlock;
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.fabricmc.fabric.api.entity.FakePlayer;
 
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.ItemInteractionResult;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -111,15 +115,17 @@ public class PackagerBlock extends WrenchableDirectionalBlock implements IBE<Pac
 				if (PackageItem.isPackage(stack)) {
 					if (level.isClientSide())
 						return ItemInteractionResult.SUCCESS;
-					if (!be.unwrapBox(stack.copy(), true))
+					try (Transaction t = CreateTransferUtil.getTransaction()) {
+						if (!be.unwrapBox(stack.copy(), t))
+							return ItemInteractionResult.SUCCESS;
+						t.commit();
+						be.triggerStockCheck();
+						stack.shrink(1);
+						AllSoundEvents.DEPOT_PLOP.playOnServer(level, pos);
+						if (stack.isEmpty())
+							player.setItemInHand(hand, ItemStack.EMPTY);
 						return ItemInteractionResult.SUCCESS;
-					be.unwrapBox(stack.copy(), false);
-					be.triggerStockCheck();
-					stack.shrink(1);
-					AllSoundEvents.DEPOT_PLOP.playOnServer(level, pos);
-					if (stack.isEmpty())
-						player.setItemInHand(hand, ItemStack.EMPTY);
-					return ItemInteractionResult.SUCCESS;
+					}
 				}
 				return ItemInteractionResult.SUCCESS;
 			}
@@ -199,7 +205,7 @@ public class PackagerBlock extends WrenchableDirectionalBlock implements IBE<Pac
 	@Override
 	public int getAnalogOutputSignal(BlockState pState, Level pLevel, BlockPos pPos) {
 		return getBlockEntityOptional(pLevel, pPos).map(pbe -> {
-				boolean empty = pbe.inventory.getStackInSlot(0)
+				boolean empty = pbe.heldBox
 					.isEmpty();
 				if (pbe.animationTicks != 0)
 					empty = false;

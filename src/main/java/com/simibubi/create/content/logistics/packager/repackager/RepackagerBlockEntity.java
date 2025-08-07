@@ -43,7 +43,7 @@ public class RepackagerBlockEntity extends PackagerBlockEntity {
 		boolean targetIsCreativeCrate = targetInv instanceof BottomlessItemHandler;
 		boolean anySpace = false;
 
-		try (Transaction transaction = TransferUtil.getTransaction()) {
+		try (Transaction transaction = CreateTransferUtil.getTransaction()) {
 			for (StorageView<ItemVariant> view : targetInv) {
 				long inserted = targetInv.insert(ItemVariant.of(box), box.getCount(), transaction);
 				if (inserted > 0)

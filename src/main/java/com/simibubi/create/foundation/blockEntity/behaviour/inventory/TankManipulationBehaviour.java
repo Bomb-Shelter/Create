@@ -2,6 +2,8 @@ package com.simibubi.create.foundation.blockEntity.behaviour.inventory;
 
 import java.util.function.Predicate;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import net.fabricmc.fabric.api.lookup.v1.block.BlockApiLookup;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
@@ -41,7 +43,7 @@ public class TankManipulationBehaviour extends CapManipulationBehaviourBase<Stor
 				continue;
 			if (!filterTest.test(new FluidStack(view)))
 				continue;
-			try (Transaction transaction = TransferUtil.getTransaction()) {
+			try (Transaction transaction = CreateTransferUtil.getTransaction()) {
 				long drained = view.extract(view.getResource(), view.getAmount(), transaction);
 
 				if (!simulateNext)

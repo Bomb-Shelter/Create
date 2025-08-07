@@ -526,7 +526,7 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements Exten
 				if (cap == null)
 					cap = EmptyItemHandler.INSTANCE;
 				for (int slot = 0; slot < cap.getSlotCount(); slot++) {
-					try (Transaction transaction = TransferUtil.getTransaction()) {
+					try (Transaction transaction = CreateTransferUtil.getTransaction()) {
 						SingleSlotStorage<ItemVariant> slotStorage = cap.getSlot(slot);
 						long extracted = slotStorage.extract(slotStorage.getResource(), 1, transaction);
 						if (extracted <= 0)

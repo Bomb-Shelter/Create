@@ -9,6 +9,8 @@ import javax.annotation.Nullable;
 
 import com.simibubi.create.foundation.mixin.accessor.ItemStackHandlerAccessor;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import io.github.fabricators_of_create.porting_lib.transfer.item.SlottedStackStorage;
@@ -234,7 +236,7 @@ public class ItemHelper {
 					extracting.grow(stack.getCount());
 
 				if (!simulate && hasEnoughItems)
-					try (Transaction trans = TransferUtil.getTransaction()) {
+					try (Transaction trans = CreateTransferUtil.getTransaction()) {
 						view.extract(view.getResource(), extracted, trans);
 						trans.commit();
 					}
@@ -299,7 +301,7 @@ public class ItemHelper {
 				extracting.grow(stack.getCount());
 
 			if (!simulate)
-				try (Transaction trans = TransferUtil.getTransaction()) {
+				try (Transaction trans = CreateTransferUtil.getTransaction()) {
 					view.extract(view.getResource(), extracted, trans);
 					trans.commit();
 				}

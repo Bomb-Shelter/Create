@@ -30,11 +30,21 @@ public class CreateTransferUtil {
 
 	public static final long BOTTLE = FluidConstants.BLOCK / 4;
 
+	// TODO: PR to Porting Lib
+	public static Transaction getTransaction() {
+		try {
+			return TransferUtil.getTransaction();
+		} catch (IllegalStateException ignored) {
+			// you cannot call Transaction.getCurrentUnsafe() in a close context, or it will crash
+			return Transaction.openOuter();
+		}
+	}
+
 	public static <T> long simulateInsert(Storage<T> storage, T variant, long amount) {
 		if (!storage.supportsInsertion())
 			return 0;
 
-		try (Transaction t = TransferUtil.getTransaction()) {
+		try (Transaction t = CreateTransferUtil.getTransaction()) {
 			return storage.insert(variant, amount, t);
 		}
 	}
@@ -43,7 +53,7 @@ public class CreateTransferUtil {
 		if (!storage.supportsExtraction())
 			return 0;
 
-		try (Transaction t = TransferUtil.getTransaction()) {
+		try (Transaction t = CreateTransferUtil.getTransaction()) {
 			return storage.extract(variant, amount, t);
 		}
 	}
@@ -60,7 +70,7 @@ public class CreateTransferUtil {
 		if (!storage.supportsInsertion())
 			return 0;
 
-		try (Transaction t = TransferUtil.getTransaction()) {
+		try (Transaction t = CreateTransferUtil.getTransaction()) {
 			return storage.insert(ItemVariant.of(stack), stack.getCount(), t);
 		}
 	}
@@ -73,7 +83,7 @@ public class CreateTransferUtil {
 		// This is technically a porting lib bug, but I'm to lazy to patch it so we are just going to do a workaround
 		if (storage.isResourceBlank())
 			return 0;
-		try (Transaction t = TransferUtil.getTransaction()) {
+		try (Transaction t = CreateTransferUtil.getTransaction()) {
 			var result = storage.extract(storage.getResource(), maxAmount, t);
 			t.commit();
 			return result;
@@ -81,7 +91,7 @@ public class CreateTransferUtil {
 	}
 
 	public static <T> long simulateExtractAny(StorageView<T> storage, long maxAmount) {
-		try (Transaction t = TransferUtil.getTransaction()) {
+		try (Transaction t = CreateTransferUtil.getTransaction()) {
 			return storage.extract(storage.getResource(), maxAmount, t);
 		}
 	}
@@ -117,7 +127,7 @@ public class CreateTransferUtil {
 		if (stack.isEmpty())
 			return stack;
 
-		try (Transaction transaction = TransferUtil.getTransaction()) {
+		try (Transaction transaction = CreateTransferUtil.getTransaction()) {
 			long inserted = storage.insert(ItemVariant.of(stack), stack.getCount(), transaction);
 
 			if (!simulate)
@@ -134,7 +144,7 @@ public class CreateTransferUtil {
 		if (stack.isEmpty())
 			return stack;
 
-		try (Transaction transaction = TransferUtil.getTransaction()) {
+		try (Transaction transaction = CreateTransferUtil.getTransaction()) {
 			long inserted = storage.insert(ItemVariant.of(stack), stack.getCount(), transaction);
 			if (!simulate) transaction.commit();
 			long remainder = stack.getCount() - inserted;
@@ -172,7 +182,7 @@ public class CreateTransferUtil {
 	}
 
 	public static ItemStack extractItem(StorageView<ItemVariant> storage, ItemStack stack, boolean simulate) {
-		try (Transaction transaction = TransferUtil.getTransaction()) {
+		try (Transaction transaction = CreateTransferUtil.getTransaction()) {
 			var inserted = storage.extract(ItemVariant.of(stack), stack.getCount(), transaction);
 
 			if (!simulate)
@@ -185,7 +195,7 @@ public class CreateTransferUtil {
 	public static ItemStack extractItem(StorageView<ItemVariant> storage, long amount, boolean simulate) {
 		if (storage.isResourceBlank())
 			return ItemStack.EMPTY;
-		try (Transaction transaction = TransferUtil.getTransaction()) {
+		try (Transaction transaction = CreateTransferUtil.getTransaction()) {
 			var resource = storage.getResource();
 			int maxSize = resource.getComponentMap().getOrDefault(DataComponents.MAX_STACK_SIZE, resource.getItem().getDefaultMaxStackSize());
 			if (amount > maxSize) {
@@ -201,7 +211,7 @@ public class CreateTransferUtil {
 	}
 
 	public static FluidStack extractAnyFluid(Storage<FluidVariant> storage, long amount, boolean simulate) {
-		try (Transaction transaction = TransferUtil.getTransaction()) {
+		try (Transaction transaction = CreateTransferUtil.getTransaction()) {
 			for (StorageView<FluidVariant> view : storage) {
 				if (!view.isResourceBlank() && view.getAmount() > 0) {
 					long extracted = storage.extract(view.getResource(), amount, transaction);
@@ -228,7 +238,7 @@ public class CreateTransferUtil {
 		StoragePreconditions.notNegative(maxAmount);
 
 		if (storage == null) return null;
-		try (Transaction transaction = TransferUtil.getTransaction()) {
+		try (Transaction transaction = CreateTransferUtil.getTransaction()) {
 			try {
 				for (StorageView<FluidVariant> view : storage.nonEmptyViews()) {
 					long amount = view.extract(view.getResource(), maxAmount, transaction);
@@ -253,7 +263,7 @@ public class CreateTransferUtil {
 	}
 
 	public static long insertFluid(Storage<FluidVariant> storage, FluidStack stack, boolean simulate) {
-		try (Transaction transaction = TransferUtil.getTransaction()) {
+		try (Transaction transaction = CreateTransferUtil.getTransaction()) {
 			var inserted = storage.insert(stack.getVariant(), stack.getAmount(), transaction);
 
 			if (!simulate)
@@ -264,7 +274,7 @@ public class CreateTransferUtil {
 	}
 
 	public static FluidStack extractFluid(Storage<FluidVariant> storage, FluidStack stack, boolean simulate) {
-		try (Transaction transaction = TransferUtil.getTransaction()) {
+		try (Transaction transaction = CreateTransferUtil.getTransaction()) {
 			var extracted = storage.extract(stack.getVariant(), stack.getAmount(), transaction);
 
 			if (!simulate)
@@ -275,7 +285,7 @@ public class CreateTransferUtil {
 	}
 
 	public static FluidStack extractFluid(Storage<FluidVariant> storage, long amount, boolean simulate) {
-		try (Transaction transaction = TransferUtil.getTransaction()) {
+		try (Transaction transaction = CreateTransferUtil.getTransaction()) {
 			for (StorageView<FluidVariant> view : storage) {
 				var variant = view.getResource();
 				if (variant.isBlank())
@@ -294,7 +304,7 @@ public class CreateTransferUtil {
 	}
 
 	public static FluidStack extractFluid(StorageView<FluidVariant> storage, FluidVariant variant, long amount, boolean simulate) {
-		try (Transaction transaction = TransferUtil.getTransaction()) {
+		try (Transaction transaction = CreateTransferUtil.getTransaction()) {
 			var extracted = storage.extract(variant, amount, transaction);
 
 			if (!simulate)

@@ -9,11 +9,14 @@ import java.util.UUID;
 
 import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 
+import io.github.fabricators_of_create.porting_lib.transfer.callbacks.TransactionCallback;
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -176,6 +179,12 @@ public class PackagerBlockEntity extends SmartBlockEntity {
 		getAvailableItems();
 	}
 
+	// fabric: cannot check stock from a transaction close callback
+	public void scheduleStockCheck() {
+		Objects.requireNonNull(this.level);
+		this.level.scheduleTick(this.worldPosition, this.getBlockState().getBlock(), 1);
+	}
+
 	public InventorySummary getAvailableItems() {
 		if (availableItems != null && invVersionTracker.stillWaiting(targetInventory.getInventory()))
 			return availableItems;
@@ -334,7 +343,7 @@ public class PackagerBlockEntity extends SmartBlockEntity {
 		buttonCooldown = 40;
 	}
 
-	public boolean unwrapBox(ItemStack box, boolean simulate) {
+	public boolean unwrapBox(ItemStack box, TransactionContext ctx) {
 		if (animationTicks > 0)
 			return false;
 
@@ -352,17 +361,24 @@ public class PackagerBlockEntity extends SmartBlockEntity {
 
 		UnpackingHandler handler = UnpackingHandler.REGISTRY.get(targetState);
 		UnpackingHandler toUse = handler != null ? handler : UnpackingHandler.DEFAULT;
-		// note: handler may modify the passed items
-		boolean unpacked = toUse.unpack(level, target, targetState, facing, items, orderContext, simulate);
 
-		if (unpacked && !simulate) {
-			previouslyUnwrapped = box;
-			animationInward = true;
-			animationTicks = CYCLE;
-			notifyUpdate();
+		// fabric: copy the items to actually unpack later
+		List<ItemStack> copy = items.stream().map(ItemStack::copy).toList();
+
+		// note: handler may modify the passed items
+		boolean unpacked = toUse.unpack(level, target, targetState, facing, items, orderContext, true);
+
+		if (unpacked) {
+			TransactionCallback.onSuccess(ctx, () -> {
+				toUse.unpack(level, target, targetState, facing, copy, orderContext, false);
+				previouslyUnwrapped = box;
+				animationInward = true;
+				animationTicks = CYCLE;
+				notifyUpdate();
+			});
 		}
 
-		return unpacked;
+		return true;
 	}
 
 	public void attemptToSend(List<PackagingRequest> queuedRequests) {

@@ -430,7 +430,7 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 				break;
 
 			for (boolean simulate : Iterate.trueAndFalse) {
-				try (Transaction transaction = TransferUtil.getTransaction()) {
+				try (Transaction transaction = CreateTransferUtil.getTransaction()) {
 					long fill = targetTank instanceof SmartFluidTankBehaviour.InternalFluidHandler
 						? ((SmartFluidTankBehaviour.InternalFluidHandler) targetTank).forceFill(fluidStack.getVariant(), fluidStack.getAmount(), transaction)
 						: targetTank.insert(fluidStack.getVariant(), fluidStack.getAmount(), transaction);
@@ -583,7 +583,7 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 	private boolean acceptFluidOutputsIntoBasin(List<FluidStack> outputFluids, boolean simulate,
 												Storage<FluidVariant> targetTank) {
 		for (FluidStack fluidStack : outputFluids) {
-			try (Transaction transaction = TransferUtil.getTransaction()) {
+			try (Transaction transaction = CreateTransferUtil.getTransaction()) {
 				long fill = targetTank instanceof SmartFluidTankBehaviour.InternalFluidHandler
 					? ((SmartFluidTankBehaviour.InternalFluidHandler) targetTank).forceFill(fluidStack.getVariant(), fluidStack.getAmount(), transaction)
 					: targetTank.insert(fluidStack.getVariant(), fluidStack.getAmount(), transaction);
