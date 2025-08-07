@@ -71,7 +71,7 @@ public class OpenCreateMenuButton extends Button {
 		public static final MenuRows INGAME_MENU = new MenuRows(Arrays.asList(
 			new SingleMenuRow("menu.returnToGame"),
 			new SingleMenuRow("gui.advancements", "gui.stats"),
-			new SingleMenuRow("menu.sendFeedback", "menu.reportBugs"),
+			new SingleMenuRow("modmenu.title", "modmenu.title"), // FU: huh.
 			new SingleMenuRow("menu.options", "menu.shareToLan"),
 			new SingleMenuRow("menu.returnToMenu")
 		));
