@@ -536,16 +536,20 @@ public class SchematicannonBlockEntity extends SmartBlockEntity implements Exten
 
 						if (!simulate) {
 							ItemStack stack = slotStorage.getResource().toStack(1);
-							transaction.commit();
 							stack.setDamageValue(stack.getDamageValue() + 1);
-							if (stack.getDamageValue() <= stack.getMaxDamage()) {
-								if (slotStorage.getAmount() <= 0) {
-									cap.insert(ItemVariant.of(stack), stack.getCount(), transaction);
-									transaction.commit();
-								} else {
-									TransferUtil.insertItem(cap, stack);
+
+							try (Transaction tr = Transaction.openNested(transaction)) {
+								if (stack.getDamageValue() <= stack.getMaxDamage()) {
+									if (slotStorage.getAmount() <= 0) {
+										cap.insert(ItemVariant.of(stack), stack.getCount(), tr);
+										tr.commit();
+									} else {
+										TransferUtil.insertItem(cap, stack);
+									}
 								}
 							}
+
+							transaction.commit();
 						}
 
 						return true;
