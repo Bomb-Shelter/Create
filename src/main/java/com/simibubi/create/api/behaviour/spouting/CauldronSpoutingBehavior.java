@@ -3,6 +3,9 @@ package com.simibubi.create.api.behaviour.spouting;
 import com.simibubi.create.api.registry.SimpleRegistry;
 import com.simibubi.create.content.fluids.spout.SpoutBlockEntity;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
@@ -23,8 +26,8 @@ public enum CauldronSpoutingBehavior implements BlockSpoutingBehaviour {
 
 	public static final SimpleRegistry<Fluid, CauldronInfo> CAULDRON_INFO = Util.make(() -> {
 		SimpleRegistry<Fluid, CauldronInfo> registry = SimpleRegistry.create();
-		registry.register(Fluids.WATER, new CauldronInfo(250, Blocks.WATER_CAULDRON));
-		registry.register(Fluids.LAVA, new CauldronInfo(1000, Blocks.LAVA_CAULDRON));
+		registry.register(Fluids.WATER, new CauldronInfo(CreateTransferUtil.BOTTLE, Blocks.WATER_CAULDRON));
+		registry.register(Fluids.LAVA, new CauldronInfo(FluidConstants.BLOCK, Blocks.LAVA_CAULDRON));
 		return registry;
 	});
 
@@ -48,8 +51,8 @@ public enum CauldronSpoutingBehavior implements BlockSpoutingBehaviour {
 	 * @param amount the amount of fluid that must be inserted into an empty cauldron
 	 * @param cauldron the BlockState to set after filling an empty cauldron with the given amount of fluid
 	 */
-	public record CauldronInfo(int amount, BlockState cauldron) {
-		public CauldronInfo(int amount, Block block) {
+	public record CauldronInfo(long amount, BlockState cauldron) {
+		public CauldronInfo(long amount, Block block) {
 			this(amount, block.defaultBlockState());
 		}
 	}

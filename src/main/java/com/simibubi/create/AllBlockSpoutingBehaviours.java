@@ -9,6 +9,8 @@ import com.simibubi.create.api.behaviour.spouting.StateChangingBehavior;
 import com.simibubi.create.compat.Mods;
 import com.simibubi.create.compat.tconstruct.SpoutCasting;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
@@ -21,10 +23,10 @@ import net.minecraft.world.level.material.Fluids;
 
 
 public class AllBlockSpoutingBehaviours {
-	
+
 	static void registerDefaults() {
 		Predicate<Fluid> isWater = fluid -> fluid.isSame(Fluids.WATER);
-		BlockSpoutingBehaviour toMud = StateChangingBehavior.setTo(250, isWater, Blocks.MUD);
+		BlockSpoutingBehaviour toMud = StateChangingBehavior.setTo(CreateTransferUtil.BOTTLE, isWater, Blocks.MUD);
 
 		for (Block dirt : List.of(Blocks.DIRT, Blocks.COARSE_DIRT, Blocks.ROOTED_DIRT)) {
 			BlockSpoutingBehaviour.BY_BLOCK.register(dirt, toMud);

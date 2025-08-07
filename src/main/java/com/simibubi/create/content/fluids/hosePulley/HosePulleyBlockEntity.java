@@ -12,6 +12,8 @@ import com.simibubi.create.foundation.fluid.SmartFluidTank;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.ServerSpeedProvider;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.createmod.catnip.animation.LerpedFloat;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.minecraft.core.BlockPos;
@@ -39,7 +41,7 @@ public class HosePulleyBlockEntity extends KineticBlockEntity {
 		offset = LerpedFloat.linear()
 			.startWithValue(0);
 		isMoving = true;
-		internalTank = new SmartFluidTank(1500, this::onTankContentsChanged);
+		internalTank = new SmartFluidTank(CreateTransferUtil.mbToDroplets(1500), this::onTankContentsChanged);
 		handler = new HosePulleyFluidHandler(internalTank, filler, drainer,
 			() -> worldPosition.below((int) Math.ceil(offset.getValue())), () -> !this.isMoving);
 	}

@@ -2,6 +2,9 @@ package com.simibubi.create.content.fluids.tank.storage.creative;
 
 import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
 
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
+import net.minecraft.nbt.Tag;
+
 import org.jetbrains.annotations.Nullable;
 
 import com.mojang.serialization.MapCodec;
@@ -47,7 +50,11 @@ public class CreativeFluidTankMountedStorage extends WrapperMountedFluidStorage<
 	}
 
 	public static CreativeFluidTankMountedStorage fromLegacy(HolderLookup.Provider registries, CompoundTag nbt) {
-		int capacity = nbt.getInt("Capacity");
+		long capacity;
+		if (nbt.contains("Capacity", Tag.TAG_INT))
+			capacity = (long) ((nbt.getInt("Capacity") / 1000.0) * FluidConstants.BLOCK);
+		else
+			capacity = nbt.getLong("Capacity");
 		FluidStack fluid = FluidStack.parseOptional(registries, nbt.getCompound("ProvidedStack"));
 		CreativeSmartFluidTank tank = new CreativeSmartFluidTank(capacity, $ -> {});
 		tank.setContainedFluid(fluid);

@@ -7,6 +7,9 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.Create;
 import com.simibubi.create.api.data.recipe.CompactingRecipeGen;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Items;
@@ -45,7 +48,7 @@ public final class CreateCompactingRecipeGen extends CompactingRecipeGen {
 		.require(Items.GRAVEL)
 		.output(Blocks.ANDESITE, 1)),
 
-	CHOCOLATE = create("chocolate", b -> b.require(AllFluids.CHOCOLATE.get(), 250)
+	CHOCOLATE = create("chocolate", b -> b.require(AllFluids.CHOCOLATE.get(), CreateTransferUtil.BOTTLE)
 		.output(AllItems.BAR_OF_CHOCOLATE.get(), 1)),
 
 	BLAZE_CAKE = create("blaze_cake", b -> b.require(Tags.Items.EGGS)
@@ -53,7 +56,7 @@ public final class CreateCompactingRecipeGen extends CompactingRecipeGen {
 		.require(AllItems.CINDER_FLOUR.get())
 		.output(AllItems.BLAZE_CAKE_BASE.get(), 1)),
 
-	HONEY = create("honey", b -> b.require(Tags.Fluids.HONEY, 1000)
+	HONEY = create("honey", b -> b.require(Tags.Fluids.HONEY, FluidConstants.BLOCK)
 		.output(Items.HONEY_BLOCK, 1)),
 
 	ICE = create("ice", b -> b

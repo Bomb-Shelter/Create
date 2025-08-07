@@ -1,6 +1,9 @@
 package com.simibubi.create.foundation.utility;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.createmod.catnip.data.Couple;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
@@ -12,15 +15,15 @@ public class FluidFormatter {
 	}
 
 	public static Couple<MutableComponent> asComponents(long amount, boolean shorten) {
-		if (shorten && amount >= 1000) {
+		if (shorten && amount >= FluidConstants.BLOCK) {
 			return Couple.create(
-					Component.literal(String.format("%.1f" , amount / 1000d)),
+					Component.literal(String.format("%.1f" , amount / (double) FluidConstants.BLOCK)),
 					CreateLang.translateDirect("generic.unit.buckets")
 			);
 		}
 
 		return Couple.create(
-				Component.literal(String.valueOf(amount)),
+				Component.literal(String.valueOf(CreateTransferUtil.dropletsToMb(amount))),
 				CreateLang.translateDirect("generic.unit.millibuckets")
 		);
 	}

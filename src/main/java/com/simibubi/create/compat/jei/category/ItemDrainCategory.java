@@ -24,6 +24,7 @@ import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.runtime.IIngredientManager;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
@@ -68,7 +69,7 @@ public class ItemDrainCategory extends CreateRecipeCategory<EmptyingRecipe> {
 
 			ItemStack copy = stack.copy();
 			capability = FluidStorage.ITEM.find(copy, new MutableContainerItemContext(stack));
-			FluidStack extracted = CreateTransferUtil.extractFluid(capability, 1000, false);
+			FluidStack extracted = CreateTransferUtil.extractFluid(capability, FluidConstants.BLOCK, false);
 			ItemStack result = copy;
 			if (extracted.isEmpty())
 				continue;

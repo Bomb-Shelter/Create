@@ -11,8 +11,10 @@ import com.simibubi.create.foundation.utility.CreateLang;
 
 import net.createmod.catnip.data.Pair;
 import net.createmod.catnip.lang.Lang;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
@@ -29,7 +31,7 @@ public abstract class CargoThresholdCondition extends LazyTickedScheduleConditio
 			this.formatted = formatted;
 		}
 
-		public boolean test(int current, int target) {
+		public boolean test(long current, long target) {
 			return switch (this) {
 			case GREATER -> current > target;
 			case EQUAL -> current == target;
@@ -58,19 +60,22 @@ public abstract class CargoThresholdCondition extends LazyTickedScheduleConditio
 			status += carriage.storage.getVersion();
 		if (status == lastChecked)
 			return false;
-		context.putInt("LastChecked", status);
+		context.putLong("LastChecked", status);
 		return test(level, train, context);
 	}
 
-	protected void requestStatusToUpdate(int amount, CompoundTag context) {
-		context.putInt("CurrentDisplay", amount);
+	protected void requestStatusToUpdate(long amount, CompoundTag context) {
+		context.putLong("CurrentDisplay", amount);
 		super.requestStatusToUpdate(context);
 	};
 
-	protected int getLastDisplaySnapshot(CompoundTag context) {
+	protected long getLastDisplaySnapshot(CompoundTag context) {
 		if (!context.contains("CurrentDisplay"))
 			return -1;
-		return context.getInt("CurrentDisplay");
+		if (context.contains("CurrentDisplay", Tag.TAG_INT))
+			return (long) ((context.getInt("CurrentDisplay") / 1000.0) * FluidConstants.BLOCK);
+
+		return context.getLong("CurrentDisplay");
 	}
 
 	protected abstract boolean test(Level level, Train train, CompoundTag context);

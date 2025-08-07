@@ -8,6 +8,7 @@ import com.simibubi.create.infrastructure.config.AllConfigs;
 import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.minecraft.core.BlockPos;
@@ -44,7 +45,7 @@ public enum SpoutCasting implements BlockSpoutingBehaviour {
 
 		// Do not fill if it would only partially fill the table (unless > 1000mb)
 		long amount = availableFluid.getAmount();
-		if (amount < 1000
+		if (amount < FluidConstants.BLOCK
 			&& CreateTransferUtil.insertFluid(handler, FluidHelper.copyStackWithAmount(availableFluid, amount + 1), true) > amount)
 			return 0;
 

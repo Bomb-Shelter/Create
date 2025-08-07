@@ -13,6 +13,7 @@ import com.simibubi.create.content.kinetics.deployer.DeployerApplicationRecipe;
 import com.simibubi.create.content.kinetics.press.PressingRecipe;
 import com.simibubi.create.foundation.data.recipe.CreateRecipeProvider.I;
 
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
 import net.minecraft.world.item.Items;
@@ -48,7 +49,7 @@ public final class CreateSequencedAssemblyRecipeGen extends SequencedAssemblyRec
 		.transitionTo(AllItems.INCOMPLETE_REINFORCED_SHEET.get())
 		.addOutput(AllItems.STURDY_SHEET.get(), 1)
 		.loops(1)
-		.addStep(FillingRecipe::new, rb -> rb.require(Fluids.LAVA, 500))
+		.addStep(FillingRecipe::new, rb -> rb.require(Fluids.LAVA, FluidConstants.BLOCK / 2))
 		.addStep(PressingRecipe::new, rb -> rb)
 		.addStep(PressingRecipe::new, rb -> rb)),
 

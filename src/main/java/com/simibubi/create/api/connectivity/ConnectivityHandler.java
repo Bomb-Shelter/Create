@@ -312,7 +312,7 @@ public class ConnectivityHandler {
 
 		// fluid handling, if present
 		FluidStack toDistribute = FluidStack.EMPTY;
-		int maxCapacity = 0;
+		long maxCapacity = 0;
 		if (be instanceof IMultiBlockEntityContainer.Fluid ifluidBE && ifluidBE.hasTank()) {
 			toDistribute = ifluidBE.getFluid(0);
 			maxCapacity = ifluidBE.getTankSize(0);

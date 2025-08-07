@@ -5,6 +5,8 @@ import java.util.Optional;
 
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.createmod.catnip.lang.LangBuilder;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
@@ -50,11 +52,11 @@ public non-sealed interface IHaveGoggleInformation extends IHaveCustomOverlayIco
 				.forGoggles(tooltip, 1);
 
 			CreateLang.builder()
-				.add(CreateLang.number(fluidStorage.getAmount())
+				.add(CreateLang.number(CreateTransferUtil.dropletsToMb(fluidStorage.getAmount()))
 					.add(mb)
 					.style(ChatFormatting.GOLD))
 				.text(ChatFormatting.GRAY, " / ")
-				.add(CreateLang.number(fluidStorage.getCapacity())
+				.add(CreateLang.number(CreateTransferUtil.dropletsToMb(fluidStorage.getCapacity()))
 					.add(mb)
 					.style(ChatFormatting.DARK_GRAY))
 				.forGoggles(tooltip, 1);
@@ -75,7 +77,7 @@ public non-sealed interface IHaveGoggleInformation extends IHaveCustomOverlayIco
 			return true;
 
 		CreateLang.translate("gui.goggles.fluid_container.capacity")
-			.add(CreateLang.number(handler.iterator().next().getCapacity())
+			.add(CreateLang.number(CreateTransferUtil.dropletsToMb(handler.iterator().next().getCapacity()))
 				.add(mb)
 				.style(ChatFormatting.GOLD))
 			.style(ChatFormatting.GRAY)

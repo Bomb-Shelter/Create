@@ -69,7 +69,7 @@ public interface IMultiBlockEntityContainer {
 		// done here rather than through the Capability to allow greater flexibility
 		default boolean hasTank() { return false; }
 
-		default int getTankSize(int tank) {	return 0; }
+		default long getTankSize(int tank) {	return 0; }
 
 		default void setTankSize(int tank, int blocks) {}
 

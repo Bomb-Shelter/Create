@@ -21,6 +21,7 @@ import it.unimi.dsi.fastutil.PriorityQueue;
 import it.unimi.dsi.fastutil.objects.ObjectHeapPriorityQueue;
 import net.createmod.catnip.data.Iterate;
 import net.createmod.catnip.math.BBHelper;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
 import net.minecraft.core.BlockPos;
@@ -367,12 +368,12 @@ public class FluidDrainingBehaviour extends FluidManipulationBehaviour {
 
 	public FluidStack getDrainableFluid(BlockPos rootPos) {
 		return fluid == null || isSearching() || !pullNext(rootPos, true) ? FluidStack.EMPTY
-			: new FluidStack(fluid, 1000);
+			: new FluidStack(fluid, FluidConstants.BLOCK);
 	}
 
 	public SingleSlotStorage<FluidVariant> getDrainableFluidView(BlockPos rootPos) {
 		return fluid == null || isSearching() || !pullNext(rootPos, true) ? EmptySingleFluidSlotStorage.INSTANCE
-			: new SingleSlotStorageImpl(FluidVariant.of(fluid), 1000, 1000);
+			: new SingleSlotStorageImpl(FluidVariant.of(fluid), FluidConstants.BLOCK, FluidConstants.BLOCK);
 	}
 
 }

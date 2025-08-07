@@ -24,6 +24,7 @@ import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
 import net.createmod.catnip.animation.LerpedFloat;
 import net.createmod.catnip.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.nbt.NBTHelper;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
@@ -528,8 +529,8 @@ public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggl
 		return MAX_SIZE;
 	}
 
-	public static int getCapacityMultiplier() {
-		return AllConfigs.server().fluids.fluidTankCapacity.get() * 1000;
+	public static long getCapacityMultiplier() {
+		return AllConfigs.server().fluids.fluidTankCapacity.get() * FluidConstants.BLOCK;
 	}
 
 	public static int getMaxHeight() {
@@ -628,7 +629,7 @@ public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggl
 	}
 
 	@Override
-	public int getTankSize(int tank) {
+	public long getTankSize(int tank) {
 		return getCapacityMultiplier();
 	}
 

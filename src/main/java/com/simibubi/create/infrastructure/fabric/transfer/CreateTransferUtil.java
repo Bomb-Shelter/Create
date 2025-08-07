@@ -28,7 +28,7 @@ import java.util.function.Predicate;
 
 public class CreateTransferUtil {
 
-	public static final long HONEY_BOTTLE = FluidConstants.BLOCK / 4;
+	public static final long BOTTLE = FluidConstants.BLOCK / 4;
 
 	public static <T> long simulateInsert(Storage<T> storage, T variant, long amount) {
 		if (!storage.supportsInsertion())
@@ -302,5 +302,13 @@ public class CreateTransferUtil {
 		}
 
 		return count;
+	}
+
+	public static long mbToDroplets(int millibuckets) {
+		return (long) ((millibuckets / 1000.0) * (double) FluidConstants.BLOCK);
+	}
+
+	public static int dropletsToMb(long droplets) {
+		return (int) ((droplets / (double) FluidConstants.BLOCK) * 1000.0);
 	}
 }

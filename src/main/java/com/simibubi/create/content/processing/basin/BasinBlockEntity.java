@@ -774,7 +774,7 @@ public class BasinBlockEntity extends SmartBlockEntity implements IHaveGoggleInf
 				.add(CreateLang.fluidName(fluidStack)
 					.add(CreateLang.text(" "))
 					.style(ChatFormatting.GRAY)
-					.add(CreateLang.number(fluidStack.getAmount())
+					.add(CreateLang.number(CreateTransferUtil.dropletsToMb(fluidStack.getAmount()))
 						.add(mb)
 						.style(ChatFormatting.BLUE)))
 				.forGoggles(tooltip, 1);

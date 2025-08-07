@@ -35,7 +35,7 @@ public class VanillaFluidTargets {
 			if (!simulate)
 				level.setBlock(pos, state.setValue(LEVEL_HONEY, 0), 3);
 			return new FluidStack(AllFluids.HONEY.get()
-				.getSource(), /*FluidConstants.BOTTLE*/ CreateTransferUtil.HONEY_BOTTLE); // Forge's value is 250 which is 20250 in droplets so 1000 / 250 = 4 and vice visa with droplets but bottle is 27000 so 81000 / 27000 = 3 so a whole block = 3 bottles instead of 4
+				.getSource(), /*FluidConstants.BOTTLE*/ CreateTransferUtil.BOTTLE); // Forge's value is 250 which is 20250 in droplets so 1000 / 250 = 4 and vice visa with droplets but bottle is 27000 so 81000 / 27000 = 3 so a whole block = 3 bottles instead of 4
 		}
 
 		if (state.is(Blocks.LAVA_CAULDRON)) {

@@ -43,7 +43,7 @@ public class FluidNetwork {
 
 	Supplier<@Nullable ICapabilityProvider<Storage<FluidVariant>>> sourceSupplier;
 	@Nullable ICapabilityProvider<Storage<FluidVariant>> source = null;
-	int transferSpeed;
+	long transferSpeed;
 
 	int pauseBeforePropagation;
 	List<BlockFace> queued;
@@ -81,7 +81,7 @@ public class FluidNetwork {
 				PipeConnection pipeConnection = get(blockFace);
 				if (pipeConnection != null) {
 					if (blockFace.equals(start))
-						transferSpeed = (int) Math.max(1, pipeConnection.pressure.get(true) / 2f);
+						transferSpeed = CreateTransferUtil.mbToDroplets((int) Math.max(1, pipeConnection.pressure.get(true) / 2f));
 					frontier.add(Pair.of(blockFace, pipeConnection));
 				}
 				iterator.remove();

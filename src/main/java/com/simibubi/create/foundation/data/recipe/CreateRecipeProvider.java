@@ -8,16 +8,13 @@ import com.simibubi.create.AllBlocks;
 import com.simibubi.create.AllItems;
 import com.simibubi.create.AllTags;
 import com.simibubi.create.api.data.recipe.ProcessingRecipeGen;
-import com.simibubi.create.api.data.recipe.StandardProcessingRecipeGen;
 
-import io.github.fabricators_of_create.porting_lib.fluids.FluidType;
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
-import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
-import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.CachedOutput;
-import net.minecraft.data.DataGenerator;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.RecipeOutput;
@@ -38,8 +35,8 @@ import io.github.fabricators_of_create.porting_lib.tags.Tags;
 public final class CreateRecipeProvider extends RecipeProvider {
 
 	static final List<ProcessingRecipeGen<?, ?, ?>> GENERATORS = new ArrayList<>();
-	static final int BUCKET = 1000;
-	static final int BOTTLE = 250;
+	static final long BUCKET = FluidConstants.BLOCK;
+	static final long BOTTLE = CreateTransferUtil.BOTTLE;
 
 	public CreateRecipeProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> registries) {
 		super(output, registries);

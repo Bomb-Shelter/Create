@@ -10,6 +10,7 @@ import com.simibubi.create.foundation.fluid.SmartFluidTank;
 
 import com.simibubi.create.infrastructure.fabric.transfer.FinalCommitSnapshot;
 
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
@@ -39,11 +40,11 @@ public class HosePulleyFluidHandler implements SingleSlotStorage<FluidVariant> {
 		long totalAmountAfterFill = diff + internalTank.getFluidAmount();
 		boolean deposited = false;
 
-		if (predicate.get() && totalAmountAfterFill >= 1000) {
+		if (predicate.get() && totalAmountAfterFill >= FluidConstants.BLOCK) {
 			if (filler.tryDeposit(resource.getFluid(), rootPosGetter.get(), true)) {
 				drainer.counterpartActed();
-				remaining -= (1000);
-				diff -= 1000;
+				remaining -= (FluidConstants.BLOCK);
+				diff -= FluidConstants.BLOCK;
 				deposited = true;
 			}
 		}
@@ -53,7 +54,7 @@ public class HosePulleyFluidHandler implements SingleSlotStorage<FluidVariant> {
 			return maxAmount;
 		}
 
-		return internalTank.insert(resource, remaining, transaction) + (deposited ? 1000 : 0);
+		return internalTank.insert(resource, remaining, transaction) + (deposited ? FluidConstants.BLOCK : 0);
 	}
 
 	@Override
@@ -68,7 +69,7 @@ public class HosePulleyFluidHandler implements SingleSlotStorage<FluidVariant> {
 	public long extract(FluidVariant resource, long maxDrain, TransactionContext transaction) {
 		if (resource != null && !internalTank.isEmpty() && !FluidStack.isSameFluidSameComponents(new FluidStack(resource, maxDrain), internalTank.getFluid()))
 			return 0;
-		if (internalTank.getFluidAmount() >= 1000)
+		if (internalTank.getFluidAmount() >= FluidConstants.BLOCK)
 			return internalTank.extract(resource, maxDrain, transaction);
 
 		BlockPos pos = rootPosGetter.get();
@@ -88,7 +89,7 @@ public class HosePulleyFluidHandler implements SingleSlotStorage<FluidVariant> {
 
 		filler.counterpartActed();
 		FluidStack leftover = returned.copy();
-		long available = 1000 + internalTank.getFluidAmount();
+		long available = FluidConstants.BLOCK + internalTank.getFluidAmount();
 		long drained;
 
 		if (!internalTank.isEmpty() && !FluidStack.isSameFluidSameComponents(internalTank.getFluid(), returned)

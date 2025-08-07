@@ -5,6 +5,8 @@ import java.util.List;
 import com.simibubi.create.api.effect.OpenPipeEffectHandler;
 import com.simibubi.create.content.fluids.potion.PotionFluidHandler;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -39,7 +41,7 @@ public class PotionEffectHandler implements OpenPipeEffectHandler {
 
 	private static PotionContents getContents(FluidStack fluid) {
 		FluidStack copy = fluid.copy();
-		copy.setAmount(250);
+		copy.setAmount(CreateTransferUtil.BOTTLE);
 		ItemStack bottle = PotionFluidHandler.fillBottle(new ItemStack(Items.GLASS_BOTTLE), copy);
 		return bottle.getOrDefault(DataComponents.POTION_CONTENTS, PotionContents.EMPTY);
 	}

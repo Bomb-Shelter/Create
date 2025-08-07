@@ -29,6 +29,7 @@ import mezz.jei.api.recipe.IFocusGroup;
 import mezz.jei.api.recipe.RecipeIngredientRole;
 import mezz.jei.api.runtime.IIngredientManager;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
@@ -86,7 +87,7 @@ public class SpoutCategory extends CreateRecipeCategory<FillingRecipe> {
 					if (!GenericItemFilling.isFluidHandlerValid(copy, fhi))
 						continue;
 					FluidStack fluidCopy = fluidStack.copy();
-					fluidCopy.setAmount(1000);
+					fluidCopy.setAmount(FluidConstants.BLOCK);
 					CreateTransferUtil.insertFluid(fhi, fluidCopy, false);
 					ItemStack container = copy;
 					if (ItemHelper.sameItem(container, copy))

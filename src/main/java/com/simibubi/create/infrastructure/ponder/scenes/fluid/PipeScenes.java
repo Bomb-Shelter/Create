@@ -26,6 +26,7 @@ import net.createmod.ponder.api.element.WorldSectionElement;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
@@ -229,7 +230,7 @@ public class PipeScenes {
 			be -> CreateTransferUtil.insertFluid(be.getBehaviour(SmartFluidTankBehaviour.TYPE)
 				.allowInsertion()
 				.getPrimaryHandler(),
-				new FluidStack(Fluids.WATER, 1500), false));
+				new FluidStack(Fluids.WATER, FluidConstants.BLOCK + (FluidConstants.BLOCK / 2)), false));
 
 		scene.idle(50);
 		scene.overlay().showOutline(PonderPalette.MEDIUM, new Object(), drain, 40);

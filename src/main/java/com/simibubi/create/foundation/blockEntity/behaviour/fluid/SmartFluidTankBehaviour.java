@@ -2,6 +2,8 @@ package com.simibubi.create.foundation.blockEntity.behaviour.fluid;
 
 import java.util.function.Consumer;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
@@ -104,6 +106,13 @@ public class SmartFluidTankBehaviour extends BlockEntityBehaviour {
 	@Override
 	public void tick() {
 		super.tick();
+
+		// force clear the tanks to allow everything else to fill
+		for (TankSegment tank : tanks) {
+			if (tank.tank.isEmpty() && !tank.tank.variant.isBlank()) {
+				tank.tank.setFluid(FluidStack.EMPTY);
+			}
+		}
 
 		if (syncCooldown > 0) {
 			syncCooldown--;
@@ -257,7 +266,7 @@ public class SmartFluidTankBehaviour extends BlockEntityBehaviour {
 		}
 
 		public float getTotalUnits(float partialTicks) {
-			return fluidLevel.getValue(partialTicks) * tank.getCapacity();
+			return fluidLevel.getValue(partialTicks) * CreateTransferUtil.dropletsToMb(tank.getCapacity());
 		}
 
 		public CompoundTag writeNBT(HolderLookup.Provider registries) {

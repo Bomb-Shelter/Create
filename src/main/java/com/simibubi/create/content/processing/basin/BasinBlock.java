@@ -101,7 +101,7 @@ public class BasinBlock extends Block implements IBE<BasinBlockEntity>, IWrencha
 				if (stack.getItem().equals(Items.SPONGE)) {
 					Storage<FluidVariant> fluidHandler = TransferUtil.getFluidStorage(level, pos, null);
 					if (fluidHandler != null) {
-					FluidStack drained = CreateTransferUtil.extractFluid(fluidHandler, Integer.MAX_VALUE, false);
+					FluidStack drained = CreateTransferUtil.extractFluid(fluidHandler, Long.MAX_VALUE, false);
 					if (!drained.isEmpty()) {
 							return ItemInteractionResult.SUCCESS;
 						}

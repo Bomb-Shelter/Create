@@ -10,7 +10,10 @@ import com.simibubi.create.content.trains.entity.Train;
 import com.simibubi.create.foundation.gui.ModularGuiLineBuilder;
 import com.simibubi.create.foundation.utility.CreateLang;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import net.createmod.catnip.lang.Lang;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
@@ -46,7 +49,7 @@ public class FluidThresholdCondition extends CargoThresholdCondition {
 		Ops operator = getOperator();
 		int target = getThreshold();
 
-		int foundFluid = 0;
+		long foundFluid = 0;
 		for (Carriage carriage : train.carriages) {
 			Storage<FluidVariant> fluids = carriage.storage.getFluids();
 			for (StorageView<FluidVariant> view : fluids) {
@@ -57,8 +60,8 @@ public class FluidThresholdCondition extends CargoThresholdCondition {
 			}
 		}
 
-		requestStatusToUpdate(foundFluid / 1000, context);
-		return operator.test(foundFluid, target * 1000);
+		requestStatusToUpdate(foundFluid / FluidConstants.BLOCK, context);
+		return operator.test(foundFluid, target * FluidConstants.BLOCK);
 	}
 
 	@Override
@@ -125,11 +128,11 @@ public class FluidThresholdCondition extends CargoThresholdCondition {
 
 	@Override
 	public MutableComponent getWaitingStatus(Level level, Train train, CompoundTag tag) {
-		int lastDisplaySnapshot = getLastDisplaySnapshot(tag);
+		long lastDisplaySnapshot = getLastDisplaySnapshot(tag);
 		if (lastDisplaySnapshot == -1)
             return Component.empty();
 		int offset = getOperator() == Ops.LESS ? -1 : getOperator() == Ops.GREATER ? 1 : 0;
-		return CreateLang.translateDirect("schedule.condition.threshold.status", lastDisplaySnapshot,
+		return CreateLang.translateDirect("schedule.condition.threshold.status", CreateTransferUtil.dropletsToMb(lastDisplaySnapshot),
 			Math.max(0, getThreshold() + offset), CreateLang.translateDirect("schedule.condition.threshold.buckets"));
 	}
 
