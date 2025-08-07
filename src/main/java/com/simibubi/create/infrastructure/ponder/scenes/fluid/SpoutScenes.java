@@ -17,6 +17,7 @@ import net.createmod.ponder.api.element.WorldSectionElement;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleOptions;
@@ -71,7 +72,7 @@ public class SpoutScenes {
 		scene.world().showSection(pipes, Direction.NORTH);
 
 		scene.idle(20);
-		FluidStack honey = new FluidStack(FluidHelper.convertToStill(AllFluids.HONEY.get()), 1000);
+		FluidStack honey = new FluidStack(FluidHelper.convertToStill(AllFluids.HONEY.get()), FluidConstants.BUCKET);
 		ItemStack bucket = AllFluids.HONEY.get()
 			.getFluidType()
 			.getBucket(honey);

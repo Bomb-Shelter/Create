@@ -1,5 +1,6 @@
 package com.simibubi.create.content.kinetics.millstone;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,12 +17,15 @@ import com.simibubi.create.foundation.sound.SoundScapes.AmbienceGroup;
 import com.simibubi.create.infrastructure.fabric.transfer.CombinedInventoryStorage;
 import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 
+import io.github.fabricators_of_create.porting_lib.transfer.ViewOnlyWrappedStorageView;
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import io.github.fabricators_of_create.porting_lib.transfer.item.RecipeWrapper;
 import net.createmod.catnip.math.VecHelper;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemStorage;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
+import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.CombinedStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction.Axis;
@@ -37,6 +41,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
+
+import org.jetbrains.annotations.NotNull;
 
 public class MillstoneBlockEntity extends KineticBlockEntity {
 
@@ -208,46 +214,53 @@ public class MillstoneBlockEntity extends KineticBlockEntity {
 			.isPresent();
 	}
 
-	private class MillstoneInventoryHandler extends CombinedInventoryStorage {
+	private class MillstoneInventoryHandler extends CombinedStorage<ItemVariant, ItemStackHandler> {
 
 		public MillstoneInventoryHandler() {
-			super(inputInv, outputInv);
-		}
-
-		@Override
-		public boolean isItemValid(int slot, ItemVariant resource, int count) {
-			if (outputInv == getHandlerFromIndex(getIndexForSlot(slot)))
-				return false;
-			ItemStack stack = resource.toStack(count);
-			return canProcess(stack) && super.isItemValid(slot, resource, count);
+			super(List.of(inputInv, outputInv));
 		}
 
 		@Override
 		public long insert(ItemVariant resource, long maxAmount, TransactionContext transaction) {
-			return super.insert(resource, maxAmount, transaction);
-		}
-
-		@Override
-		public long insertSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
-			if (outputInv == getHandlerFromIndex(getIndexForSlot(slot)))
-				return 0;
-			if (!isItemValid(slot, resource, (int) Math.min(CreateTransferUtil.getMaxStackSize(resource), maxAmount)))
-				return 0;
-			return super.insertSlot(slot, resource, maxAmount, transaction);
+			if (canProcess(resource.toStack()))
+				return inputInv.insert(resource, maxAmount, transaction);
+			return 0;
 		}
 
 		@Override
 		public long extract(ItemVariant resource, long maxAmount, TransactionContext transaction) {
-			return super.extract(resource, maxAmount, transaction);
+			return outputInv.extract(resource, maxAmount, transaction);
 		}
 
 		@Override
-		public long extractSlot(int slot, ItemVariant resource, long maxAmount, TransactionContext transaction) {
-			if (inputInv == getHandlerFromIndex(getIndexForSlot(slot)))
-				return 0;
-			return super.extractSlot(slot, resource, maxAmount, transaction);
+		public @NotNull Iterator<StorageView<ItemVariant>> iterator() {
+			return new MillstoneInventoryHandlerIterator();
 		}
 
+		private class MillstoneInventoryHandlerIterator implements Iterator<StorageView<ItemVariant>> {
+			private boolean output = true;
+			private Iterator<StorageView<ItemVariant>> wrapped;
+
+			public MillstoneInventoryHandlerIterator() {
+				wrapped = outputInv.iterator();
+			}
+
+			@Override
+			public boolean hasNext() {
+				return wrapped.hasNext();
+			}
+
+			@Override
+			public StorageView<ItemVariant> next() {
+				StorageView<ItemVariant> view = wrapped.next();
+				if (!output) view = new ViewOnlyWrappedStorageView<>(view);
+				if (output && !hasNext()) {
+					wrapped = inputInv.iterator();
+					output = false;
+				}
+				return view;
+			}
+		}
 	}
 
 }

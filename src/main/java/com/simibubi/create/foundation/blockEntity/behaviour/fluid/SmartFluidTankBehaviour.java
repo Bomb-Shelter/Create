@@ -277,7 +277,19 @@ public class SmartFluidTankBehaviour extends BlockEntityBehaviour {
 		}
 
 		public void readNBT(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
-			tank.readFromNBT(registries, compound.getCompound("TankContent"));
+			CompoundTag contentTag = compound.getCompound("TankContent");
+
+			// FU: convert millibucket storage to droplets
+			if (contentTag.contains("Fluid", Tag.TAG_COMPOUND)) {
+				CompoundTag fluidTag = contentTag.getCompound("Fluid");
+				if (fluidTag.contains("amount", Tag.TAG_INT)) {
+					int mbAmount = fluidTag.getInt("amount");
+					fluidTag.remove("amount");
+					fluidTag.putLong("amount", CreateTransferUtil.mbToDroplets(mbAmount));
+				}
+			}
+
+			tank.readFromNBT(registries, contentTag);
 			fluidLevel.readNBT(compound.getCompound("Level"), clientPacket);
 			if (!tank.getFluid()
 				.isEmpty())

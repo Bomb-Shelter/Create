@@ -8,6 +8,7 @@ import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 
 import net.fabricmc.fabric.api.gametest.v1.FabricGameTest;
 
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
@@ -99,7 +100,7 @@ public class TestFluids implements FabricGameTest {
 		BlockPos lever = new BlockPos(4, 3, 3);
 		BlockPos basin = new BlockPos(5, 2, 2);
 		BlockPos water = new BlockPos(2, 2, 2);
-		FluidStack expectedResult = new FluidStack(Fluids.WATER, 1000);
+		FluidStack expectedResult = new FluidStack(Fluids.WATER, FluidConstants.BUCKET);
 		helper.pullLever(lever);
 		helper.succeedWhen(() -> {
 			helper.assertBlockPresent(Blocks.AIR, water);
@@ -268,7 +269,7 @@ public class TestFluids implements FabricGameTest {
 		BlockPos lever = new BlockPos(3, 3, 1);
 		BlockPos output = new BlockPos(3, 4, 4);
 		BlockPos tankOutput = new BlockPos(1, 2, 4);
-		FluidStack expected = new FluidStack(Fluids.WATER, 2 * 1000);
+		FluidStack expected = new FluidStack(Fluids.WATER, 2 * FluidConstants.BLOCK);
 		helper.pullLever(lever);
 		helper.succeedWhen(() -> {
 			helper.assertFluidPresent(expected, tankOutput);

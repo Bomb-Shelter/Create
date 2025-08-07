@@ -71,6 +71,14 @@ public class TransportedItemStack implements Comparable<TransportedItemStack> {
 		return copy;
 	}
 
+	// fabric: full copy, used for snapshots
+	public TransportedItemStack fullCopy() {
+		TransportedItemStack copy = copy();
+		copy.locked = locked;
+		copy.lockedExternally = lockedExternally;
+		return copy;
+	}
+
 	public CompoundTag serializeNBT(HolderLookup.Provider registries) {
 		CompoundTag nbt = new CompoundTag();
 		nbt.put("Item", stack.saveOptional(registries));

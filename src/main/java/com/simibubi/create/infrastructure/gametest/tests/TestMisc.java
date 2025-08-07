@@ -92,7 +92,7 @@ public class TestMisc implements FabricGameTest {
 		helper.pullLever(lever);
 		helper.succeedWhen(() -> {
 			ThresholdSwitchBlockEntity switchBe = helper.getBlockEntity(AllBlockEntityTypes.THRESHOLD_SWITCH.get(), switchPos);
-			int level = switchBe.getStockLevel();
+			long level = switchBe.getStockLevel();
 			int expectedLevel = helper.absolutePos(finalPos).getY();
 			if (level != expectedLevel)
 				helper.fail("Unexpected level: " + level);

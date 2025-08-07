@@ -18,6 +18,8 @@ import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour
 import com.simibubi.create.foundation.fluid.SmartFluidTank;
 import com.simibubi.create.infrastructure.config.AllConfigs;
 
+import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
+
 import io.github.fabricators_of_create.porting_lib.fluids.FluidType;
 import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
 import io.github.fabricators_of_create.porting_lib.transfer.fluid.FluidTank;
@@ -34,6 +36,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -432,7 +435,19 @@ public class FluidTankBlockEntity extends SmartBlockEntity implements IHaveGoggl
 			height = compound.getInt("Height");
 			tankInventory.setCapacity(getTotalTankSize() * getCapacityMultiplier());
 
-			tankInventory.readFromNBT(registries, compound.getCompound("TankContent"));
+			CompoundTag contentTag = compound.getCompound("TankContent");
+
+			// FU: convert millibucket storage to droplets
+			if (contentTag.contains("Fluid", Tag.TAG_COMPOUND)) {
+				CompoundTag fluidTag = contentTag.getCompound("Fluid");
+				if (fluidTag.contains("amount", Tag.TAG_INT)) {
+					int mbAmount = fluidTag.getInt("amount");
+					fluidTag.remove("amount");
+					fluidTag.putLong("amount", CreateTransferUtil.mbToDroplets(mbAmount));
+				}
+			}
+
+			tankInventory.readFromNBT(registries, contentTag);
 			if (tankInventory.getSpace() < 0)
 				TransferUtil.extractAnyFluid(tankInventory, -tankInventory.getSpace());
 		}

@@ -73,7 +73,7 @@ public class PipeScenes {
 		scene.world().showSection(tank, Direction.DOWN);
 		scene.idle(5);
 		scene.world().showSection(tank2, Direction.DOWN);
-		FluidStack content = new FluidStack(Fluids.LAVA, 10000);
+		FluidStack content = new FluidStack(Fluids.LAVA, FluidConstants.BUCKET * 10);
 		scene.world().modifyBlockEntity(util.grid().at(4, 1, 2), FluidTankBlockEntity.class, be -> CreateTransferUtil.insertFluid(be.getTankInventory(),
 			content, false));
 		scene.idle(10);

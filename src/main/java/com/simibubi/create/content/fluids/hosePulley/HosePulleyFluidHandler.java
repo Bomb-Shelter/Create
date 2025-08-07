@@ -1,6 +1,5 @@
 package com.simibubi.create.content.fluids.hosePulley;
 
-import java.util.Iterator;
 import java.util.function.Supplier;
 
 import com.simibubi.create.content.fluids.transfer.FluidDrainingBehaviour;
@@ -12,12 +11,8 @@ import com.simibubi.create.infrastructure.fabric.transfer.FinalCommitSnapshot;
 
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
-import net.fabricmc.fabric.api.transfer.v1.storage.SlottedStorage;
-import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.api.transfer.v1.storage.base.SingleSlotStorage;
-import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
-import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import net.minecraft.core.BlockPos;
 import io.github.fabricators_of_create.porting_lib.fluids.FluidStack;
 import net.minecraft.world.level.material.FlowingFluid;

@@ -105,7 +105,7 @@ public class ItemHelper {
 	}
 
 	public static <T extends IBE<? extends BlockEntity>> int calcRedstoneFromBlockEntity(T ibe, Level level, BlockPos pos) {
-		return calcRedstoneFromInventory(ItemStorage.SIDED.find(level, pos, null));
+		return calcRedstoneFromInventory(ItemStorage.SIDED.find(level, pos, ibe.getBlockEntity(level, pos).getBlockState(), ibe.getBlockEntity(level, pos), null));
 	}
 
 	public static int calcRedstoneFromInventory(@Nullable Storage<ItemVariant> inv) {

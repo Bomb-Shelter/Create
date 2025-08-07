@@ -24,9 +24,16 @@ import com.simibubi.create.foundation.item.ItemHelper;
 
 import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 
+import io.github.fabricators_of_create.porting_lib.transfer.TransferUtil;
+import io.github.fabricators_of_create.porting_lib.transfer.callbacks.TransactionCallback;
+import io.github.fabricators_of_create.porting_lib.transfer.item.ItemHandlerHelper;
 import io.github.fabricators_of_create.porting_lib.transfer.item.ItemStackHandler;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.math.VecHelper;
+import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
+import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
+import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
+import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
@@ -55,6 +62,28 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 	Consumer<ItemStack> onHeldInserted;
 	Predicate<ItemStack> acceptedItems;
 	boolean allowMerge;
+
+	SnapshotParticipant<Data> snapshotParticipant = new SnapshotParticipant<>() {
+		@Override
+		protected Data createSnapshot() {
+			// incoming stacks are not mutated during transfer, no need to deep copy
+			return new Data(new ArrayList<>(incoming), heldItem == null ? null : heldItem.fullCopy());
+		}
+
+		@Override
+		protected void readSnapshot(Data snapshot) {
+			incoming = snapshot.incoming;
+			heldItem = snapshot.held;
+		}
+
+		@Override
+		protected void onFinalCommit() {
+			blockEntity.notifyUpdate();
+		}
+	};
+
+	record Data(List<TransportedItemStack> incoming, TransportedItemStack held) {
+	}
 
 	public DepotBehaviour(SmartBlockEntity be) {
 		super(be);
@@ -142,6 +171,12 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 			return;
 		}
 
+		// fabric: might be set to null in processing
+		if (heldItem == null) {
+			blockEntity.sendData();
+			return;
+		}
+
 		heldItem.locked = result == ProcessingResult.HOLD;
 		if (heldItem.locked != wasLocked || !ItemStack.matches(previousItem, heldItem.stack))
 			blockEntity.sendData();
@@ -181,6 +216,9 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 		}
 
 		ItemStack previousItem = heldItem.stack;
+		if (previousItem.isEmpty()) { // fabric: this is not allowed
+			return false;
+		}
 		ItemStack afterInsert = blockEntity.getBehaviour(DirectBeltInputBehaviour.TYPE)
 			.tryExportingToBeltFunnel(previousItem, null, false);
 		if (afterInsert == null)
@@ -211,8 +249,7 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 
 	@Override
 	public void unload() {
-		//if (itemHandler != null)
-			//blockEntity.invalidateCapabilities();
+		itemHandler = null;
 	}
 
 	@Override
@@ -270,7 +307,7 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 		return (fromGetter) - cumulativeStackSize;
 	}
 
-	public ItemStack insert(TransportedItemStack heldItem, boolean simulate) {
+	public ItemStack insert(TransportedItemStack heldItem, TransactionContext ctx) {
 		if (!canAcceptItems.get())
 			return heldItem.stack;
 		if (!acceptedItems.test(heldItem.stack))
@@ -285,23 +322,20 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 				return inserted;
 
 			ItemStack returned = ItemStack.EMPTY;
+			snapshotParticipant.updateSnapshots(ctx);
 			if (remainingSpace < inserted.getCount()) {
 				returned = heldItem.stack.copyWithCount(inserted.getCount() - remainingSpace);
-				if (!simulate) {
-					TransportedItemStack copy = heldItem.copy();
-					copy.stack.setCount(remainingSpace);
-					if (this.heldItem != null)
-						incoming.add(copy);
-					else
-						this.heldItem = copy;
-				}
+				TransportedItemStack copy = heldItem.copy();
+				copy.stack.setCount(remainingSpace);
+				if (this.heldItem != null)
+					incoming.add(copy);
+				else
+					this.heldItem = copy;
 			} else {
-				if (!simulate) {
-					if (this.heldItem != null)
-						incoming.add(heldItem);
-					else
-						this.heldItem = heldItem;
-				}
+				if (this.heldItem != null)
+					incoming.add(heldItem);
+				else
+					this.heldItem = heldItem;
 			}
 			return returned;
 		}
@@ -312,16 +346,15 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 		if (stackTooLarge)
 			returned = heldItem.stack.copyWithCount(heldItem.stack.getCount() - maxCount);
 
-		if (simulate)
-			return returned;
-
 		if (this.isEmpty()) {
 			if (heldItem.insertedFrom.getAxis()
 				.isHorizontal())
-				AllSoundEvents.DEPOT_SLIDE.playOnServer(getWorld(), getPos());
+				TransactionCallback.onSuccess(ctx, () -> AllSoundEvents.DEPOT_SLIDE.playOnServer(getWorld(), getPos()));
 			else
-				AllSoundEvents.DEPOT_PLOP.playOnServer(getWorld(), getPos());
+				TransactionCallback.onSuccess(ctx, () -> AllSoundEvents.DEPOT_PLOP.playOnServer(getWorld(), getPos()));
 		}
+
+		snapshotParticipant.updateSnapshots(ctx);
 
 		if (stackTooLarge) {
 			heldItem = heldItem.copy();
@@ -347,6 +380,10 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 		this.heldItem.prevBeltPosition = 0.5f;
 	}
 
+//	public <T> LazyOptional<T> getItemCapability(Capability<T> cap, Direction side) {
+//		return lazyItemHandler.cast();
+//	}
+
 	private boolean isOccupied(Direction side) {
 		if (!getHeldItemStack().isEmpty() && !canMergeItems())
 			return true;
@@ -370,15 +407,20 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 		transportedStack.insertedFrom = side;
 		transportedStack.prevSideOffset = transportedStack.sideOffset;
 		transportedStack.prevBeltPosition = transportedStack.beltPosition;
-		ItemStack remainder = insert(transportedStack, simulate);
-		if (remainder.getCount() != size)
-			blockEntity.notifyUpdate();
+		try (Transaction t = TransferUtil.getTransaction()) {
+			snapshotParticipant.updateSnapshots(t);
+			ItemStack remainder = insert(transportedStack, t);
+			if (remainder.getCount() != size)
+				blockEntity.notifyUpdate();
+			if (!simulate)
+				t.commit();
 
-		return remainder;
+			return remainder;
+		}
 	}
 
 	private void applyToAllItems(float maxDistanceFromCentre,
-		Function<TransportedItemStack, TransportedResult> processFunction) {
+								 Function<TransportedItemStack, TransportedResult> processFunction) {
 		if (heldItem == null)
 			return;
 		if (.5f - heldItem.beltPosition > maxDistanceFromCentre)
@@ -401,9 +443,14 @@ public class DepotBehaviour extends BlockEntityBehaviour {
 				setCenteredHeldItem(added);
 				continue;
 			}
-			ItemStack remainder = CreateTransferUtil.insertItemStacked(processingOutputBuffer, added.stack, false);
-			Vec3 vec = VecHelper.getCenterOf(blockEntity.getBlockPos());
-			Containers.dropItemStack(blockEntity.getLevel(), vec.x, vec.y + .5f, vec.z, remainder);
+			try (Transaction t = TransferUtil.getTransaction()) {
+				long inserted = processingOutputBuffer.insert(ItemVariant.of(added.stack), added.stack.getCount(), t);
+				t.commit();
+				ItemStack remainder = added.stack.copy();
+				remainder.setCount(TransferUtil.truncateLong(added.stack.getCount() - inserted));
+				Vec3 vec = VecHelper.getCenterOf(blockEntity.getBlockPos());
+				Containers.dropItemStack(blockEntity.getLevel(), vec.x, vec.y + .5f, vec.z, remainder);
+			}
 		}
 
 		if (dirty)

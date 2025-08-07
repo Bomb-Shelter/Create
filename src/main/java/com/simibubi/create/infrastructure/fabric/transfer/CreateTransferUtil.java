@@ -128,12 +128,16 @@ public class CreateTransferUtil {
 	}
 
 	public static ItemStack insertItemStacked(Storage<ItemVariant> storage, ItemStack stack, boolean simulate) {
-		ItemStack remainder = stack.copy();
-		long inserted = simulate ? CreateTransferUtil.simulateInsertItem(storage, stack) : TransferUtil.insertItem(storage, stack);
-
-		remainder.shrink((int) inserted);
-
-		return remainder;
+		try (Transaction transaction = TransferUtil.getTransaction()) {
+			long inserted = storage.insert(ItemVariant.of(stack), stack.getCount(), transaction);
+			if (!simulate) transaction.commit();
+			long remainder = stack.getCount() - inserted;
+			if (remainder == 0)
+				return ItemStack.EMPTY;
+			stack = stack.copy();
+			stack.setCount((int) remainder);
+			return stack;
+		}
 	}
 
 	public static ItemStack extractItem(Storage<ItemVariant> storage, int slot, ItemStack stack, boolean simulate) {

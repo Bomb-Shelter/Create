@@ -62,7 +62,7 @@ public class DrainScenes {
 				.allowInsertion();
 			Storage<FluidVariant> fh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 			if (fh != null)
-				CreateTransferUtil.insertFluid(fh, new FluidStack(Fluids.LAVA, 1000), false);
+				CreateTransferUtil.insertFluid(fh, new FluidStack(Fluids.LAVA, FluidConstants.BUCKET), false);
 		});
 		scene.idle(10);
 

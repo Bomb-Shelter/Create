@@ -78,7 +78,7 @@ public class ThresholdSwitchScreen extends AbstractSimiScreen {
 
 				if (onAbove.getState() / valueStep == 0 && state / valueStep == 0)
 					return;
-				
+
 				if (onAbove.getState() / valueStep <= state / valueStep) {
 					onAbove.setState((state + valueStep) / valueStep * valueStep);
 					onAbove.onChanged();
@@ -239,20 +239,20 @@ public class ThresholdSwitchScreen extends AbstractSimiScreen {
 
 			CreateLang
 				.translate("gui.threshold_switch.currently",
-					blockEntity.format(blockEntity.currentLevel / valueStep, stacks))
+					blockEntity.format((int) blockEntity.currentLevel / valueStep, stacks))
 				.style(ChatFormatting.DARK_AQUA)
 				.addTo(list);
 
 			if (blockEntity.currentMinLevel / valueStep == 0)
 				CreateLang
 					.translate("gui.threshold_switch.range_max",
-						blockEntity.format(blockEntity.currentMaxLevel / valueStep, stacks))
+						blockEntity.format((int) blockEntity.currentMaxLevel / valueStep, stacks))
 					.style(ChatFormatting.GRAY)
 					.addTo(list);
 			else
 				CreateLang
 					.translate("gui.threshold_switch.range", blockEntity.currentMinLevel / valueStep,
-						blockEntity.format(blockEntity.currentMaxLevel / valueStep, stacks))
+						blockEntity.format((int) blockEntity.currentMaxLevel / valueStep, stacks))
 					.style(ChatFormatting.GRAY)
 					.addTo(list);
 
@@ -307,8 +307,8 @@ public class ThresholdSwitchScreen extends AbstractSimiScreen {
 		onAbove.visible = typeOfCurrentTarget != ThresholdType.UNSUPPORTED;
 		offBelow.visible = typeOfCurrentTarget != ThresholdType.UNSUPPORTED;
 
-		int min = blockEntity.currentMinLevel + valueStep;
-		int max = blockEntity.currentMaxLevel;
+		int min = (int) blockEntity.currentMinLevel + valueStep;
+		int max = (int) blockEntity.currentMaxLevel;
 		onAbove.withRange(min, max + 1);
 		int roundedState = Mth.clamp((onAbove.getState() / valueStep) * valueStep, min, max);
 		if (roundedState != onAbove.getState()) {
@@ -316,8 +316,8 @@ public class ThresholdSwitchScreen extends AbstractSimiScreen {
 			onAbove.onChanged();
 		}
 
-		min = blockEntity.currentMinLevel;
-		max = blockEntity.currentMaxLevel - valueStep;
+		min = (int) blockEntity.currentMinLevel;
+		max = (int) blockEntity.currentMaxLevel - valueStep;
 		offBelow.withRange(min, max + 1);
 		roundedState = Mth.clamp((offBelow.getState() / valueStep) * valueStep, min, max);
 		if (roundedState != offBelow.getState()) {

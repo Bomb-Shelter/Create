@@ -60,6 +60,12 @@ public class ScrollInput extends AbstractSimiWidget {
 		return this;
 	}
 
+	public ScrollInput withRange(long min, long max) {
+		this.min = (int) min;
+		this.max = (int) max;
+		return this;
+	}
+
 	public ScrollInput calling(Consumer<Integer> onScroll) {
 		this.onScroll = onScroll;
 		return this;

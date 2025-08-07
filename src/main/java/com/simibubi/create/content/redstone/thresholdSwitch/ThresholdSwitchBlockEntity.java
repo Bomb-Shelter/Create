@@ -47,9 +47,9 @@ public class ThresholdSwitchBlockEntity extends SmartBlockEntity {
 	public int onWhenAbove;
 	public int offWhenBelow;
 
-	public int currentMinLevel;
-	public int currentLevel;
-	public int currentMaxLevel;
+	public long currentMinLevel;
+	public long currentLevel;
+	public long currentMaxLevel;
 	public boolean inStacks;
 
 	private boolean redstoneState;
@@ -82,9 +82,9 @@ public class ThresholdSwitchBlockEntity extends SmartBlockEntity {
 	protected void read(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
 		onWhenAbove = compound.getInt("OnAboveAmount");
 		offWhenBelow = compound.getInt("OffBelowAmount");
-		currentLevel = compound.getInt("CurrentAmount");
-		currentMinLevel = compound.getInt("CurrentMinAmount");
-		currentMaxLevel = compound.getInt("CurrentMaxAmount");
+		currentLevel = compound.getLong("CurrentAmount");
+		currentMinLevel = compound.getLong("CurrentMinAmount");
+		currentMaxLevel = compound.getLong("CurrentMaxAmount");
 		inStacks = compound.getBoolean("InStacks");
 		redstoneState = compound.getBoolean("Powered");
 		inverted = compound.getBoolean("Inverted");
@@ -101,9 +101,9 @@ public class ThresholdSwitchBlockEntity extends SmartBlockEntity {
 	@Override
 	public void write(CompoundTag compound, HolderLookup.Provider registries, boolean clientPacket) {
 		writeCommon(compound);
-		compound.putInt("CurrentAmount", currentLevel);
-		compound.putInt("CurrentMinAmount", currentMinLevel);
-		compound.putInt("CurrentMaxAmount", currentMaxLevel);
+		compound.putLong("CurrentAmount", currentLevel);
+		compound.putLong("CurrentMinAmount", currentMinLevel);
+		compound.putLong("CurrentMaxAmount", currentMaxLevel);
 		compound.putBoolean("InStacks", inStacks);
 		compound.putBoolean("Powered", redstoneState);
 		compound.putBoolean("PoweredAfterDelay", poweredAfterDelay);
@@ -116,22 +116,22 @@ public class ThresholdSwitchBlockEntity extends SmartBlockEntity {
 		super.writeSafe(compound, registries);
 	}
 
-	public int getMinLevel() {
+	public long getMinLevel() {
 		return currentMinLevel;
 	}
 
-	public int getStockLevel() {
+	public long getStockLevel() {
 		return currentLevel;
 	}
 
-	public int getMaxLevel() {
+	public long getMaxLevel() {
 		return currentMaxLevel;
 	}
 
 	public void updateCurrentLevel() {
 		boolean changed = false;
-		int prevLevel = currentLevel;
-		int prevMaxLevel = currentMaxLevel;
+		long prevLevel = currentLevel;
+		long prevMaxLevel = currentMaxLevel;
 
 		BlockPos target = getTargetPos();
 		BlockEntity targetBlockEntity = level.getBlockEntity(target);

@@ -18,6 +18,7 @@ import net.createmod.ponder.api.element.WorldSectionElement;
 import net.createmod.ponder.api.scene.SceneBuilder;
 import net.createmod.ponder.api.scene.SceneBuildingUtil;
 import net.createmod.ponder.api.scene.Selection;
+import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
@@ -350,7 +351,7 @@ public class HosePulleyScenes {
 		scene.world().modifyBlockEntity(util.grid().at(1, 3, 2), HosePulleyBlockEntity.class, be -> {
 			Storage<FluidVariant> ifh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 			if (ifh != null)
-				CreateTransferUtil.insertFluid(ifh, new FluidStack(Fluids.WATER, 1000), false);
+				CreateTransferUtil.insertFluid(ifh, new FluidStack(Fluids.WATER, FluidConstants.BUCKET), false);
 		});
 		scene.world().setKineticSpeed(hose, 0);
 		scene.world().modifyBlock(pumpPos, s -> s.setValue(PumpBlock.FACING, Direction.DOWN), true);

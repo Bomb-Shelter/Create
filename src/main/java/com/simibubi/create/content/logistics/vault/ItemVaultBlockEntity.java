@@ -169,6 +169,8 @@ public class ItemVaultBlockEntity extends SmartBlockEntity implements IMultiBloc
 		BlockState blockstate = level.getBlockState(updatePos);
 		if (blockstate.getBlock() instanceof NeighborChangeListeningBlock neighborChangeListeningBlock)
 			neighborChangeListeningBlock.onNeighborChange(blockstate, level, updatePos, provokingPos);
+		else
+			blockstate.handleNeighborChanged(level, updatePos, level.getBlockState(provokingPos).getBlock(), provokingPos, false);
 		if (blockstate.isRedstoneConductor(level, updatePos)) {
 			updatePos.move(direction);
 			blockstate = level.getBlockState(updatePos);
