@@ -114,6 +114,9 @@ public class CreateTransferUtil {
 
 	// A bridge between Forge's transfer API and Fabric's, basically
 	public static ItemStack insertItem(Storage<ItemVariant> storage, ItemStack stack, boolean simulate) {
+		if (stack.isEmpty())
+			return stack;
+
 		try (Transaction transaction = TransferUtil.getTransaction()) {
 			long inserted = storage.insert(ItemVariant.of(stack), stack.getCount(), transaction);
 
@@ -128,6 +131,9 @@ public class CreateTransferUtil {
 	}
 
 	public static ItemStack insertItemStacked(Storage<ItemVariant> storage, ItemStack stack, boolean simulate) {
+		if (stack.isEmpty())
+			return stack;
+
 		try (Transaction transaction = TransferUtil.getTransaction()) {
 			long inserted = storage.insert(ItemVariant.of(stack), stack.getCount(), transaction);
 			if (!simulate) transaction.commit();
