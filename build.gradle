@@ -304,15 +304,15 @@ publishing {
         }
     }
     repositories {
-        if (project.hasProperty("mavenUsername") && project.hasProperty("mavenPassword") && project.hasProperty("mavenURL")) {
+        if (System.getenv().MAVEN_USER != null && !System.getenv().MAVEN_USER.isBlank()) {
             project.logger.lifecycle("Adding maven from secrets")
 
             maven {
                 credentials {
-                    username = project.property("mavenUsername") as String
-                    password = project.property("mavenPassword") as String
+                    username = System.getenv().MAVEN_USER
+                    password = System.getenv().MAVEN_PASS
                 }
-                url = URI.create(project.property("mavenURL") as String)
+                url = "https://mvn.devos.one/snapshots"
             }
         }
 
