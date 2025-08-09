@@ -28,13 +28,13 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build Flywheel
-        run: cd flywheel && ./gradlew buildOrPublish
+        run: cd flywheel && ./gradlew buildOrPublish && cd ..
 
       - name: Build Registrate
-        run: cd registrate && ./gradlew buildOrPublish
+        run: cd registrate && ./gradlew buildOrPublish && cd ..
 
       - name: Build Create
-        run: cd .. && ./gradlew buildOrPublish
+        run: ./gradlew buildOrPublish
 
       - name: Send Build Artifacts To Webhook
         run: |
