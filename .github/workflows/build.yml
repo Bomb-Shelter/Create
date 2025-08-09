@@ -28,10 +28,10 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build Flywheel
-        run: cd flywheel && ./gradlew buildOrPublish && cd ..
+        run: cd flywheel && ./gradlew build && cd ..
 
       - name: Build Registrate
-        run: cd registrate && ./gradlew buildOrPublish && cd ..
+        run: cd registrate && ./gradlew build && cd ..
 
       - name: Build Create
         run: ./gradlew buildOrPublish
