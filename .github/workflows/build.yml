@@ -27,8 +27,14 @@ jobs:
       - name: Make Gradle Wrapper Executable
         run: chmod +x ./gradlew
 
-      - name: build
-        run: ./gradlew buildOrPublish
+      - name: Build Flywheel
+        run: cd flywheel && ./gradlew buildOrPublish
+
+      - name: Build Registrate
+        run: cd registrate && ./gradlew buildOrPublish
+
+      - name: Build Create
+        run: cd .. && ./gradlew buildOrPublish
 
       - name: Send Build Artifacts To Webhook
         run: |
