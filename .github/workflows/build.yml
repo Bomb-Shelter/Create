@@ -39,12 +39,13 @@ jobs:
       - name: Send Build Artifacts To Webhook
         run: |
           JAR_FILE=$(find build/libs/ -name "*.jar" -type f | head -1)
-
+          if [ -n "$JAR_FILE" ]; then
             curl -F "file=@$JAR_FILE" \
                  -F "content=**Create is done!**
 
             Build completed successfully! " \
-                 $DISCORD_WEBHOOK
+                 $WEBHOOK
           else
             echo "No JAR file found in build/libs/"
             exit 1
+          fi
