@@ -276,6 +276,18 @@ final slimJar = tasks.register("slimJar", Jar) {
     ])
 }
 
+task buildOrPublish {
+    group = "build"
+    String mavenUser = System.getenv().MAVEN_USER
+    if (mavenUser != null && !mavenUser.isEmpty()) {
+        dependsOn(tasks.getByName("publish"))
+        println("prepared for publish")
+    } else {
+        dependsOn(tasks.getByName("build"))
+        println("prepared for build")
+    }
+}
+
 publishing {
     publications {
         register('mavenJava', MavenPublication) {
