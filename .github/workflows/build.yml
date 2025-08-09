@@ -31,21 +31,7 @@ jobs:
         run: cd flywheel && ./gradlew build && cd ..
 
       - name: Build Registrate
-        run: cd registrate && ./gradlew build && cd ..
+        run: cd registrate && ./gradlew buildOrPublish && cd ..
 
       - name: Build Create
         run: ./gradlew buildOrPublish
-
-      - name: Send Build Artifacts To Webhook
-        run: |
-          JAR_FILE=$(find build/libs/ -name "*.jar" -type f | head -1)
-          if [ -n "$JAR_FILE" ]; then
-            curl -F "file=@$JAR_FILE" \
-                 -F "content=**Create is done!**
-
-            Build completed successfully! " \
-                 $WEBHOOK
-          else
-            echo "No JAR file found in build/libs/"
-            exit 1
-          fi
