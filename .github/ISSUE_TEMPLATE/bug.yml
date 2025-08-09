@@ -1,5 +1,5 @@
 name: I found a bug!
-description: "Report some other kind of issue. You should ask in the Discord first to make sure it's actually a bug with Create."
+description: "Report some other kind of issue. You need to make sure its a bug with Create: Fucked Up. This is UNOFFICIAL!"
 labels: [ "type: bug" ]
 body:
   - type: textarea
@@ -35,4 +35,4 @@ body:
 
   - type: markdown
     attributes:
-      value: "Thank you for taking the time to make a report and help improve Create!"
+      value: "Thank you for taking the time to make a report and help improve Create: Fucked Up!"

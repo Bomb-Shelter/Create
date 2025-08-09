@@ -1,8 +1,42 @@
-name: Build
-on: [ workflow_dispatch, push, pull_request ]
+name: build
+on: [ push, workflow_dispatch ]
 
 jobs:
   build:
-    uses: ithundxr/workflows/.github/workflows/java-build.yml@main
-    with:
-      java-version: 21
+    strategy:
+      matrix:
+        java: [ 21 ]
+    runs-on: ubuntu-latest
+    env:
+      PUBLISH_SUFFIX: snapshots
+      MAVEN_USER: ${{ secrets.MAVEN_USER }}
+      MAVEN_PASS: ${{ secrets.MAVEN_PASS }}
+      WEBHOOK: ${{ secrets.WEBHOOK }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup JDK ${{ matrix.java }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+
+      - name: Make Gradle Wrapper Executable
+        run: chmod +x ./gradlew
+
+      - name: build
+        run: ./gradlew buildOrPublish
+
+      - name: Send Build Artifacts To Webhook
+        run: |
+          JAR_FILE=$(find build/libs/ -name "*.jar" -type f | head -1)
+
+            curl -F "file=@$JAR_FILE" \
+                 -F "content=**Create is done!**
+
+            Build completed successfully! " \
+                 $DISCORD_WEBHOOK
+          else
+            echo "No JAR file found in build/libs/"
+            exit 1
