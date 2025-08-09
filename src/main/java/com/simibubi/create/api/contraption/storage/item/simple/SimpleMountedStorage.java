@@ -73,7 +73,16 @@ public class SimpleMountedStorage extends WrapperMountedItemStorage<ItemStackHan
 					var slot = handler.getSlot(i);
 					ItemStack toInsert = this.getStackInSlot(i);
 					try (Transaction tx = CreateTransferUtil.getTransaction()) {
-						slot.extract(slot.getResource(), slot.getAmount(), tx);
+						if (!slot.isResourceBlank()) {
+							slot.extract(slot.getResource(), slot.getAmount(), tx);
+						}
+
+						if (toInsert.isEmpty()) {
+							// nothing to replace it with
+							tx.commit();
+							continue;
+						}
+
 						ItemVariant variant = ItemVariant.of(toInsert);
 
 						long inserted = slot.insert(variant, toInsert.getCount(), tx);
@@ -99,14 +108,14 @@ public class SimpleMountedStorage extends WrapperMountedItemStorage<ItemStackHan
 		if (!(handler instanceof SlottedStorage<ItemVariant> slottedStorage))
 			return Optional.empty();
 
-		if (slottedStorage.getSlotCount() == this.getSlotCount() && handler instanceof SlottedStackStorage modifiable) {
+		if (slottedStorage.getSlotCount() == this.getSlotCount() && handler instanceof SlottedStorage<ItemVariant> modifiable) {
 			return Optional.of(modifiable);
 		} else {
 			return Optional.empty();
 		}
 	}
 
-	public static <T extends SimpleMountedStorage> MapCodec<T> codec(Function<SlottedStackStorage, T> factory) {
+	public static <T extends SimpleMountedStorage> MapCodec<T> codec(Function<SlottedStorage<ItemVariant>, T> factory) {
 		return CreateCodecs.ITEM_STACK_HANDLER.xmap(factory, storage -> storage.wrapped).fieldOf("value");
 	}
 }
