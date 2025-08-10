@@ -12,7 +12,6 @@ import io.github.fabricators_of_create.porting_lib.entity.events.player.PlayerIn
 import io.netty.buffer.ByteBuf;
 import net.createmod.catnip.nbt.NBTHelper;
 import net.createmod.catnip.outliner.Outliner;
-import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.util.TriState;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -45,11 +44,6 @@ public abstract class ClickToLinkBlockItem extends BlockItem {
 	}
 
 	static {
-		UseBlockCallback.EVENT.register((player, world, hand, hitResult) -> {
-			var event = new RightClickBlock(player, hand, hitResult.getBlockPos(), hitResult);
-			linkableItemAlwaysPlacesWhenUsed(event);
-			return event.getCancellationResult();
-		});
 		RightClickBlock.EVENT.register(ClickToLinkBlockItem::linkableItemAlwaysPlacesWhenUsed);
 	}
 
