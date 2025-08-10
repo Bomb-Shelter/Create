@@ -55,7 +55,7 @@ public abstract class ClickToLinkBlockItem extends BlockItem {
 			.getBlockState(event.getPos())
 			.is(blockItem.getBlock()))
 			return;
-		event.setUseBlock(TriState.FALSE);
+		event.setCancellationResult(InteractionResult.SUCCESS);
 	}
 
 	@Override
