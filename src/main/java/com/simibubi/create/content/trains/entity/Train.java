@@ -1140,7 +1140,7 @@ public class Train {
 
 				long extracted = CreateTransferUtil.extractAnyItem(slotView, 1);
 				fuelTicks += burnTime * extracted;
-				ItemStack containerItem = stack.getItem().getCraftingRemainingItem().getDefaultInstance();
+				ItemStack containerItem = stack.getRecipeRemainder();
 				if (!containerItem.isEmpty())
 					CreateTransferUtil.insertItemStacked(fuelItems, containerItem, false);
 				return;
