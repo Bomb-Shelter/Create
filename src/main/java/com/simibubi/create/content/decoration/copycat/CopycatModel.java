@@ -65,8 +65,7 @@ public abstract class CopycatModel extends BakedModelWrapperWithData implements 
 	@Override
 	public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context) {
 		BlockState material;
-		if (blockView instanceof RenderAttachedBlockView attachmentView
-			&& attachmentView.getBlockEntityRenderAttachment(pos) instanceof BlockState material1) {
+		if (blockView.getBlockEntityRenderData(pos) instanceof BlockState material1) {
 			material = material1;
 		} else {
 			material = AllBlocks.COPYCAT_BASE.getDefaultState();

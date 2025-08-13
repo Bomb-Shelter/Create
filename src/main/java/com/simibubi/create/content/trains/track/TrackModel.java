@@ -41,8 +41,7 @@ public class TrackModel extends BakedModelWrapper<BakedModel> {
 
 	@Override
 	public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context) {
-		if (!(blockView instanceof RenderAttachedBlockView attachmentView
-			&& attachmentView.getBlockEntityRenderAttachment(pos) instanceof Double data)) {
+		if (!(blockView.getBlockEntityRenderData(pos) instanceof Double data)) {
 			super.emitBlockQuads(blockView, state, pos, randomSupplier, context);
 			return;
 		}

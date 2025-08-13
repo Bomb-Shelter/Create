@@ -57,8 +57,7 @@ public class BeltModel extends BakedModelWrapper<BakedModel> implements CustomPa
 
 	@Override
 	public void emitBlockQuads(BlockAndTintGetter blockView, BlockState state, BlockPos pos, Supplier<RandomSource> randomSupplier, RenderContext context) {
-		if (!(blockView instanceof RenderAttachedBlockView attachmentView
-			&& attachmentView.getBlockEntityRenderAttachment(pos) instanceof RenderData data)) {
+		if (!(blockView.getBlockEntityRenderData(pos) instanceof RenderData data)) {
 			super.emitBlockQuads(blockView, state, pos, randomSupplier, context);
 			return;
 		}

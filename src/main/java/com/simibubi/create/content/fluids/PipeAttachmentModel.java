@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
+import net.fabricmc.fabric.api.blockview.v2.FabricBlockView;
 import net.fabricmc.fabric.api.renderer.v1.model.FabricBakedModel;
 import net.fabricmc.fabric.api.renderer.v1.render.RenderContext;
 
@@ -57,8 +58,7 @@ public class PipeAttachmentModel extends BakedModelWrapperWithData {
 		PipeModelData data = new PipeModelData();
 		BracketedBlockEntityBehaviour bracket = BlockEntityBehaviour.get(world, pos, BracketedBlockEntityBehaviour.TYPE);
 
-		RenderAttachedBlockView attachmentView = (RenderAttachedBlockView) world;
-		Object attachment = attachmentView.getBlockEntityRenderAttachment(pos);
+		Object attachment = world.getBlockEntityRenderData(pos);
 		if (attachment instanceof AttachmentTypes[] attachments) {
 			for (int i = 0; i < attachments.length; i++) {
 				data.putAttachment(Iterate.directions[i], attachments[i]);
