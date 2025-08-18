@@ -7,6 +7,7 @@ import com.simibubi.create.AllItems;
 import com.simibubi.create.Create;
 import com.simibubi.create.api.data.recipe.EmptyingRecipeGen;
 
+import io.github.fabricators_of_create.porting_lib.milk.PortingLibMilk;
 import net.fabricmc.fabric.api.transfer.v1.fluid.FluidConstants;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.data.PackOutput;
@@ -34,20 +35,20 @@ public final class CreateEmptyingRecipeGen extends EmptyingRecipeGen {
 		.output(AllFluids.TEA.get(), FluidConstants.BUCKET / 4)
 		.output(Items.GLASS_BOTTLE)),
 
-	/*FD_MILK = create(Mods.FD.recipeId("milk_bottle"), b -> b.require(Mods.FD, "milk_bottle")
-		.output(NeoForgeMod.MILK.get(), 250)
+	FD_MILK = create(Mods.FD.recipeId("milk_bottle"), b -> b.require(Mods.FD, "milk_bottle")
+		.output(PortingLibMilk.MILK.get(), 250)
 		.output(Items.GLASS_BOTTLE)
-		.whenModLoaded(Mods.FD.getId())),*/
+		.whenModLoaded(Mods.FD.getId())),
 
 	AM_LAVA = create(Mods.AM.recipeId("lava_bottle"), b -> b.require(Mods.AM, "lava_bottle")
 		.output(Items.GLASS_BOTTLE)
 		.output(Fluids.LAVA, FluidConstants.BOTTLE)
-		.whenModLoaded(Mods.AM.getId()))
+		.whenModLoaded(Mods.AM.getId())),
 
-	/*NEO_MILK = create(Mods.NEA.recipeId("milk_bottle"), b -> b.require(Mods.FD, "milk_bottle")
-		.output(NeoForgeMod.MILK.get(), 250)
+	NEO_MILK = create(Mods.NEA.recipeId("milk_bottle"), b -> b.require(Mods.FD, "milk_bottle")
+		.output(PortingLibMilk.MILK.get(), 250)
 		.output(Items.GLASS_BOTTLE)
-		.whenModLoaded(Mods.NEA.getId()))*/
+		.whenModLoaded(Mods.NEA.getId()))
 
 	;
 

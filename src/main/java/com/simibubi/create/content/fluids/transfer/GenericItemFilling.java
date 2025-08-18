@@ -17,9 +17,11 @@ import net.fabricmc.fabric.api.transfer.v1.fluid.base.FullItemFluidStorage;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
 import net.fabricmc.fabric.impl.transfer.fluid.EmptyBucketStorage;
+import net.minecraft.world.item.BucketItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.MilkBucketItem;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.level.Level;
@@ -46,13 +48,13 @@ public class GenericItemFilling {
 	 */
 	public static boolean isFluidHandlerValid(ItemStack stack, Storage<FluidVariant> fluidHandler) {
 		// Not instanceof in case a correct subclass is made
-		/*if (fluidHandler.getClass() == FluidBucketWrapper.class) {
+		if (fluidHandler.getClass() == FullItemFluidStorage.class) {
 			Item item = stack.getItem();
 			// Forge does not patch the FluidBucketWrapper onto subclasses of BucketItem
 			if (item.getClass() != BucketItem.class && !(item instanceof MilkBucketItem)) {
 				return false;
 			}
-		}*/
+		}
 		return true;
 	}
 

@@ -25,6 +25,7 @@ import com.simibubi.create.impl.registry.CreateRegistriesImpl;
 import com.simibubi.create.infrastructure.RemapHelper;
 import com.simibubi.create.infrastructure.worldgen.AllBiomeModifiers;
 
+import io.github.fabricators_of_create.porting_lib.milk.PortingLibMilk;
 import net.fabricmc.api.ModInitializer;
 
 import org.slf4j.Logger;
@@ -166,7 +167,7 @@ public class Create implements ModInitializer {
 
 		ComputerCraftProxy.register();
 
-		//NeoForgeMod.enableMilkFluid();
+		PortingLibMilk.enableMilkFluid();
 		REGISTRATE.registerEventListeners();
 
 		Create.init();

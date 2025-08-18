@@ -19,6 +19,7 @@ import com.simibubi.create.foundation.ponder.CreateSceneBuilder;
 
 import com.simibubi.create.infrastructure.fabric.transfer.CreateTransferUtil;
 
+import io.github.fabricators_of_create.porting_lib.milk.PortingLibMilk;
 import net.createmod.catnip.math.Pointing;
 import net.createmod.ponder.api.PonderPalette;
 import net.createmod.ponder.api.element.ElementLink;
@@ -496,11 +497,11 @@ public class PipeScenes {
 		Selection basin = util.select().position(basinPos);
 		BlockPos smartPos = util.grid().at(3, 1, 1);
 
-		/*scene.world().modifyBlockEntity(basinPos, BasinBlockEntity.class, be -> {
+		scene.world().modifyBlockEntity(basinPos, BasinBlockEntity.class, be -> {
 			Storage<FluidVariant> ifh = FluidStorage.SIDED.find(be.getLevel(), be.getBlockPos(), be.getBlockState(), be, null);
 			if (ifh != null)
-				ifh.fill(new FluidStack(NeoForgeMod.MILK.get(), 1000), false);
-		});*/
+				CreateTransferUtil.insertFluid(ifh, new FluidStack(PortingLibMilk.MILK.get(), 1000), false);
+		});
 
 		scene.world().setBlock(util.grid().at(3, 1, 3), AllBlocks.FLUID_PIPE.get()
 			.getAxisState(Axis.X), false);

@@ -57,6 +57,7 @@ import com.simibubi.create.AllBlockEntityTypes;
 import com.simibubi.create.Create;
 import com.simibubi.create.foundation.data.recipe.CompatMetals;
 
+import io.github.fabricators_of_create.porting_lib.milk.PortingLibMilk;
 import net.createmod.catnip.registry.RegisteredObjectsHelper;
 import net.fabricmc.fabric.api.event.registry.RegistryIdRemapCallback;
 import net.minecraft.core.Registry;
@@ -241,8 +242,8 @@ public class RemapHelper {
 
 		{
 			var registry = BuiltInRegistries.FLUID;
-			//registry.addAlias(asResource("milk"), NeoForgeMod.MILK.getId());
-			//registry.addAlias(asResource("flowing_milk"), NeoForgeMod.FLOWING_MILK.getId());
+			registry.addAlias(asResource("milk"), PortingLibMilk.MILK.getId());
+			registry.addAlias(asResource("flowing_milk"), PortingLibMilk.FLOWING_MILK.getId());
 		}
 
 		{
