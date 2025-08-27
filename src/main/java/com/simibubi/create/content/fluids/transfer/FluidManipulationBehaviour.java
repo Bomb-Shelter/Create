@@ -238,7 +238,7 @@ public abstract class FluidManipulationBehaviour extends BlockEntityBehaviour {
 
 	@Override
 	public void read(CompoundTag nbt, HolderLookup.Provider registries, boolean clientPacket) {
-		infinite = nbt.contains("Infinite");
+		infinite = nbt.contains("Infinite") && nbt.getBoolean("Infinite");
 		if (nbt.contains("LastPos"))
 			rootPos = NBTHelper.readBlockPos(nbt, "LastPos");
 		if (nbt.contains("AffectedAreaFrom") && nbt.contains("AffectedAreaTo"))
