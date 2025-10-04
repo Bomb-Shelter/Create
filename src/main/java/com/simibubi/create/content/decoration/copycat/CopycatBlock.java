@@ -326,11 +326,15 @@ public abstract class CopycatBlock extends Block implements IBE<CopycatBlockEnti
 
 	@Override
 	public int getLightEmission(BlockState state, BlockGetter level, BlockPos pos) {
-		if (level instanceof LevelReader levelReader)
-			return levelReader.getLightEngine().getRawBrightness(pos, 0);
-			//return lightManager.getLightAt(pos);
+		var material = getMaterial(level, pos);
 
-		return LightEmissiveBlock.super.getLightEmission(state, level, pos);
+		if (material == null)
+			return state.getLightEmission();
+
+		if (material.getBlock() instanceof LightEmissiveBlock emissiveBlock)
+			return emissiveBlock.getLightEmission(state, level, pos);
+
+		return material.getLightEmission();
 	}
 
 	@Override
