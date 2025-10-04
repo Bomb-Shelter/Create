@@ -73,6 +73,7 @@
     "client.HumanoidModelMixin",
     "client.LevelRendererMixin",
     "client.PlayerRendererMixin",
+    "fabric.KeyBindsScreenMixin",
     "fabric.ModelManagerMixin"
   ],
   "injectors": {
