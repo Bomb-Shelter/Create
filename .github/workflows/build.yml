@@ -28,7 +28,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build Flywheel
-        run: cd flywheel && ./gradlew build && cd ..
+        run: cd flywheel && ./gradlew assemble && cd ..
 
       - name: Build Registrate
         run: cd registrate && ./gradlew buildOrPublish && cd ..
