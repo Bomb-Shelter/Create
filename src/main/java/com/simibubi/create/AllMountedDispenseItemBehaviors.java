@@ -10,6 +10,7 @@ import com.simibubi.create.content.contraptions.behaviour.MovementContext;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -175,6 +176,12 @@ public class AllMountedDispenseItemBehaviors {
 
 	public static void registerDefaults() {
 		for (SpawnEggItem egg : SpawnEggItem.eggs()) {
+			// F-U: apparently you can't trust this shit
+			if (MountedDispenseBehavior.REGISTRY.get(egg) != null) {
+				Create.LOGGER.warn("Skipped registering dispense behaviour for spawn egg {} ({})!", egg, BuiltInRegistries.ITEM.getKey(egg));
+				continue;
+			}
+
 			MountedDispenseBehavior.REGISTRY.register(egg, SPAWN_EGG);
 		}
 
